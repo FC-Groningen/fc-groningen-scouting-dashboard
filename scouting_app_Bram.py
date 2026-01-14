@@ -1157,18 +1157,42 @@ grid_response = AgGrid(
     theme='streamlit'
 )
 
-# Extract selected players from grid
+# Extract selected players from grid - store full row data
 selected_from_grid = []
+selected_from_grid_full_data = []  # Store full data to match exact rows
 if grid_response and 'selected_rows' in grid_response:
     selected_rows = grid_response['selected_rows']
     if selected_rows is not None and len(selected_rows) > 0:
-        # Convert to DataFrame if it's not already, then get player names
+        # Convert to DataFrame if it's not already
         if isinstance(selected_rows, pd.DataFrame):
             selected_from_grid = selected_rows['Player Name'].tolist()[:2]
+            # Store the full row data with original column names
+            for idx in selected_rows.index[:2]:
+                row_data = df_top.loc[df_top.index == idx]
+                if not row_data.empty:
+                    selected_from_grid_full_data.append(row_data.iloc[0])
         elif isinstance(selected_rows, list) and len(selected_rows) > 0:
             # Handle if it's a list of dicts
             if isinstance(selected_rows[0], dict):
                 selected_from_grid = [row['Player Name'] for row in selected_rows[:2]]
+                # Try to match back to df_top using player name, team, position, competition, season
+                for row_dict in selected_rows[:2]:
+                    player_name = row_dict.get('Player Name')
+                    team_name = row_dict.get('Team', '').split('>')[-1] if '>' in str(row_dict.get('Team', '')) else row_dict.get('Team', '')
+                    position = row_dict.get('Position')
+                    competition = row_dict.get('Competition')
+                    season = row_dict.get('Season')
+                    
+                    # Match in df_top
+                    matched_row = df_top[
+                        (df_top['player_name'] == player_name) &
+                        (df_top['team_name'] == team_name.strip()) &
+                        (df_top['position'] == position) &
+                        (df_top['competition_name'] == competition) &
+                        (df_top['season_name'] == season)
+                    ]
+                    if not matched_row.empty:
+                        selected_from_grid_full_data.append(matched_row.iloc[0])
             else:
                 # If it's already a list of player names
                 selected_from_grid = selected_rows[:2]
@@ -1343,18 +1367,25 @@ with comparison_placeholder.container():
     # Determine which players to show: bottom table selections take priority over top table selections
     if selected_from_bottom_table:
         players_to_compare = selected_from_bottom_table
+        players_data_to_compare = []  # Will be populated from search pool
         source_message = "from search table below"
-    elif selected_from_grid:
+        use_exact_data = False
+    elif selected_from_grid and selected_from_grid_full_data:
         players_to_compare = selected_from_grid
+        players_data_to_compare = selected_from_grid_full_data  # Use exact data from top table
         source_message = "from top table"
+        use_exact_data = True
     else:
         players_to_compare = []
+        players_data_to_compare = []
         source_message = ""
+        use_exact_data = False
     
     if len(players_to_compare) > 0:
         if len(players_to_compare) > 2:
             st.warning("Please select at most 2 players for comparison.")
             players_to_compare = players_to_compare[:2]
+            players_data_to_compare = players_data_to_compare[:2] if use_exact_data else []
         
         st.info(f"Comparing {len(players_to_compare)} player(s) selected {source_message}")
         
@@ -1374,19 +1405,23 @@ with comparison_placeholder.container():
         cols = st.columns(2)
         
         for i, player_name in enumerate(players_to_compare):
-            # Get player data from search pool (allows finding players from bottom table)
-            player_rows = df_search_pool[df_search_pool["player_name"] == player_name]
-            
-            if player_rows.empty:
-                # Fallback to main df if not in search pool
-                player_rows = df[df["player_name"] == player_name]
-            
-            if player_rows.empty:
-                st.warning(f"No data found for {player_name}")
-                continue
-            
-            # Take first row for basic info
-            player_data = player_rows.iloc[0]
+            # Use exact data if available from top table, otherwise search
+            if use_exact_data and i < len(players_data_to_compare):
+                player_data = players_data_to_compare[i]
+            else:
+                # Get player data from search pool (allows finding players from bottom table)
+                player_rows = df_search_pool[df_search_pool["player_name"] == player_name]
+                
+                if player_rows.empty:
+                    # Fallback to main df if not in search pool
+                    player_rows = df[df["player_name"] == player_name]
+                
+                if player_rows.empty:
+                    st.warning(f"No data found for {player_name}")
+                    continue
+                
+                # Take first row for basic info
+                player_data = player_rows.iloc[0]
             
             with cols[i]:
                 # Player name with larger font
@@ -1428,5 +1463,3 @@ with comparison_placeholder.container():
                 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
     else:
         st.info("Select players from the top table or search table below (using checkboxes) to view comparison charts.")
-
-
