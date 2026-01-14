@@ -565,7 +565,9 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     ))
     
     # Calculate overall average
-    overall_avg = np.mean(percentile_values)
+    #overall_avg = np.mean(percentile_values)
+    # Calculate overall average (should match 'total' column: average of the 3 category averages)
+    overall_avg = np.mean([physical_avg, attack_avg, defense_avg])
     
     # Update layout with colored category labels and competition/season info
     # FIXED: Changed tickvals to start at 25 instead of 0 to remove gridlines in the hole
