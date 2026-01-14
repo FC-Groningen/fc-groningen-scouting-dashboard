@@ -8,12 +8,6 @@ from io import BytesIO
 from pathlib import Path
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from supabase import create_client, Client
-import hashlib
-import time
-
-# VERSION CONTROL: Increment this number to force cache clear
-APP_VERSION = "1.0.1"
-CACHE_BUSTER = hashlib.md5(f"{APP_VERSION}{time.time()}".encode()).hexdigest()[:8]
 
 # =========================
 # PASSWORD PROTECTION
@@ -632,8 +626,9 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 # =========================
 # Data
 # =========================
-@st.cache_data(ttl=3600)  # Cache for 1 hour
-def load_data_from_supabase(cache_buster=None) -> pd.DataFrame:
+# NO CACHE - TEMPORARY FIX
+# @st.cache_data(ttl=3600)  # Cache for 1 hour - DISABLED
+def load_data_from_supabase() -> pd.DataFrame:
     """Load ALL data from Supabase database (handles pagination for >1000 rows)"""
     try:
         # Create Supabase client
@@ -900,7 +895,7 @@ def get_team_fbref_google_search(team_name: str) -> str:
 # LOAD DATA
 # =========================
 with st.spinner('Loading player data...'):
-    df = load_data_from_supabase(cache_buster=CACHE_BUSTER)
+    df = load_data_from_supabase()
 
 # Load Impect URLs
 with st.spinner('Loading player profiles...'):
