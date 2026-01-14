@@ -951,7 +951,7 @@ with st.sidebar:
 st.title("FC Groningen Scouting Dashboard")
 
 # VERSION BANNER - If you don't see this, the file wasn't updated!
-st.info("🔢 **App Version 2.0.0** - Chart fixes active")
+st.info("🔢 **App Version 2.0.1** - Chart fixes active")
 
 competitions = sorted(df["competition_name"].dropna().unique())
 seasons = sorted(df["season_name"].dropna().unique())
