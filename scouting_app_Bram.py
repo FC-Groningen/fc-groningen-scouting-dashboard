@@ -199,15 +199,21 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     """
     Create a polarized bar chart (circular bar chart) for a player.
     Shows 15 metrics in 3 categories: Physical (4), Attack (6), Defense (5).
+    Uses Bram's exact color scheme with gradients based on percentile scores.
 
-    ✅ FIX: Overall score is ALWAYS recomputed from physical/attack/defense,
-           so it matches the table total exactly even if player_data['total'] is wrong/stale.
+    FIX:
+    - Overall is ALWAYS computed as mean(physical, attack, defense)
+      (not taken from player_data['total'], which can drift or refer to a different value).
+    - Bar heights treat missing metrics as 0 only for plotting,
+      but category/overall calculations use the precomputed category columns.
     """
-    green = '#3E8C5E'
-    red = '#E83F2A'
-    yellow = '#F2B533'
+    # Bram's exact color scheme
+    green = '#3E8C5E'      # Physical (FC Groningen green) - Fysiek
+    red = '#E83F2A'        # Attack - Aanvallen
+    yellow = '#F2B533'     # Defense - Verdedigen
 
     def lighten_color(hex_color, amount=0.6):
+        """Lighten a hex color by interpolating towards white."""
         hex_color = hex_color.lstrip('#')
         r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
         r = int(r + (255 - r) * amount)
@@ -216,19 +222,40 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         return f'#{r:02x}{g:02x}{b:02x}'
 
     def get_gradient_color(base_color, score, min_score=0, max_score=100):
+        """Get color from gradient based on score (0-100 percentile)."""
+        # Handle NaN safely
+        if score is None or (isinstance(score, float) and np.isnan(score)):
+            score = 0.0
+
         normalized = (score - min_score) / (max_score - min_score) if max_score > min_score else 0
         normalized = max(0, min(1, normalized))
+
         light_color = lighten_color(base_color, amount=0.6)
         light_rgb = tuple(int(light_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
         dark_rgb = tuple(int(base_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+
         r = int(light_rgb[0] + (dark_rgb[0] - light_rgb[0]) * normalized)
         g = int(light_rgb[1] + (dark_rgb[1] - light_rgb[1]) * normalized)
         b = int(light_rgb[2] + (dark_rgb[2] - light_rgb[2]) * normalized)
+
         return f'rgb({r},{g},{b})'
 
-    plot_columns = PHYSICAL_METRICS + ATTACK_METRICS + DEFENSE_METRICS
-    percentile_values = [player_data[col] if col in player_data.index else 0 for col in plot_columns]
+    def to_float(x, default=np.nan):
+        try:
+            if pd.isna(x):
+                return default
+            return float(x)
+        except Exception:
+            return default
 
+    # Metrics to plot (15 total)
+    plot_columns = PHYSICAL_METRICS + ATTACK_METRICS + DEFENSE_METRICS
+
+    # Raw metric percentiles (keep NaN as NaN; only convert to 0 for plotting)
+    percentile_values_raw = [to_float(player_data.get(col, np.nan), default=np.nan) for col in plot_columns]
+    percentile_values_plot = [0.0 if pd.isna(v) else float(v) for v in percentile_values_raw]
+
+    # Category mapping (1=Physical, 2=Attack, 3=Defense)
     category_mapping = (
         [1] * len(PHYSICAL_METRICS) +
         [2] * len(ATTACK_METRICS) +
@@ -237,34 +264,51 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 
     category_colors = {1: green, 2: red, 3: yellow}
 
+    # Gradient colors based on plotted values (0 if missing)
     colors = []
-    for score, category_id in zip(percentile_values, category_mapping):
+    for score, category_id in zip(percentile_values_plot, category_mapping):
         base_color = category_colors[category_id]
         colors.append(get_gradient_color(base_color, score))
 
-    # ✅ Category averages
-    if all(k in player_data.index for k in ['physical', 'attack', 'defense']):
-        physical_avg = float(player_data['physical'])
-        attack_avg   = float(player_data['attack'])
-        defense_avg  = float(player_data['defense'])
-    else:
-        physical_avg = float(np.mean(percentile_values[0:len(PHYSICAL_METRICS)]))
-        attack_avg   = float(np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)]))
-        defense_avg  = float(np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):]))
+    # --- IMPORTANT FIX: category + overall values are taken from the precomputed columns ---
+    physical_avg = to_float(player_data.get("physical", np.nan), default=np.nan)
+    attack_avg   = to_float(player_data.get("attack", np.nan), default=np.nan)
+    defense_avg  = to_float(player_data.get("defense", np.nan), default=np.nan)
 
-    # ✅ FIX: Always recompute overall from these 3 values (matches table total)
-    overall_avg = float(np.mean([physical_avg, attack_avg, defense_avg]))
+    # If for any reason those are missing, fallback to computing from raw metrics (skipping NaNs)
+    if pd.isna(physical_avg):
+        physical_block = [v for v in percentile_values_raw[:len(PHYSICAL_METRICS)] if not pd.isna(v)]
+        physical_avg = float(np.mean(physical_block)) if physical_block else 0.0
 
+    if pd.isna(attack_avg):
+        start = len(PHYSICAL_METRICS)
+        end = start + len(ATTACK_METRICS)
+        attack_block = [v for v in percentile_values_raw[start:end] if not pd.isna(v)]
+        attack_avg = float(np.mean(attack_block)) if attack_block else 0.0
+
+    if pd.isna(defense_avg):
+        start = len(PHYSICAL_METRICS) + len(ATTACK_METRICS)
+        defense_block = [v for v in percentile_values_raw[start:] if not pd.isna(v)]
+        defense_avg = float(np.mean(defense_block)) if defense_block else 0.0
+
+    # Overall must be the mean of the 3 displayed category scores
+    overall_avg = float((physical_avg + attack_avg + defense_avg) / 3.0)
+
+    # Labels
     metric_labels = [LABELS.get(col, col).replace('\n', '<br>') for col in plot_columns]
 
     fig = go.Figure()
+
     fig.add_trace(go.Barpolar(
-        r=percentile_values,
+        r=percentile_values_plot,
         theta=metric_labels,
-        marker=dict(color=colors, line=dict(color='white', width=2)),
+        marker=dict(
+            color=colors,
+            line=dict(color='white', width=2)
+        ),
         opacity=1.0,
         name='',
-        text=[f'{v:.0f}' for v in percentile_values],
+        text=[f'{v:.0f}' for v in percentile_values_plot],
         hovertemplate='%{theta}<br>Percentile: %{r:.1f}<extra></extra>'
     ))
 
@@ -300,10 +344,15 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         title=dict(
             text=(
                 f"<b>Overall: {overall_avg:.1f}</b><br>"
-                f"<span style='font-size:14px'>🟢 Fysiek: {physical_avg:.1f} | 🔴 Aanvallen: {attack_avg:.1f} | 🟡 Verdedigen: {defense_avg:.1f}</span><br>"
+                f"<span style='font-size:14px'>🟢 Fysiek: {physical_avg:.1f} | "
+                f"🔴 Aanvallen: {attack_avg:.1f} | "
+                f"🟡 Verdedigen: {defense_avg:.1f}</span><br>"
                 f"<span style='font-size:11px; color:#666'>{competition_name} | {season_name}</span>"
             ),
-            x=0.5, y=0.95, xanchor='center', yanchor='top',
+            x=0.5,
+            y=0.95,
+            xanchor='center',
+            yanchor='top',
             font=dict(size=16, family='Proxima Nova', color='black')
         ),
         paper_bgcolor='rgba(255, 255, 255, 1)',
@@ -311,6 +360,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     )
 
     return fig
+
 
 
 # =========================
@@ -344,8 +394,13 @@ def load_data_from_supabase() -> pd.DataFrame:
         df['attack'] = df[ATTACK_METRICS].mean(axis=1)
         df['defense'] = df[DEFENSE_METRICS].mean(axis=1)
 
-        # ✅ Keep this if you want the column, but the chart now ignores any stale/incorrect 'total' values anyway
-        df['total'] = df[['physical', 'attack', 'defense']].mean(axis=1)
+        # Calculate aggregate scores for display (explicit numeric + skipna behavior)
+        df['physical'] = df[PHYSICAL_METRICS].mean(axis=1, skipna=True)
+        df['attack'] = df[ATTACK_METRICS].mean(axis=1, skipna=True)
+        df['defense'] = df[DEFENSE_METRICS].mean(axis=1, skipna=True)
+        # Total MUST be mean of the three category scores
+        df['total'] = (df['physical'] + df['attack'] + df['defense']) / 3.0
+
 
         return df
 
