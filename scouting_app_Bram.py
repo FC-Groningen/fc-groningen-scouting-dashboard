@@ -1165,14 +1165,40 @@ selected_from_grid_full_data = []  # Store full data to match exact rows
 if grid_response and 'selected_rows' in grid_response:
     selected_rows = grid_response['selected_rows']
     if selected_rows is not None and len(selected_rows) > 0:
+        # Import re for regex matching
+        import re
+        
         # Convert to DataFrame if it's not already
         if isinstance(selected_rows, pd.DataFrame):
             selected_from_grid = selected_rows['Player Name'].tolist()[:2]
-            # Store the full row data with original column names
-            for idx in selected_rows.index[:2]:
-                row_data = df_top.loc[df_top.index == idx]
-                if not row_data.empty:
-                    selected_from_grid_full_data.append(row_data.iloc[0])
+            # Match back to df_top using player name and other identifiers
+            for _, row_dict in selected_rows.iterrows():
+                if len(selected_from_grid_full_data) >= 2:
+                    break
+                    
+                player_name = row_dict['Player Name']
+                team_name = row_dict['Team']
+                # Remove logo HTML if present
+                if isinstance(team_name, str) and '<img' in team_name:
+                    # Extract team name from HTML
+                    match = re.search(r'margin-right: 8px;">(.+?)(?:<|$)', team_name)
+                    if match:
+                        team_name = match.group(1).strip()
+                
+                position = row_dict['Position']
+                competition = row_dict['Competition']
+                season = row_dict['Season']
+                
+                # Match in df_top using ORIGINAL column names
+                matched_row = df_top[
+                    (df_top['player_name'] == player_name) &
+                    (df_top['team_name'] == team_name) &
+                    (df_top['position'] == position) &
+                    (df_top['competition_name'] == competition) &
+                    (df_top['season_name'] == season)
+                ]
+                if not matched_row.empty:
+                    selected_from_grid_full_data.append(matched_row.iloc[0])
         elif isinstance(selected_rows, list) and len(selected_rows) > 0:
             # Handle if it's a list of dicts
             if isinstance(selected_rows[0], dict):
@@ -1180,12 +1206,18 @@ if grid_response and 'selected_rows' in grid_response:
                 # Try to match back to df_top using player name, team, position, competition, season
                 for row_dict in selected_rows[:2]:
                     player_name = row_dict.get('Player Name')
-                    team_name = row_dict.get('Team', '').split('>')[-1] if '>' in str(row_dict.get('Team', '')) else row_dict.get('Team', '')
+                    team_name = row_dict.get('Team', '')
+                    # Remove logo HTML if present
+                    if isinstance(team_name, str) and '<img' in team_name:
+                        match = re.search(r'margin-right: 8px;">(.+?)(?:<|$)', team_name)
+                        if match:
+                            team_name = match.group(1).strip()
+                    
                     position = row_dict.get('Position')
                     competition = row_dict.get('Competition')
                     season = row_dict.get('Season')
                     
-                    # Match in df_top
+                    # Match in df_top using ORIGINAL column names
                     matched_row = df_top[
                         (df_top['player_name'] == player_name) &
                         (df_top['team_name'] == team_name.strip()) &
