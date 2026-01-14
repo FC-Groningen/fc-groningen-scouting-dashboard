@@ -191,7 +191,37 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Add this TEMPORARY debug code right before creating the chart
+# Insert this around line 1100 in your comparison charts section
 
+# TEMPORARY DEBUG - ADD THIS BEFORE CALLING create_polarized_bar_chart
+with cols[i]:
+    st.markdown(
+        f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;'>{player_name}</p>",
+        unsafe_allow_html=True
+    )
+    
+    # === ADD THIS DEBUG BLOCK ===
+    st.write("DEBUG INFO:")
+    st.write(f"- Has 'physical' column: {'physical' in player_data.index}")
+    st.write(f"- Has 'attack' column: {'attack' in player_data.index}")
+    st.write(f"- Has 'defense' column: {'defense' in player_data.index}")
+    st.write(f"- Has 'total' column: {'total' in player_data.index}")
+    
+    if 'physical' in player_data.index:
+        st.write(f"- Physical value: {player_data['physical']}")
+    if 'attack' in player_data.index:
+        st.write(f"- Attack value: {player_data['attack']}")
+    if 'defense' in player_data.index:
+        st.write(f"- Defense value: {player_data['defense']}")
+    if 'total' in player_data.index:
+        st.write(f"- Total value: {player_data['total']}")
+    
+    st.write(f"- Type of player_data: {type(player_data)}")
+    st.write(f"- player_data index: {list(player_data.index[:10])}...")  # Show first 10 columns
+    # === END DEBUG BLOCK ===
+    
+    # ... rest of your code
 # =========================
 # CHARTS
 # =========================
