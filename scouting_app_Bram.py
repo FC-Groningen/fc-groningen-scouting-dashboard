@@ -579,6 +579,10 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     
     # Update layout with colored category labels and competition/season info
     # FIXED: Changed tickvals to start at 25 instead of 0 to remove gridlines in the hole
+    
+    # DEBUG: Add what values were actually used
+    debug_info = f"<br><span style='font-size:10px; color:red;'>DEBUG: total={overall_avg:.4f}, phys={physical_avg:.4f}, att={attack_avg:.4f}, def={defense_avg:.4f}</span>"
+    
     fig.update_layout(
         polar=dict(
             domain=dict(x=[0.02, 0.98], y=[0.0, 0.88]),  # Larger plot area for better visibility
@@ -609,7 +613,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         height=500,
         margin=dict(l=80, r=80, t=120, b=80),  # Increased top margin for subtitle
         title=dict(
-            text=f"<b>Overall: {overall_avg:.1f}</b><br><span style='font-size:14px'>🟢 Fysiek: {physical_avg:.1f} | 🔴 Aanvallen: {attack_avg:.1f} | 🟡 Verdedigen: {defense_avg:.1f}</span><br><span style='font-size:11px; color:#666'>{competition_name} | {season_name}</span>",
+            text=f"<b>Overall: {overall_avg:.1f}</b><br><span style='font-size:14px'>🟢 Fysiek: {physical_avg:.1f} | 🔴 Aanvallen: {attack_avg:.1f} | 🟡 Verdedigen: {defense_avg:.1f}</span><br><span style='font-size:11px; color:#666'>{competition_name} | {season_name}</span>{debug_info}",
             x=0.5,
             y=0.95,
             xanchor='center',
@@ -1434,6 +1438,14 @@ with comparison_placeholder.container():
             
             # Take first row - contains unrounded original values
             player_data = player_rows.iloc[0]
+            
+            # DEBUG: Show what values we're actually using
+            st.write(f"**DEBUG for {player_name}:**")
+            st.write(f"- Physical from data: {player_data.get('physical', 'MISSING')}")
+            st.write(f"- Attack from data: {player_data.get('attack', 'MISSING')}")
+            st.write(f"- Defense from data: {player_data.get('defense', 'MISSING')}")
+            st.write(f"- Total from data: {player_data.get('total', 'MISSING')}")
+            st.write(f"- Calculated average: {(float(player_data.get('physical', 0)) + float(player_data.get('attack', 0)) + float(player_data.get('defense', 0))) / 3.0}")
             
             with cols[i]:
                 # Player name with larger font
