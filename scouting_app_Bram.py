@@ -1046,6 +1046,9 @@ if 'impect_url' in df_top.columns:
     cols_to_copy.append('impect_url')
 df_show = df_top[cols_to_copy].copy()
 
+# Store original index for later lookup
+df_show['_original_index'] = df_top.index
+
 # Round all numeric columns to 1 decimal place (except minutes to 0)
 numeric_display_cols = ["age", "total_minutes", "physical", "attack", "defense", "total"]
 for col in numeric_display_cols:
@@ -1078,7 +1081,7 @@ df_show["team_with_logo_html"] = df_show.apply(create_team_html_with_logo, axis=
 
 # Reorder columns: rank first, then player name, team with logo, then rest
 cols_order = ["original_rank", "player_name", "team_with_logo_html"] + [c for c in table_cols if c not in ["player_name", "team_name"]]
-df_show = df_show[cols_order + ["player_url"]]
+df_show = df_show[cols_order + ["player_url", "_original_index"]]
 
 # Rename columns
 rename_dict = {k: v for k, v in DISPLAY_COLS.items() if k != "team_name"}
@@ -1140,8 +1143,9 @@ gb.configure_column("Attack", width=100, type=["numericColumn"], sortable=True)
 gb.configure_column("Defense", width=100, type=["numericColumn"], sortable=True)
 gb.configure_column("Total", width=100, type=["numericColumn"], sortable=True)
 
-# Hide the helper column
+# Hide the helper columns
 gb.configure_column("player_url", hide=True)
+gb.configure_column("_original_index", hide=True)
 
 # Set default column properties
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
@@ -1169,22 +1173,27 @@ selected_from_grid_full_data = []  # Store full data to match exact rows
 if grid_response and 'selected_rows' in grid_response:
     selected_rows = grid_response['selected_rows']
     if selected_rows is not None and len(selected_rows) > 0:
-        # Import re for regex matching
-        import re
-        
         # Convert to DataFrame if it's not already
         if isinstance(selected_rows, pd.DataFrame):
             selected_from_grid = selected_rows['Player Name'].tolist()[:2]
-            # Match back to df_top using player name and other identifiers
+            # Use the original index to directly look up in df_top
             for _, row_dict in selected_rows.iterrows():
                 if len(selected_from_grid_full_data) >= 2:
                     break
-                    
+                
+                # Get the original index from the hidden column
+                if '_original_index' in row_dict.index:
+                    orig_idx = row_dict['_original_index']
+                    if orig_idx in df_top.index:
+                        selected_from_grid_full_data.append(df_top.loc[orig_idx])
+                        continue
+                
+                # Fallback: Try to match using player attributes (if index not available)
+                import re
                 player_name = row_dict['Player Name']
                 team_name = row_dict['Team']
                 # Remove logo HTML if present
                 if isinstance(team_name, str) and '<img' in team_name:
-                    # Extract team name from HTML
                     match = re.search(r'margin-right: 8px;">(.+?)(?:<|$)', team_name)
                     if match:
                         team_name = match.group(1).strip()
@@ -1207,8 +1216,17 @@ if grid_response and 'selected_rows' in grid_response:
             # Handle if it's a list of dicts
             if isinstance(selected_rows[0], dict):
                 selected_from_grid = [row['Player Name'] for row in selected_rows[:2]]
-                # Try to match back to df_top using player name, team, position, competition, season
+                # Try to match back to df_top
                 for row_dict in selected_rows[:2]:
+                    # Use the original index if available
+                    if '_original_index' in row_dict:
+                        orig_idx = row_dict['_original_index']
+                        if orig_idx in df_top.index:
+                            selected_from_grid_full_data.append(df_top.loc[orig_idx])
+                            continue
+                    
+                    # Fallback: match using attributes
+                    import re
                     player_name = row_dict.get('Player Name')
                     team_name = row_dict.get('Team', '')
                     # Remove logo HTML if present
