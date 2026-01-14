@@ -539,10 +539,23 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         gradient_color = get_gradient_color(base_color, score)
         colors.append(gradient_color)
     
-    # Calculate category averages
-    physical_avg = np.mean(percentile_values[0:len(PHYSICAL_METRICS)])
-    attack_avg = np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)])
-    defense_avg = np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):])
+    # CRITICAL FIX: Use pre-calculated category averages from player_data, NOT recalculated from metrics
+    # This ensures the chart matches the table exactly
+    if 'physical' in player_data.index and 'attack' in player_data.index and 'defense' in player_data.index:
+        physical_avg = float(player_data['physical'])
+        attack_avg = float(player_data['attack'])
+        defense_avg = float(player_data['defense'])
+    else:
+        # Fallback: calculate from individual metrics if columns don't exist
+        physical_avg = np.mean(percentile_values[0:len(PHYSICAL_METRICS)])
+        attack_avg = np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)])
+        defense_avg = np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):])
+    
+    # Use pre-calculated total if available, otherwise calculate from category averages
+    if 'total' in player_data.index:
+        overall_avg = float(player_data['total'])
+    else:
+        overall_avg = (physical_avg + attack_avg + defense_avg) / 3.0
     
     # Create metric labels using Dutch labels with line breaks
     metric_labels = [LABELS.get(col, col).replace('\n', '<br>') for col in plot_columns]
@@ -563,11 +576,6 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         text=[f'{v:.0f}' for v in percentile_values],
         hovertemplate='%{theta}<br>Percentile: %{r:.1f}<extra></extra>'
     ))
-    
-    # Calculate overall average
-    #overall_avg = np.mean(percentile_values)
-    # Calculate overall average (should match 'total' column: average of the 3 category averages)
-    overall_avg = np.mean([physical_avg, attack_avg, defense_avg])
     
     # Update layout with colored category labels and competition/season info
     # FIXED: Changed tickvals to start at 25 instead of 0 to remove gridlines in the hole
