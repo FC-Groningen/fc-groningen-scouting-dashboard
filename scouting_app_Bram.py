@@ -8,12 +8,12 @@ from io import BytesIO
 from pathlib import Path
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from supabase import create_client, Client
-
-# TEMPORARY: Force cache clear on every deploy
-# Remove this after confirming the fix works
 import hashlib
 import time
-CACHE_BUSTER = hashlib.md5(str(time.time()).encode()).hexdigest()[:8]
+
+# VERSION CONTROL: Increment this number to force cache clear
+APP_VERSION = "1.0.1"
+CACHE_BUSTER = hashlib.md5(f"{APP_VERSION}{time.time()}".encode()).hexdigest()[:8]
 
 # =========================
 # PASSWORD PROTECTION
@@ -545,10 +545,23 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         gradient_color = get_gradient_color(base_color, score)
         colors.append(gradient_color)
     
-    # Calculate category averages
-    physical_avg = np.mean(percentile_values[0:len(PHYSICAL_METRICS)])
-    attack_avg = np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)])
-    defense_avg = np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):])
+    # CRITICAL FIX: Use pre-calculated category averages from player_data
+    # This ensures the chart matches the table exactly
+    if 'physical' in player_data.index and 'attack' in player_data.index and 'defense' in player_data.index:
+        physical_avg = float(player_data['physical'])
+        attack_avg = float(player_data['attack'])
+        defense_avg = float(player_data['defense'])
+    else:
+        # Fallback: calculate from individual metrics if columns don't exist
+        physical_avg = np.mean(percentile_values[0:len(PHYSICAL_METRICS)])
+        attack_avg = np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)])
+        defense_avg = np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):])
+    
+    # CRITICAL FIX: Use pre-calculated total from player_data
+    if 'total' in player_data.index:
+        overall_avg = float(player_data['total'])
+    else:
+        overall_avg = (physical_avg + attack_avg + defense_avg) / 3.0
     
     # Create metric labels using Dutch labels with line breaks
     metric_labels = [LABELS.get(col, col).replace('\n', '<br>') for col in plot_columns]
@@ -569,11 +582,6 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         text=[f'{v:.0f}' for v in percentile_values],
         hovertemplate='%{theta}<br>Percentile: %{r:.1f}<extra></extra>'
     ))
-    
-    # Calculate overall average
-    #overall_avg = np.mean(percentile_values)
-    # Calculate overall average (should match 'total' column: average of the 3 category averages)
-    overall_avg = np.mean([physical_avg, attack_avg, defense_avg])
     
     # Update layout with colored category labels and competition/season info
     # FIXED: Changed tickvals to start at 25 instead of 0 to remove gridlines in the hole
@@ -625,7 +633,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 # Data
 # =========================
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def load_data_from_supabase(cache_buster=CACHE_BUSTER) -> pd.DataFrame:
+def load_data_from_supabase(cache_buster=None) -> pd.DataFrame:
     """Load ALL data from Supabase database (handles pagination for >1000 rows)"""
     try:
         # Create Supabase client
@@ -1413,23 +1421,24 @@ with comparison_placeholder.container():
         cols = st.columns(2)
         
         for i, player_name in enumerate(players_to_compare):
-            # Use exact data if available from top table, otherwise search
-            if use_exact_data and i < len(players_data_to_compare):
-                player_data = players_data_to_compare[i]
-            else:
-                # Get player data from search pool (allows finding players from bottom table)
+            # CRITICAL FIX: Always get fresh unrounded data by player name
+            # First try df_top (for top table selections)
+            player_rows = df_top[df_top["player_name"] == player_name]
+            
+            if player_rows.empty:
+                # Try search pool (for bottom table selections)
                 player_rows = df_search_pool[df_search_pool["player_name"] == player_name]
                 
                 if player_rows.empty:
-                    # Fallback to main df if not in search pool
+                    # Final fallback to main df
                     player_rows = df[df["player_name"] == player_name]
                 
                 if player_rows.empty:
                     st.warning(f"No data found for {player_name}")
                     continue
-                
-                # Take first row for basic info
-                player_data = player_rows.iloc[0]
+            
+            # Take first row - contains unrounded original values
+            player_data = player_rows.iloc[0]
             
             with cols[i]:
                 # Player name with larger font
