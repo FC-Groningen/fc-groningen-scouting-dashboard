@@ -633,8 +633,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 # =========================
 # Data
 # =========================
-# CACHE DISABLED FOR TESTING
-# @st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour
 def load_data_from_supabase() -> pd.DataFrame:
     """Load ALL data from Supabase database (handles pagination for >1000 rows)"""
     try:
@@ -951,7 +950,7 @@ with st.sidebar:
 st.title("FC Groningen Scouting Dashboard")
 
 # VERSION BANNER - If you don't see this, the file wasn't updated!
-st.info("🔢 **App Version 2.0.1** - Chart fixes active")
+st.info("🔢 **App Version 2.0.2** - Chart fixes active + Cache restored")
 
 competitions = sorted(df["competition_name"].dropna().unique())
 seasons = sorted(df["season_name"].dropna().unique())
