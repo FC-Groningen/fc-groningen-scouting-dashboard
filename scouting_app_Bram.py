@@ -539,23 +539,30 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         gradient_color = get_gradient_color(base_color, score)
         colors.append(gradient_color)
     
-    # CRITICAL FIX: Use pre-calculated category averages from player_data
-    # This ensures the chart matches the table exactly
-    if 'physical' in player_data.index and 'attack' in player_data.index and 'defense' in player_data.index:
+    # ============================================
+    # CRITICAL FIX V2.0 - USE PRE-CALCULATED VALUES
+    # ============================================
+    if 'physical' in player_data.index:
         physical_avg = float(player_data['physical'])
+    else:
+        physical_avg = np.mean(percentile_values[0:len(PHYSICAL_METRICS)])
+    
+    if 'attack' in player_data.index:
         attack_avg = float(player_data['attack'])
+    else:
+        attack_avg = np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)])
+    
+    if 'defense' in player_data.index:
         defense_avg = float(player_data['defense'])
     else:
-        # Fallback: calculate from individual metrics if columns don't exist
-        physical_avg = np.mean(percentile_values[0:len(PHYSICAL_METRICS)])
-        attack_avg = np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)])
         defense_avg = np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):])
     
-    # CRITICAL FIX: Use pre-calculated total from player_data
+    # USE THE TOTAL FROM DATABASE
     if 'total' in player_data.index:
         overall_avg = float(player_data['total'])
     else:
         overall_avg = (physical_avg + attack_avg + defense_avg) / 3.0
+    # ============================================
     
     # Create metric labels using Dutch labels with line breaks
     metric_labels = [LABELS.get(col, col).replace('\n', '<br>') for col in plot_columns]
@@ -579,10 +586,6 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     
     # Update layout with colored category labels and competition/season info
     # FIXED: Changed tickvals to start at 25 instead of 0 to remove gridlines in the hole
-    
-    # DEBUG: Add what values were actually used
-    debug_info = f"<br><span style='font-size:10px; color:red;'>DEBUG: total={overall_avg:.4f}, phys={physical_avg:.4f}, att={attack_avg:.4f}, def={defense_avg:.4f}</span>"
-    
     fig.update_layout(
         polar=dict(
             domain=dict(x=[0.02, 0.98], y=[0.0, 0.88]),  # Larger plot area for better visibility
@@ -613,7 +616,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         height=500,
         margin=dict(l=80, r=80, t=120, b=80),  # Increased top margin for subtitle
         title=dict(
-            text=f"<b>Overall: {overall_avg:.1f}</b><br><span style='font-size:14px'>🟢 Fysiek: {physical_avg:.1f} | 🔴 Aanvallen: {attack_avg:.1f} | 🟡 Verdedigen: {defense_avg:.1f}</span><br><span style='font-size:11px; color:#666'>{competition_name} | {season_name}</span>{debug_info}",
+            text=f"<b>Overall: {overall_avg:.1f}</b><br><span style='font-size:14px'>🟢 Fysiek: {physical_avg:.1f} | 🔴 Aanvallen: {attack_avg:.1f} | 🟡 Verdedigen: {defense_avg:.1f}</span><br><span style='font-size:11px; color:#666'>{competition_name} | {season_name}</span>",
             x=0.5,
             y=0.95,
             xanchor='center',
@@ -630,8 +633,8 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 # =========================
 # Data
 # =========================
-# NO CACHE - TEMPORARY FIX
-# @st.cache_data(ttl=3600)  # Cache for 1 hour - DISABLED
+# CACHE DISABLED FOR TESTING
+# @st.cache_data(ttl=3600)
 def load_data_from_supabase() -> pd.DataFrame:
     """Load ALL data from Supabase database (handles pagination for >1000 rows)"""
     try:
@@ -946,6 +949,9 @@ with st.sidebar:
 
 # Main title
 st.title("FC Groningen Scouting Dashboard")
+
+# VERSION BANNER - If you don't see this, the file wasn't updated!
+st.info("🔢 **App Version 2.0.0** - Chart fixes active")
 
 competitions = sorted(df["competition_name"].dropna().unique())
 seasons = sorted(df["season_name"].dropna().unique())
@@ -1420,32 +1426,17 @@ with comparison_placeholder.container():
         cols = st.columns(2)
         
         for i, player_name in enumerate(players_to_compare):
-            # CRITICAL FIX: Always get fresh unrounded data by player name
-            # First try df_top (for top table selections)
+            # V2.0 FIX: Always lookup fresh data by name
             player_rows = df_top[df_top["player_name"] == player_name]
-            
             if player_rows.empty:
-                # Try search pool (for bottom table selections)
                 player_rows = df_search_pool[df_search_pool["player_name"] == player_name]
-                
                 if player_rows.empty:
-                    # Final fallback to main df
                     player_rows = df[df["player_name"] == player_name]
-                
                 if player_rows.empty:
                     st.warning(f"No data found for {player_name}")
                     continue
             
-            # Take first row - contains unrounded original values
             player_data = player_rows.iloc[0]
-            
-            # DEBUG: Show what values we're actually using
-            st.write(f"**DEBUG for {player_name}:**")
-            st.write(f"- Physical from data: {player_data.get('physical', 'MISSING')}")
-            st.write(f"- Attack from data: {player_data.get('attack', 'MISSING')}")
-            st.write(f"- Defense from data: {player_data.get('defense', 'MISSING')}")
-            st.write(f"- Total from data: {player_data.get('total', 'MISSING')}")
-            st.write(f"- Calculated average: {(float(player_data.get('physical', 0)) + float(player_data.get('attack', 0)) + float(player_data.get('defense', 0))) / 3.0}")
             
             with cols[i]:
                 # Player name with larger font
