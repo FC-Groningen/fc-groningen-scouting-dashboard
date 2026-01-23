@@ -239,6 +239,27 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     ✅ FIX: Overall score is taken from player_data['total'] (same as the table Total column) when available;
            fallback is the mean of physical/attack/defense if 'total' is missing.
     """
+    # -----------------------------------------------------------------
+    # Select metric set for the radar chart.
+    # DM/CM profiles use the updated profile metrics (pass/dribble split, press count, etc.)
+    # All other positions keep the original metric set.
+    # -----------------------------------------------------------------
+    display_pos = None
+    if isinstance(player_data, pd.Series):
+        # Prefer display_position if it exists; otherwise use position_profile/position
+        if 'display_position' in player_data.index and pd.notna(player_data.get('display_position')):
+            display_pos = str(player_data.get('display_position'))
+        elif 'position_profile' in player_data.index and pd.notna(player_data.get('position_profile')):
+            display_pos = str(player_data.get('position_profile'))
+        elif 'position' in player_data.index and pd.notna(player_data.get('position')):
+            display_pos = str(player_data.get('position'))
+
+    is_dmcm_profile = bool(display_pos) and display_pos.startswith("DM/CM (") and display_pos.endswith(")")
+
+    physical_metrics = DMCM_PROFILE_PHYSICAL_METRICS if is_dmcm_profile else PHYSICAL_METRICS
+    attack_metrics   = DMCM_PROFILE_ATTACK_METRICS   if is_dmcm_profile else ATTACK_METRICS
+    defense_metrics  = DMCM_PROFILE_DEFENSE_METRICS  if is_dmcm_profile else DEFENSE_METRICS
+
     green = '#3E8C5E'
     red = '#E83F2A'
     yellow = '#F2B533'
@@ -262,13 +283,13 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         b = int(light_rgb[2] + (dark_rgb[2] - light_rgb[2]) * normalized)
         return f'rgb({r},{g},{b})'
 
-    plot_columns = PHYSICAL_METRICS + ATTACK_METRICS + DEFENSE_METRICS
+    plot_columns = physical_metrics + attack_metrics + defense_metrics
     percentile_values = [player_data[col] if col in player_data.index else 0 for col in plot_columns]
 
     category_mapping = (
-        [1] * len(PHYSICAL_METRICS) +
-        [2] * len(ATTACK_METRICS) +
-        [3] * len(DEFENSE_METRICS)
+        [1] * len(physical_metrics) +
+        [2] * len(attack_metrics) +
+        [3] * len(defense_metrics)
     )
 
     category_colors = {1: green, 2: red, 3: yellow}
@@ -284,9 +305,9 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         attack_avg   = float(player_data['attack'])
         defense_avg  = float(player_data['defense'])
     else:
-        physical_avg = float(np.mean(percentile_values[0:len(PHYSICAL_METRICS)]))
-        attack_avg   = float(np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)]))
-        defense_avg  = float(np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):]))
+        physical_avg = float(np.mean(percentile_values[0:len(physical_metrics)]))
+        attack_avg   = float(np.mean(percentile_values[len(physical_metrics):len(physical_metrics)+len(attack_metrics)]))
+        defense_avg  = float(np.mean(percentile_values[len(physical_metrics)+len(attack_metrics):]))
 
     # ✅ FIX: Overall score should match the table's Total column.
     # Prefer the stored 'total' value (already weighted/defined by the model); fallback to mean of category scores.
