@@ -200,8 +200,8 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     Create a polarized bar chart (circular bar chart) for a player.
     Shows 15 metrics in 3 categories: Physical (4), Attack (6), Defense (5).
 
-    ✅ FIX: Overall score shown in the chart is taken from player_data['total'] when available
-           (so it matches the Top Table 'Total'). Falls back to mean(physical, attack, defense) only if needed.
+    ✅ FIX: Overall score is taken from player_data['total'] (same as the table Total column) when available;
+           fallback is the mean of physical/attack/defense if 'total' is missing.
     """
     green = '#3E8C5E'
     red = '#E83F2A'
@@ -251,10 +251,13 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         physical_avg = float(np.mean(percentile_values[0:len(PHYSICAL_METRICS)]))
         attack_avg   = float(np.mean(percentile_values[len(PHYSICAL_METRICS):len(PHYSICAL_METRICS)+len(ATTACK_METRICS)]))
         defense_avg  = float(np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):]))
-    # ✅ FIX: Prefer the same 'total' value used in the Top Table (often position-profile weighted).
-    # Fall back to mean(physical, attack, defense) only if 'total' is missing/NaN.
-    total_val = player_data.get('total', np.nan) if isinstance(player_data, (pd.Series, dict)) else np.nan
-    overall_avg = float(total_val) if pd.notna(total_val) else float(np.mean([physical_avg, attack_avg, defense_avg]))
+
+    # ✅ FIX: Overall score should match the table's Total column.
+    # Prefer the stored 'total' value (already weighted/defined by the model); fallback to mean of category scores.
+    if 'total' in player_data.index and pd.notna(player_data.get('total')):
+        overall_avg = float(player_data['total'])
+    else:
+        overall_avg = float(np.mean([physical_avg, attack_avg, defense_avg]))
 
     metric_labels = [LABELS.get(col, col).replace('\n', '<br>') for col in plot_columns]
 
@@ -360,6 +363,21 @@ def load_data_from_supabase() -> pd.DataFrame:
             df['defense'] = df[DEFENSE_METRICS].mean(axis=1)
         if 'total' not in df.columns or df['total'].isna().all():
             df['total'] = df[['physical', 'attack', 'defense']].mean(axis=1)
+
+        # ✅ FIX 4: Calculate category scores for rows missing them (non-DM/CM players)
+        # The scouting model only calculates scores for DM/CM, so other positions have NaN
+        mask_missing_scores = (
+            df['physical'].isna() | 
+            df['attack'].isna() | 
+            df['defense'].isna()
+        )
+        
+        if mask_missing_scores.any():
+            # Calculate simple averages (equal weights) for missing scores
+            df.loc[mask_missing_scores, 'physical'] = df.loc[mask_missing_scores, PHYSICAL_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'attack'] = df.loc[mask_missing_scores, ATTACK_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'defense'] = df.loc[mask_missing_scores, DEFENSE_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'total'] = df.loc[mask_missing_scores, ['physical', 'attack', 'defense']].mean(axis=1)
 
         return df
 
