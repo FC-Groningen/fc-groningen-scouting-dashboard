@@ -109,28 +109,19 @@ LABELS = {
     "involvement_chances_tip_p30_percentile": "Betrokkenheid\nkansen",
     "ball_loss_removed_teammates_tip_p30_percentile": "Balverlies\nverwijderde\nteamgenoten",
     "ball_loss_added_opponents_tip_p30_percentile": "Balverlies\ntoegevoegde\ntegenstanders",
-    "ball_win_removed_opponents_otip_p30_percentile": "Aanvallende
-veroveringen",
-    "ball_win_added_teammates_otip_p30_percentile": "Verdedigende
-veroveringen",
+    "ball_win_removed_opponents_otip_p30_percentile": "Aanvallende\nveroveringen",
+    "ball_win_added_teammates_otip_p30_percentile": "Verdedigende\nveroveringen",
     "ground_duels_won_percentage_percentile": "Winstpercentage\ngrondduels",
     "aerial_duels_won_percentage_percentile": "Winstpercentage\nluchtduels",
     "press_total_stop_danger_otip_p30_percentile": "Gestopt gevaar\nmet verdedigende actie",
 
     "hi_distance_p90_percentile": "20+km/u\nafstand",
     "total_minutes_percentile": "Totale\nspeeltijd",
-    "bypass_midfield_defense_pass_tip_p30_percentile": "Uitgespeelde
-tegenstanders
-(pass)",
-    "bypass_midfield_defense_dribble_tip_p30_percentile": "Uitgespeelde
-tegenstanders
-(dribbel)",
-    "ground_duels_won_p90_percentile": "Gewonnen
-grondduels",
-    "aerial_duels_won_p90_percentile": "Gewonnen
-luchtduels",
-    "press_total_count_otip_p30_percentile": "Druk
-zetten",
+    "bypass_midfield_defense_pass_tip_p30_percentile": "Uitgespeelde\ntegenstanders\n(pass)",
+    "bypass_midfield_defense_dribble_tip_p30_percentile": "Uitgespeelde\ntegenstanders\n(dribbel)",
+    "ground_duels_won_p90_percentile": "Gewonnen\ngrondduels",
+    "aerial_duels_won_p90_percentile": "Gewonnen\nluchtduels",
+    "press_total_count_otip_p30_percentile": "Druk\nzetten",
 }
 
 DISPLAY_COLS = {
