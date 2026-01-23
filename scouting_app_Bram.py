@@ -253,12 +253,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         defense_avg  = float(np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):]))
 
     # ✅ FIX: Always recompute overall from these 3 values (matches table total)
-        # ✅ Overall: prefer the same 'total' value shown in the table (can be position‑profile weighted)
-    table_total = player_data.get('total', np.nan)
-    if pd.notna(table_total):
-        overall_avg = float(table_total)
-    else:
-        overall_avg = float(np.mean([physical_avg, attack_avg, defense_avg]))
+    overall_avg = float(np.mean([physical_avg, attack_avg, defense_avg]))
 
     metric_labels = [LABELS.get(col, col).replace('\n', '<br>') for col in plot_columns]
 
@@ -364,6 +359,21 @@ def load_data_from_supabase() -> pd.DataFrame:
             df['defense'] = df[DEFENSE_METRICS].mean(axis=1)
         if 'total' not in df.columns or df['total'].isna().all():
             df['total'] = df[['physical', 'attack', 'defense']].mean(axis=1)
+
+        # ✅ FIX 4: Calculate category scores for rows missing them (non-DM/CM players)
+        # The scouting model only calculates scores for DM/CM, so other positions have NaN
+        mask_missing_scores = (
+            df['physical'].isna() | 
+            df['attack'].isna() | 
+            df['defense'].isna()
+        )
+        
+        if mask_missing_scores.any():
+            # Calculate simple averages (equal weights) for missing scores
+            df.loc[mask_missing_scores, 'physical'] = df.loc[mask_missing_scores, PHYSICAL_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'attack'] = df.loc[mask_missing_scores, ATTACK_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'defense'] = df.loc[mask_missing_scores, DEFENSE_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'total'] = df.loc[mask_missing_scores, ['physical', 'attack', 'defense']].mean(axis=1)
 
         return df
 
