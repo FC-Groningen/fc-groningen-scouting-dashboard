@@ -70,6 +70,34 @@ DEFENSE_METRICS = [
     "press_total_stop_danger_otip_p30_percentile"
 ]
 
+
+
+# =============================================================================
+# DM/CM POSITION PROFILE RADAR METRICS (match scouting_model_* profile weights)
+# These are ONLY used for the radar chart variable set (Top-20 ranking stays the same).
+# =============================================================================
+DMCM_PROFILE_PHYSICAL_METRICS = [
+    "total_distance_p90_percentile",
+    "running_distance_p90_percentile",
+    "hi_distance_p90_percentile",
+    "total_minutes_percentile"
+]
+
+DMCM_PROFILE_ATTACK_METRICS = [
+    "bypass_midfield_defense_pass_tip_p30_percentile",
+    "bypass_midfield_defense_dribble_tip_p30_percentile",
+    "bypass_opponents_rec_tip_p30_percentile",
+    "off_ball_runs_total_tip_p30_percentile",
+    "involvement_chances_tip_p30_percentile"
+]
+
+DMCM_PROFILE_DEFENSE_METRICS = [
+    "ball_win_removed_opponents_otip_p30_percentile",
+    "ball_win_added_teammates_otip_p30_percentile",
+    "ground_duels_won_p90_percentile",
+    "aerial_duels_won_p90_percentile",
+    "press_total_count_otip_p30_percentile"
+]
 LABELS = {
     "total_distance_p90_percentile": "Totale\nafstand",
     "running_distance_p90_percentile": "15-20km/u\nafstand",
@@ -85,7 +113,15 @@ LABELS = {
     "ball_win_added_teammates_otip_p30_percentile": "Balverovering\ntoegevoegde\nteamgenoten",
     "ground_duels_won_percentage_percentile": "Winstpercentage\ngrondduels",
     "aerial_duels_won_percentage_percentile": "Winstpercentage\nluchtduels",
-    "press_total_stop_danger_otip_p30_percentile": "Gestopt gevaar\nmet verdedigende actie"
+    "press_total_stop_danger_otip_p30_percentile": "Gestopt gevaar\nmet verdedigende actie",
+
+    "hi_distance_p90_percentile": "20+km/u\nafstand",
+    "total_minutes_percentile": "Totale\nspeeltijd",
+    "bypass_midfield_defense_pass_tip_p30_percentile": "Uitgespeelde\ntegenstanders\n(pas)",
+    "bypass_midfield_defense_dribble_tip_p30_percentile": "Uitgespeelde\ntegenstanders\n(dribbel)",
+    "ground_duels_won_p90_percentile": "Grondduels\ngewonnen p90",
+    "aerial_duels_won_p90_percentile": "Luchtduels\ngewonnen p90",
+    "press_total_count_otip_p30_percentile": "Pressies\naantal",
 }
 
 DISPLAY_COLS = {
@@ -431,12 +467,20 @@ def percentile_0_100(series: pd.Series) -> pd.Series:
 
 
 def get_relevant_metrics_for_position(row: pd.Series, cohort: pd.DataFrame) -> dict:
-    relevant = {
-        'physical': PHYSICAL_METRICS,
-        'attack': ATTACK_METRICS,
-        'defense': DEFENSE_METRICS
-    }
-    return relevant
+    # Default metric sets (legacy radar)
+    physical = PHYSICAL_METRICS
+    attack   = ATTACK_METRICS
+    defense  = DEFENSE_METRICS
+
+    # If this row is a DM/CM position profile, use the profile-specific metric set
+    # to match how the model defines DM/CM (DEF/CRE/BTB).
+    pos_label = str(row.get("display_position", row.get("position_profile", row.get("position", ""))))
+    if pos_label.startswith("DM/CM ("):
+        physical = DMCM_PROFILE_PHYSICAL_METRICS
+        attack   = DMCM_PROFILE_ATTACK_METRICS
+        defense  = DMCM_PROFILE_DEFENSE_METRICS
+
+    return {'physical': physical, 'attack': attack, 'defense': defense}
 
 
 def build_radar_3_shapes(row: pd.Series, cohort: pd.DataFrame) -> go.Figure:
