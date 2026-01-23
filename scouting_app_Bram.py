@@ -253,7 +253,12 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         defense_avg  = float(np.mean(percentile_values[len(PHYSICAL_METRICS)+len(ATTACK_METRICS):]))
 
     # ✅ FIX: Always recompute overall from these 3 values (matches table total)
-    overall_avg = float(np.mean([physical_avg, attack_avg, defense_avg]))
+        # ✅ Overall: prefer the same 'total' value shown in the table (can be position‑profile weighted)
+    table_total = player_data.get('total', np.nan)
+    if pd.notna(table_total):
+        overall_avg = float(table_total)
+    else:
+        overall_avg = float(np.mean([physical_avg, attack_avg, defense_avg]))
 
     metric_labels = [LABELS.get(col, col).replace('\n', '<br>') for col in plot_columns]
 
