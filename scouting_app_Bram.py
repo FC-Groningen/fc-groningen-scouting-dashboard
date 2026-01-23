@@ -109,19 +109,28 @@ LABELS = {
     "involvement_chances_tip_p30_percentile": "Betrokkenheid\nkansen",
     "ball_loss_removed_teammates_tip_p30_percentile": "Balverlies\nverwijderde\nteamgenoten",
     "ball_loss_added_opponents_tip_p30_percentile": "Balverlies\ntoegevoegde\ntegenstanders",
-    "ball_win_removed_opponents_otip_p30_percentile": "Balverovering\nverwijderde\ntegenstanders",
-    "ball_win_added_teammates_otip_p30_percentile": "Balverovering\ntoegevoegde\nteamgenoten",
+    "ball_win_removed_opponents_otip_p30_percentile": "Aanvallende
+veroveringen",
+    "ball_win_added_teammates_otip_p30_percentile": "Verdedigende
+veroveringen",
     "ground_duels_won_percentage_percentile": "Winstpercentage\ngrondduels",
     "aerial_duels_won_percentage_percentile": "Winstpercentage\nluchtduels",
     "press_total_stop_danger_otip_p30_percentile": "Gestopt gevaar\nmet verdedigende actie",
 
     "hi_distance_p90_percentile": "20+km/u\nafstand",
     "total_minutes_percentile": "Totale\nspeeltijd",
-    "bypass_midfield_defense_pass_tip_p30_percentile": "Uitgespeelde\ntegenstanders\n(pas)",
-    "bypass_midfield_defense_dribble_tip_p30_percentile": "Uitgespeelde\ntegenstanders\n(dribbel)",
-    "ground_duels_won_p90_percentile": "Grondduels\ngewonnen p90",
-    "aerial_duels_won_p90_percentile": "Luchtduels\ngewonnen p90",
-    "press_total_count_otip_p30_percentile": "Pressies\naantal",
+    "bypass_midfield_defense_pass_tip_p30_percentile": "Uitgespeelde
+tegenstanders
+(pass)",
+    "bypass_midfield_defense_dribble_tip_p30_percentile": "Uitgespeelde
+tegenstanders
+(dribbel)",
+    "ground_duels_won_p90_percentile": "Gewonnen
+grondduels",
+    "aerial_duels_won_p90_percentile": "Gewonnen
+luchtduels",
+    "press_total_count_otip_p30_percentile": "Druk
+zetten",
 }
 
 DISPLAY_COLS = {
@@ -707,7 +716,11 @@ show_european_only = st.sidebar.checkbox(
     help="Filter to show only players from European countries"
 )
 
-selected_pos = st.sidebar.multiselect("Position (optional)", positions, default=positions)
+# Default selection: show DM/CM profiles first (Bram request)
+dmcm_default_positions = [p for p in ["DM/CM (DEF)", "DM/CM (CRE)", "DM/CM (BTB)"] if p in positions]
+default_positions = dmcm_default_positions if dmcm_default_positions else positions
+
+selected_pos = st.sidebar.multiselect("Position (optional)", positions, default=default_positions)
 
 # Workaround: enforce minimum minutes played IN the selected position for DM/CM profile rows
 # (prevents players with low DM/CM minutes from ranking as DM/CM profiles when they mostly played elsewhere)
