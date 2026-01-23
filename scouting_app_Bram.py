@@ -685,6 +685,18 @@ show_european_only = st.sidebar.checkbox(
 
 selected_pos = st.sidebar.multiselect("Position (optional)", positions, default=positions)
 
+# Workaround: enforce minimum minutes played IN the selected position for DM/CM profile rows
+# (prevents players with low DM/CM minutes from ranking as DM/CM profiles when they mostly played elsewhere)
+DMCM_PROFILE_MIN_POSITION_MINUTES = st.sidebar.number_input(
+    "DM/CM profile min position minutes",
+    min_value=0,
+    max_value=5000,
+    value=400,
+    step=25,
+    help="Applies only to DM/CM (DEF/CRE/BTB). Set to 0 to disable."
+)
+
+
 st.subheader("Ranking & Filtering")
 
 col1, col2, col3, col4 = st.columns(4)
@@ -707,8 +719,13 @@ position_mask = pd.Series([False] * len(df), index=df.index)
 for selected in selected_pos:
     if selected.startswith("DM/CM ("):
         # This is a position profile - filter by position_profile column
-        if 'position_profile' in df.columns:
-            position_mask |= (df["position_profile"] == selected)
+        if "position_profile" in df.columns:
+            dmcm_mask = (df["position_profile"] == selected)
+            # Workaround: require sufficient minutes played in DM/CM (position_minutes) for profile rows
+            if DMCM_PROFILE_MIN_POSITION_MINUTES and ("position_minutes" in df.columns):
+                dmcm_mask &= (df["position_minutes"].fillna(0) >= float(DMCM_PROFILE_MIN_POSITION_MINUTES))
+            position_mask |= dmcm_mask
+
     else:
         # Regular position - filter by position column
         position_mask |= (df["position"] == selected)
