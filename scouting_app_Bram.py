@@ -93,7 +93,7 @@ DISPLAY_COLS = {
     "team_name": "Team",
     "country": "Nationality",
     "age": "Age",
-    "position": "Position",
+    "display_position": "Position",
     "total_minutes": "Minutes",
     "competition_name": "Competition",
     "season_name": "Season",
@@ -334,18 +334,31 @@ def load_data_from_supabase() -> pd.DataFrame:
 
         df = pd.DataFrame(all_data)
 
-        numeric_cols = ["age", "total_minutes"] + PHYSICAL_METRICS + ATTACK_METRICS + DEFENSE_METRICS
+        # ✅ FIX 3: Include category columns in numeric conversion
+        numeric_cols = (
+            ["age", "total_minutes", "physical", "attacking", "defending", "total"] +
+            PHYSICAL_METRICS + ATTACK_METRICS + DEFENSE_METRICS
+        )
         for c in numeric_cols:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors="coerce")
 
-        # Calculate aggregate scores for display
-        df['physical'] = df[PHYSICAL_METRICS].mean(axis=1)
-        df['attack'] = df[ATTACK_METRICS].mean(axis=1)
-        df['defense'] = df[DEFENSE_METRICS].mean(axis=1)
+        # ✅ FIX 2: Rename database columns to match app expectations
+        if 'attacking' in df.columns:
+            df['attack'] = df['attacking']
+        if 'defending' in df.columns:
+            df['defense'] = df['defending']
 
-        # ✅ Keep this if you want the column, but the chart now ignores any stale/incorrect 'total' values anyway
-        df['total'] = df[['physical', 'attack', 'defense']].mean(axis=1)
+        # ✅ FIX 1: Use database scores (correctly weighted for position profiles)
+        # Only calculate if database values are missing
+        if 'physical' not in df.columns or df['physical'].isna().all():
+            df['physical'] = df[PHYSICAL_METRICS].mean(axis=1)
+        if 'attack' not in df.columns or df['attack'].isna().all():
+            df['attack'] = df[ATTACK_METRICS].mean(axis=1)
+        if 'defense' not in df.columns or df['defense'].isna().all():
+            df['defense'] = df[DEFENSE_METRICS].mean(axis=1)
+        if 'total' not in df.columns or df['total'].isna().all():
+            df['total'] = df[['physical', 'attack', 'defense']].mean(axis=1)
 
         return df
 
@@ -565,7 +578,25 @@ st.title("FC Groningen Scouting Dashboard")
 
 competitions = sorted(df["competition_name"].dropna().unique())
 seasons = sorted(df["season_name"].dropna().unique())
-positions = sorted(df["position"].dropna().unique())
+
+# Build position list that includes position profiles for DM/CM
+positions = []
+for pos in sorted(df["position"].dropna().unique()):
+    if pos == "DM/CM":
+        # For DM/CM, add the specific profiles instead of generic position
+        if 'position_profile' in df.columns:
+            profiles = df[df["position"] == "DM/CM"]["position_profile"].dropna().unique()
+            dm_cm_profiles = sorted([p for p in profiles if p and p.startswith("DM/CM")])
+            if len(dm_cm_profiles) > 0:
+                # Add the specific profiles
+                positions.extend(dm_cm_profiles)
+            else:
+                # Fallback: no profiles exist yet, add generic DM/CM
+                positions.append(pos)
+        else:
+            positions.append(pos)
+    else:
+        positions.append(pos)
 
 default_competitions = ["Eredivisie"] if "Eredivisie" in competitions else competitions
 default_seasons = ["2025/2026"] if "2025/2026" in seasons else seasons
@@ -607,11 +638,23 @@ with col3:
 with col4:
     min_defense = st.slider("Defense minimum", min_value=0, max_value=100, value=0, step=1)
 
+# Build position filter that handles both regular positions and profiles
+position_mask = pd.Series([False] * len(df), index=df.index)
+
+for selected in selected_pos:
+    if selected.startswith("DM/CM ("):
+        # This is a position profile - filter by position_profile column
+        if 'position_profile' in df.columns:
+            position_mask |= (df["position_profile"] == selected)
+    else:
+        # Regular position - filter by position column
+        position_mask |= (df["position"] == selected)
+
 mask = (
     df["competition_name"].isin(selected_comp)
     & df["season_name"].isin(selected_season)
     & df["age"].between(age_range[0], age_range[1])
-    & df["position"].isin(selected_pos)
+    & position_mask
 )
 
 if show_european_only and 'european' in df.columns:
@@ -637,6 +680,15 @@ df_f = df_f[
 if len(df_top) == 0:
     st.info("No players match the current filters.")
     st.stop()
+
+# Add display_position column that shows position_profile when available
+if 'position_profile' in df_top.columns:
+    df_top['display_position'] = df_top.apply(
+        lambda row: row['position_profile'] if pd.notna(row.get('position_profile')) and row.get('position_profile') else row['position'],
+        axis=1
+    )
+else:
+    df_top['display_position'] = df_top['position']
 
 st.subheader("Top Players Table")
 
@@ -716,7 +768,7 @@ gb.configure_column("Player Name", width=180, pinned="left", cellRenderer=player
 gb.configure_column("Team", width=200, cellRenderer=team_logo_renderer)
 gb.configure_column("Nationality", width=110)
 gb.configure_column("Age", width=80, type=["numericColumn"], sortable=True)
-gb.configure_column("Position", width=90)
+gb.configure_column("Position", width=130)  # Increased width for position profiles
 gb.configure_column("Minutes", width=100, type=["numericColumn"], sortable=True)
 gb.configure_column("Competition", width=110)
 gb.configure_column("Season", width=110)
@@ -771,7 +823,7 @@ if grid_response and 'selected_rows' in grid_response:
                 matched_row = df_top[
                     (df_top['player_name'] == player_name) &
                     (df_top['team_name'] == team_name) &
-                    (df_top['position'] == position) &
+                    (df_top['display_position'] == position) &  # Use display_position for matching
                     (df_top['competition_name'] == competition) &
                     (df_top['season_name'] == season)
                 ]
@@ -799,7 +851,7 @@ if grid_response and 'selected_rows' in grid_response:
                     matched_row = df_top[
                         (df_top['player_name'] == player_name) &
                         (df_top['team_name'] == team_name.strip()) &
-                        (df_top['position'] == position) &
+                        (df_top['display_position'] == position) &  # Use display_position for matching
                         (df_top['competition_name'] == competition) &
                         (df_top['season_name'] == season)
                     ]
@@ -841,8 +893,17 @@ selected_from_bottom_table = []
 
 if search_selected_players:
     search_df = df_search_pool[df_search_pool["player_name"].isin(search_selected_players)].copy()
+    
+    # Add display_position for search results
+    if 'position_profile' in search_df.columns:
+        search_df['display_position'] = search_df.apply(
+            lambda row: row['position_profile'] if pd.notna(row.get('position_profile')) and row.get('position_profile') else row['position'],
+            axis=1
+        )
+    else:
+        search_df['display_position'] = search_df['position']
 
-    search_cols = ["player_name", "team_name", "position", "competition_name", "season_name", "total_minutes",
+    search_cols = ["player_name", "team_name", "display_position", "competition_name", "season_name", "total_minutes",
                    "physical", "attack", "defense", "total"]
     if 'impect_url' in search_df.columns:
         search_cols.append('impect_url')
@@ -876,14 +937,14 @@ if search_selected_players:
 
     search_display["player_url"] = search_display.apply(get_search_player_url, axis=1)
 
-    display_cols = ["player_name", "team_with_logo_html", "position", "competition_name", "season_name",
+    display_cols = ["player_name", "team_with_logo_html", "display_position", "competition_name", "season_name",
                     "total_minutes", "physical", "attack", "defense", "total"]
     search_display = search_display[display_cols + ["player_url"]]
 
     search_display = search_display.rename(columns={
         "player_name": "Player Name",
         "team_with_logo_html": "Team",
-        "position": "Position",
+        "display_position": "Position",
         "competition_name": "Competition",
         "season_name": "Season",
         "total_minutes": "Minutes",
@@ -896,7 +957,7 @@ if search_selected_players:
     gb_search = GridOptionsBuilder.from_dataframe(search_display)
     gb_search.configure_column("Player Name", width=180, pinned="left", cellRenderer=player_link_renderer)
     gb_search.configure_column("Team", width=200, cellRenderer=team_logo_renderer)
-    gb_search.configure_column("Position", width=90)
+    gb_search.configure_column("Position", width=130)  # Increased width for position profiles
     gb_search.configure_column("Competition", width=110)
     gb_search.configure_column("Season", width=110)
     gb_search.configure_column("Minutes", width=100, type=["numericColumn"], sortable=True)
