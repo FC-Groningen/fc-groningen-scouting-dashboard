@@ -256,6 +256,9 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 
     is_dmcm_profile = bool(display_pos) and display_pos.startswith("DM/CM (") and display_pos.endswith(")")
 
+    # Use profile label in the chart caption when available
+    position_caption = display_pos if display_pos else (str(player_data.get('position')) if 'position' in player_data.index else "")
+
     physical_metrics = DMCM_PROFILE_PHYSICAL_METRICS if is_dmcm_profile else PHYSICAL_METRICS
     attack_metrics   = DMCM_PROFILE_ATTACK_METRICS   if is_dmcm_profile else ATTACK_METRICS
     defense_metrics  = DMCM_PROFILE_DEFENSE_METRICS  if is_dmcm_profile else DEFENSE_METRICS
@@ -1171,7 +1174,7 @@ with comparison_placeholder.container():
                     f"{team_name}",
                     f"{player_data['country']}",
                     f"Age {int(player_data['age'])}",
-                    f"{player_data['position']}",
+                    f"{position_caption}",
                     f"{int(player_data['total_minutes'])} mins"
                 ]
 
