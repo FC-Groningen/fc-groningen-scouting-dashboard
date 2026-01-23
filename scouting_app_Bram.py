@@ -1174,7 +1174,7 @@ with comparison_placeholder.container():
                     f"{team_name}",
                     f"{player_data['country']}",
                     f"Age {int(player_data['age'])}",
-                    f"{position_caption}",
+                    f"{str(player_data.get('display_position') if 'display_position' in player_data.index and pd.notna(player_data.get('display_position')) else (player_data.get('position_profile') if 'position_profile' in player_data.index and pd.notna(player_data.get('position_profile')) else player_data.get('position', '')))}",
                     f"{int(player_data['total_minutes'])} mins"
                 ]
 
