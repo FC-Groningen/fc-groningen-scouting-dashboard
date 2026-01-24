@@ -130,7 +130,7 @@ DISPLAY_COLS = {
     "country": "Nationality",
     "age": "Age",
     "display_position": "Position",
-    "minutes_display": "Minutes",
+    "total_minutes": "Minutes",
     "competition_name": "Competition",
     "season_name": "Season",
     "physical": "Physical",
@@ -635,27 +635,6 @@ if not df_impect_urls.empty:
         how='left'
     )
 
-# -------------------------
-# Minutes display logic
-# -------------------------
-# For DM/CM profile rows (e.g., "DM/CM (DEF/CRE/BTB)"), show minutes played in that profile (position_minutes)
-# instead of season total minutes. For all other rows, keep total_minutes.
-if "total_minutes" in df.columns:
-    if "position_minutes" in df.columns:
-        # Safely build a label that matches what the UI treats as the row "position"
-        _pos_label = (
-            df.get("position_profile", pd.Series([""] * len(df), index=df.index))
-              .fillna("")
-              .astype(str)
-        )
-        df["minutes_display"] = np.where(
-            _pos_label.str.startswith("DM/CM ("),
-            df["position_minutes"].fillna(df["total_minutes"]),
-            df["total_minutes"]
-        )
-    else:
-        df["minutes_display"] = df["total_minutes"]
-
 # =========================
 # SIDEBAR & FILTERS
 # =========================
@@ -829,10 +808,10 @@ df_show = df_top[cols_to_copy].copy()
 
 df_show['_original_index'] = df_top.index
 
-numeric_display_cols = ["age", "minutes_display", "physical", "attack", "defense", "total"]
+numeric_display_cols = ["age", "total_minutes", "physical", "attack", "defense", "total"]
 for col in numeric_display_cols:
     if col in df_show.columns:
-        if col == "minutes_display":
+        if col == "total_minutes":
             df_show[col] = df_show[col].round(0)
         else:
             df_show[col] = df_show[col].round(1)
@@ -1032,16 +1011,16 @@ if search_selected_players:
     else:
         search_df['display_position'] = search_df['position']
 
-    search_cols = ["player_name", "team_name", "display_position", "competition_name", "season_name", "minutes_display",
+    search_cols = ["player_name", "team_name", "display_position", "competition_name", "season_name", "total_minutes",
                    "physical", "attack", "defense", "total"]
     if 'impect_url' in search_df.columns:
         search_cols.append('impect_url')
 
     search_display = search_df[search_cols].copy()
 
-    for col in ["minutes_display", "physical", "attack", "defense", "total"]:
+    for col in ["total_minutes", "physical", "attack", "defense", "total"]:
         if col in search_display.columns:
-            if col == "minutes_display":
+            if col == "total_minutes":
                 search_display[col] = search_display[col].round(0)
             else:
                 search_display[col] = search_display[col].round(1)
@@ -1067,7 +1046,7 @@ if search_selected_players:
     search_display["player_url"] = search_display.apply(get_search_player_url, axis=1)
 
     display_cols = ["player_name", "team_with_logo_html", "display_position", "competition_name", "season_name",
-                    "minutes_display", "physical", "attack", "defense", "total"]
+                    "total_minutes", "physical", "attack", "defense", "total"]
     search_display = search_display[display_cols + ["player_url"]]
 
     search_display = search_display.rename(columns={
@@ -1076,7 +1055,7 @@ if search_selected_players:
         "display_position": "Position",
         "competition_name": "Competition",
         "season_name": "Season",
-        "minutes_display": "Minutes",
+        "total_minutes": "Minutes",
         "physical": "Physical",
         "attack": "Attack",
         "defense": "Defense",
@@ -1200,7 +1179,7 @@ with comparison_placeholder.container():
                     f"{player_data['country']}",
                     f"Age {int(player_data['age'])}",
                     f"{str(player_data.get('display_position') if 'display_position' in player_data.index and pd.notna(player_data.get('display_position')) else (player_data.get('position_profile') if 'position_profile' in player_data.index and pd.notna(player_data.get('position_profile')) else player_data.get('position', '')))}",
-                    f"{int(player_data['minutes_display'])} mins"
+                    f"{int(player_data['total_minutes'])} mins"
                 ]
 
                 if team_logo_b64:
