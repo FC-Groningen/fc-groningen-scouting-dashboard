@@ -998,6 +998,7 @@ search_selected_players = st.multiselect(
 )
 
 selected_from_bottom_table = []
+selected_from_bottom_table_full_data = []
 
 if search_selected_players:
     search_df = df_search_pool[df_search_pool["player_name"].isin(search_selected_players)].copy()
@@ -1017,6 +1018,9 @@ if search_selected_players:
         search_cols.append('impect_url')
 
     search_display = search_df[search_cols].copy()
+    
+    # Store original index to match back to full data later
+    search_display['_search_original_index'] = search_df.index
 
     for col in ["total_minutes", "physical", "attack", "defense", "total"]:
         if col in search_display.columns:
@@ -1047,7 +1051,7 @@ if search_selected_players:
 
     display_cols = ["player_name", "team_with_logo_html", "display_position", "competition_name", "season_name",
                     "total_minutes", "physical", "attack", "defense", "total"]
-    search_display = search_display[display_cols + ["player_url"]]
+    search_display = search_display[display_cols + ["player_url", "_search_original_index"]]
 
     search_display = search_display.rename(columns={
         "player_name": "Player Name",
@@ -1074,6 +1078,7 @@ if search_selected_players:
     gb_search.configure_column("Defense", width=100, type=["numericColumn"], sortable=True)
     gb_search.configure_column("Total", width=100, type=["numericColumn"], sortable=True)
     gb_search.configure_column("player_url", hide=True)
+    gb_search.configure_column("_search_original_index", hide=True)
     gb_search.configure_default_column(sortable=True, filterable=False, resizable=True)
     gb_search.configure_selection(selection_mode='multiple', use_checkbox=True, pre_selected_rows=[])
 
@@ -1094,19 +1099,31 @@ if search_selected_players:
     )
 
     selected_from_bottom_table = []
+    selected_from_bottom_table_full_data = []
     if search_grid_response and 'selected_rows' in search_grid_response:
         search_selected_rows = search_grid_response['selected_rows']
         if search_selected_rows is not None and len(search_selected_rows) > 0:
             if isinstance(search_selected_rows, pd.DataFrame):
                 selected_from_bottom_table = search_selected_rows['Player Name'].tolist()[:2]
+                # Get full data using the original index
+                for idx in search_selected_rows['_search_original_index'].tolist()[:2]:
+                    if idx in search_df.index:
+                        selected_from_bottom_table_full_data.append(search_df.loc[idx])
             elif isinstance(search_selected_rows, list) and len(search_selected_rows) > 0:
                 if isinstance(search_selected_rows[0], dict):
                     selected_from_bottom_table = [row['Player Name'] for row in search_selected_rows[:2]]
+                    # Get full data using the original index
+                    for row in search_selected_rows[:2]:
+                        if '_search_original_index' in row:
+                            idx = row['_search_original_index']
+                            if idx in search_df.index:
+                                selected_from_bottom_table_full_data.append(search_df.loc[idx])
                 else:
                     selected_from_bottom_table = search_selected_rows[:2]
 else:
     st.info("Type player names above to search across all positions and seasons.")
     selected_from_bottom_table = []
+    selected_from_bottom_table_full_data = []
 
 # ========================================
 # COMPARISON CHARTS
@@ -1116,9 +1133,9 @@ with comparison_placeholder.container():
 
     if selected_from_bottom_table:
         players_to_compare = selected_from_bottom_table
-        players_data_to_compare = []
+        players_data_to_compare = selected_from_bottom_table_full_data
         source_message = "from search table below"
-        use_exact_data = False
+        use_exact_data = len(selected_from_bottom_table_full_data) > 0
     elif selected_from_grid and selected_from_grid_full_data:
         players_to_compare = selected_from_grid
         players_data_to_compare = selected_from_grid_full_data
