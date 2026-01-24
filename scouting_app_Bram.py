@@ -1201,6 +1201,8 @@ with comparison_placeholder.container():
                     player_data['competition_name'],
                     player_data['season_name']
                 )
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                # Add unique key to prevent duplicate element ID error
+                chart_key = f"comparison_chart_{i}_{player_name.replace(' ', '_')}"
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=chart_key)
     else:
         st.info("Select players from the top table or search table below (using checkboxes) to view comparison charts.")
