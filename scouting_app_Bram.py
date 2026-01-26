@@ -9,6 +9,7 @@ from pathlib import Path
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from supabase import create_client, Client
 
+
 # =========================
 # PASSWORD PROTECTION
 # =========================
