@@ -17,7 +17,12 @@ def check_password():
     """Returns `True` if the user has entered the correct password."""
     def password_entered():
         """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == st.secrets.get("APP_PASSWORD", "fcgroningen2024"):
+        # Get password from Streamlit secrets (no fallback for security)
+        if "APP_PASSWORD" not in st.secrets:
+            st.error("⚠️ APP_PASSWORD not configured. Please contact the administrator.")
+            return
+        
+        if st.session_state["password"] == st.secrets["APP_PASSWORD"]:
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # Don't store password
         else:
