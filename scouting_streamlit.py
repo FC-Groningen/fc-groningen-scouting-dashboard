@@ -673,8 +673,8 @@ df_top = df_filtered.head(int(top_n)).copy()
 # Filter the data based on the benchmarks at the top
 df_top = df_top[
     (df_top["physical"] >= min_physical) &
-    (df_top["attack"] >= min_attack) &
-    (df_top["defense"] >= min_defense)
+    (df_top["attacking"] >= min_attack) &
+    (df_top["defending"] >= min_defense)
 ]
 
 # If no players meet the criteria, return info message
