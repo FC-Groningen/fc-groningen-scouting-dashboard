@@ -856,6 +856,5 @@ grid_response = AgGrid(
     update_mode=GridUpdateMode.SELECTION_CHANGED,
     height=615,
     fit_columns_on_grid_load=False,
-    custom_css=custom_css,
     theme='streamlit'
 )
