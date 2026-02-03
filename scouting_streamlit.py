@@ -548,22 +548,17 @@ st.markdown(
         padding-bottom: 0.05rem;
       }}
 
-    /* 1. Add space between the Logo and the "Filters" title */
-    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{
-        margin-bottom: 10px;
+    /* 1. Target ONLY the logo container to push down the title */
+    section[data-testid="stSidebar"] div[style*="text-align: center"] {{
+        margin-bottom: 30px !important;
     }}
 
-    /* 2. Add space between Slider Header and the Slider bar */
-    section[data-testid="stSidebar"] .stSlider [data-testid="stWidgetLabel"] {{
-        margin-bottom: 25px !important; /* Adjust this number to increase/decrease space */
-    }}
-
-    /* 3. Extra breathing room for the logo container specifically */
-    section[data-testid="stSidebar"] div:first-child img {{
-        margin-bottom: 20px !important;
+    /* 2. Target ONLY the label inside a slider to push the slider bar down */
+    /* This won't affect Multiselects because they use a different internal structure */
+    section[data-testid="stSidebar"] .stSlider > label {{
+        padding-bottom: 20px !important;
     }}
     
-
     </style>
     """,
 
