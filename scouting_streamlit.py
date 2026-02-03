@@ -495,10 +495,8 @@ st.markdown(
 
     /* This targets the actual text element inside the label */
       section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{
-         font-size: 26px !important; /* Massive size to confirm it works */
+         font-size: 16px !important;
          color: #000000 !important;
-         font-weight: 700 !important;
-         line-height: 1.2 !important;
         }}
 
 /* This handles the checkbox label which is structured slightly differently */
