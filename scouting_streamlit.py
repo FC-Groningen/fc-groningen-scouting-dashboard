@@ -590,7 +590,7 @@ st.subheader("Ranglijst")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
 # Create selection options for first table
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4 = st.columns(4, gap="large")
 
 with col1:
     top_n = st.number_input("Aantal spelers", min_value=1, max_value=500, value=20, step=1)
