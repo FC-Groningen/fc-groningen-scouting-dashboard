@@ -840,7 +840,7 @@ for key, label in table_columns.items():
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         gb.configure_column(
             label, 
-            width=140, 
+            width=130, 
             type=["numericColumn"] if is_numeric else []
         )
 
