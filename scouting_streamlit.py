@@ -550,24 +550,6 @@ st.markdown(
         section[data-testid="stSidebar"] .stSlider > label {{
             padding-bottom: 10px !important;
             }}
-
-
-    /* 1. Target the specific BaseWeb placeholder div */
-        div[data-baseweb="select"] div[aria-hidden="true"] {{
-            visibility: hidden;
-            position: relative;
-            }}
-
-    /* 2. Inject the new text into that same container */
-        div[data-baseweb="select"] div[aria-hidden="true"]:after {{
-            content: "Selecteer optie...";
-            visibility: visible;
-            position: absolute;
-            left: 0;
-            top: 0;
-            color: #666666; /* Adjust color as needed */
-            font-size: 14px;
-            }}
     
     </style>
     """,
@@ -603,26 +585,23 @@ with st.sidebar:
     st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True) 
 
 # Add title and subtitle at top of dashboard
-st.title("FC Groningen Scouting Dashboard")
-st.subheader("Ranking & Filtering")
+st.title("Scouting dashboard")
+st.subheader("Ranglijst")
 
 # Create selection options for first table
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    top_n = st.number_input("Top X Players", min_value=1, max_value=500, value=20, step=1)
+    top_n = st.number_input("Aantal spelers", min_value=1, max_value=500, value=20, step=1)
 
 with col2:
-    min_physical = st.slider("Physical minimum", min_value=0, max_value=100, value=0, step=1)
+    min_physical = st.slider("Fysieke benchmark", min_value=0, max_value=100, value=0, step=1)
 
 with col3:
-    min_attack = st.slider("Attack minimum", min_value=0, max_value=100, value=0, step=1)
+    min_attack = st.slider("Aanvallende benchmark", min_value=0, max_value=100, value=0, step=1)
 
 with col4:
-    min_defense = st.slider("Defense minimum", min_value=0, max_value=100, value=0, step=1)
-
-# Create subheader for first table
-st.subheader("Top Players Table")
+    min_defense = st.slider("Defensieve benchmark", min_value=0, max_value=100, value=0, step=1)
 
 # X. GET DATA
 # Get percentile data
@@ -683,7 +662,7 @@ age_range_slider = st.sidebar.slider(
 
 # Create EU player selection
 show_eu_only = st.sidebar.checkbox(
-    "EU spelers",
+    "Alleen EU spelers",
     value=False,
     help="Selecteer alleen spelers die een EU paspoort hebben"
 )
