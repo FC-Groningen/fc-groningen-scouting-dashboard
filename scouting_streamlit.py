@@ -582,6 +582,29 @@ st.markdown(
         [data-testid="stMainViewContainer"] {{
             width: 100% !important;
             }}
+
+    /* Change AgGrid Header Background and Text Color */
+        .ag-header-cell {{
+            background-color: #3E8C5E !important; /* FC Groningen Green */
+            }}
+
+    /* Target the text inside the header */
+        .ag-header-cell-text {{
+            color: #FFFFFF !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            }}
+
+    /* Change the color of the sort icons (arrows) so they are visible on green */
+        .ag-header-icon {{
+            color: #FFFFFF !important;
+            }}
+
+    /* Optional: Change the background of the pinned header specifically 
+    (where player_name is) to match */
+        .ag-pinned-left-header {{
+            background-color: #3E8C5E !important;
+            }}
     
     </style>
     """,
