@@ -457,51 +457,50 @@ st.markdown(
     <style>
     
     /* Import Proxima Nova and create fallback */
-      @import url('https://fonts.cdnfonts.com/css/proxima-nova-2');
-
-      html, body, [class*="css"], .stApp {{
+        @import url('https://fonts.cdnfonts.com/css/proxima-nova-2');
+        html, body, [class*="css"], .stApp {{
         font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-      }}
+        }}
 
     /* Create sidebar, set background color and allow vertical scrolling */ 
-      section[data-testid="stSidebar"] {{
-        background-color: #E9F4ED;
-        overflow-y: auto !important;
-      }}
+        section[data-testid="stSidebar"] {{
+            background-color: #E9F4ED;
+            overflow-y: auto !important;
+            }}
 
-    /* Make sure sidebar elements are not cut off */ 
-      section[data-testid="stSidebar"] > div {{
-        overflow-y: visible !important;
-      }}
+    /* Make sure sidebar elements are not cut off */
+        section[data-testid="stSidebar"] > div {{
+            overflow-y: visible !important;
+            }}
 
     /* Remove top padding of first element */ 
-      section[data-testid="stSidebar"] > div:first-child {{
-        padding-top: 0 !important;
-      }}
+        section[data-testid="stSidebar"] > div:first-child {{
+            padding-top: 0 !important;
+            }}
 
-    /* Set padding for the block containing all dropdowns and sliders */ 
-      section[data-testid="stSidebar"] .block-container {{
-        padding-top: 0.2rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        padding-bottom: 0.5rem !important;
-      }}
+    /* Set padding for the block containing all dropdowns and sliders */
+        section[data-testid="stSidebar"] .block-container {{
+            padding-top: 0.2rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            padding-bottom: 0.5rem !important;
+            }}
 
     /* Set padding inside block */ 
-      section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {{
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
-      }}
+        section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {{
+            padding-top: 0rem !important;
+            padding-bottom: 0rem !important;
+            }}
 
-    /* This targets the actual text element inside the label */
-      section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{
-         font-size: 16px !important;
-         color: #000000 !important;
-        }}
+    /* Set label size and color for dropdown titles */
+        section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{
+            font-size: 16px !important;
+            color: #000000 !important;
+            }}
 
     /* This handles the checkbox label which is structured slightly differently */
     section[data-testid="stSidebar"] .stCheckbox label span {{
-        font-size: 26px !important;
+        font-size: 6px !important;
         color: #000000 !important;
     }}
 
@@ -565,12 +564,6 @@ st.markdown(
     # Make sure it is able to process HTML
     unsafe_allow_html=True,
 )
-
-    # /* Set sidebar labels and their margin */    
-    # section[data-testid="stSidebar"] label {{
-    #     margin-bottom: 0.2rem !important;
-    #     font-size: 14px !important;
-    #   }}
 
 # Add elements to sidebar
 with st.sidebar:
