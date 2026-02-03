@@ -498,36 +498,23 @@ st.markdown(
             color: #000000 !important;
             }}
 
-    /* This handles the checkbox label which is structured slightly differently */
-    section[data-testid="stSidebar"] .stCheckbox label span {{
-        font-size: 6px !important;
-        color: #000000 !important;
-    }}
+    /* Set margins for dropdowns in the sidebar */
+        section[data-testid="stSidebar"] div[data-baseweb="select"] {{
+            margin-bottom: 0.3rem !important;
+            }}
 
-    /* Set margins for dropdowns in the sidebar */  
-      section[data-testid="stSidebar"] div[data-baseweb="select"] {{
-        margin-bottom: 0.3rem !important;
-      }}
+    /* Set margins for sliders in the sidebar */
+        section[data-testid="stSidebar"] div[data-testid="stSlider"] {{
+            padding-top: 0rem !important;
+            padding-bottom: 0.3rem !important;
+            }}
 
-    /* Set margins for sliders in the sidebar */  
-      section[data-testid="stSidebar"] div[data-testid="stSlider"] {{
-        padding-top: 0rem !important;
-        padding-bottom: 0.3rem !important;
-      }}
+    /* Set margins for all other elements */
+        section[data-testid="stSidebar"] .element-container {{
+            margin-bottom: 0.2rem !important;
+            }}
 
-    /* Set margins for all other elements */  
-      section[data-testid="stSidebar"] .element-container {{
-        margin-bottom: 0.2rem !important;
-      }}
 
-    /* Set fontstyle for headers in sidebar */    
-      .sb-title {{
-        font-size: 24px;
-        font-weight: 700;
-        margin: 0 0 4px 0;
-        padding: 0;
-        font-family: 'Proxima Nova', sans-serif !important;
-      }}
 
     /* Create small horizontal lines under headers */    
       .sb-rule {{
