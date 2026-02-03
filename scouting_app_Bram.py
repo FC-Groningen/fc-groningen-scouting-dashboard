@@ -635,8 +635,14 @@ with st.spinner('Loading player profiles...'):
     df_impect_urls = load_impect_urls_from_supabase()
 
 if not df_impect_urls.empty:
+    # Deduplicate: keep one URL per player/iteration/position to avoid row multiplication on merge
+    df_impect_urls_deduped = (
+        df_impect_urls[['player_id', 'iterationid', 'position', 'impect_url']]
+        .dropna(subset=['impect_url'])
+        .drop_duplicates(subset=['player_id', 'iterationid', 'position'], keep='first')
+    )
     df = df.merge(
-        df_impect_urls[['player_id', 'iterationid', 'position', 'impect_url']],
+        df_impect_urls_deduped,
         on=['player_id', 'iterationid', 'position'],
         how='left'
     )
