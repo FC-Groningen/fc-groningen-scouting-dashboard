@@ -606,9 +606,15 @@ with st.spinner('Loading Impect connection...'):
 
 # Merge Impect url to the players data
 if not df_impect_urls.empty:
+    # Create a unique lookup table from the URL data
+    url_lookup = df_impect_urls[['player_id', 'position', 'impect_url']].drop_duplicates(
+        subset=['player_id', 'position']
+    )
+
+    # Merge onto  main data
     df_player_data = df_player_data.merge(
-        df_impect_urls[['player_id', 'iterationid', 'position', 'impect_url']],
-        on=['player_id', 'iterationid', 'position'],
+        url_lookup,
+        on=['player_id', 'position'],
         how='left'
     )
 
