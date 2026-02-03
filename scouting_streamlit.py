@@ -492,11 +492,13 @@ st.markdown(
         padding-top: 0rem !important;
         padding-bottom: 0rem !important;
       }}
-    
-    /* Set sidebar labels and their margin */    
-    section[data-testid="stSidebar"] label {{
-        margin-bottom: 0.2rem !important;
-        font-size: 24px !important;
+
+    /* Standardize all labels in the sidebar */
+      section[data-testid="stSidebar"] label {{
+        color: #FFFFFF !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        margin-bottom: 8px !important;
       }}
 
     /* Set margins for dropdowns in the sidebar */  
@@ -532,7 +534,9 @@ st.markdown(
       }}
 
     /* Set fontcolor for sliderscan  */   
-      div[data-testid="stSlider"] * {{ color: #000000 !important; }}
+      section[data-testid="stSidebar"] div[data-testid="stSlider"] label {{
+          color: #FFFFFF !important;
+      }}
 
     /* Set padding for all vertical blocks */       
       div[data-testid="stVerticalBlock"] > div {{
@@ -546,6 +550,12 @@ st.markdown(
     # Make sure it is able to process HTML
     unsafe_allow_html=True,
 )
+
+    # /* Set sidebar labels and their margin */    
+    # section[data-testid="stSidebar"] label {{
+    #     margin-bottom: 0.2rem !important;
+    #     font-size: 14px !important;
+    #   }}
 
 # Add elements to sidebar
 with st.sidebar:
@@ -793,130 +803,3 @@ grid_response = AgGrid(
     fit_columns_on_grid_load=False,
     theme='streamlit'
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Temp: load csv instead of Supabase
-# @st.cache_data(ttl=3600)
-# def load_csv(path):
-#     return pd.read_csv(path)
-
-# df = load_csv("/Users/data-analist/Downloads/sample_data.csv")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Appendix
-# Load data from supabase with help code to manually create category totals
-@st.cache_data(ttl=3600)
-def load_data_from_supabase() -> pd.DataFrame:
-    """_"""
-    try:
-
-        # Create Supabase client using the url and key
-        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-        # Create pagination so all data can be fetched
-        count_response = supabase.table('player_percentiles').select("*", count='exact').limit(1).execute()
-        total_count = count_response.count
-
-        all_data = []
-        page_size = 1000
-
-        for offset in range(0, total_count, page_size):
-            response = supabase.table('player_percentiles').select("*").range(offset, offset + page_size - 1).execute()
-            all_data.extend(response.data)
-
-        df = pd.DataFrame(all_data)
-
-        # # This is probably temp until the scouting model code is alligned
-        # # Make sure all columns are numeric
-        # numeric_cols = (
-        #     ["age", "total_minutes", "physical", "attacking", "defending", "total"] +
-        #     PHYSICAL_METRICS + ATTACK_METRICS + DEFENSE_METRICS
-        # )
-        # for c in numeric_cols:
-        #     if c in df.columns:
-        #         df[c] = pd.to_numeric(df[c], errors="coerce")
-
-        # # Rename columns for uniformity
-        # if 'attacking' in df.columns:
-        #     df['attack'] = df['attacking']
-        # if 'defending' in df.columns:
-        #     df['defense'] = df['defending']
-
-        # # Calculate category averages when they are missing
-        # if 'physical' not in df.columns or df['physical'].isna().all():
-        #     df['physical'] = df[PHYSICAL_METRICS].mean(axis=1)
-        # if 'attack' not in df.columns or df['attack'].isna().all():
-        #     df['attack'] = df[ATTACK_METRICS].mean(axis=1)
-        # if 'defense' not in df.columns or df['defense'].isna().all():
-        #     df['defense'] = df[DEFENSE_METRICS].mean(axis=1)
-        # if 'total' not in df.columns or df['total'].isna().all():
-        #     df['total'] = df[['physical', 'attack', 'defense']].mean(axis=1)
-
-        # # Calculate category scores for rows missing them
-        # mask_missing_scores = (
-        #     df['physical'].isna() | 
-        #     df['attack'].isna() | 
-        #     df['defense'].isna()
-        # )
-        
-        # if mask_missing_scores.any():
-        #     df.loc[mask_missing_scores, 'physical'] = df.loc[mask_missing_scores, PHYSICAL_METRICS].mean(axis=1)
-        #     df.loc[mask_missing_scores, 'attack'] = df.loc[mask_missing_scores, ATTACK_METRICS].mean(axis=1)
-        #     df.loc[mask_missing_scores, 'defense'] = df.loc[mask_missing_scores, DEFENSE_METRICS].mean(axis=1)
-        #     df.loc[mask_missing_scores, 'total'] = df.loc[mask_missing_scores, ['physical', 'attack', 'defense']].mean(axis=1)
-
-        return df
-
-    except Exception as e:
-        st.error(f"Error loading data from Supabase: {str(e)}")
-        st.info("Please check your Supabase credentials in .streamlit/secrets.toml")
-        st.stop()
-        return pd.DataFrame()
-    
