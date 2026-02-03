@@ -583,28 +583,28 @@ st.markdown(
             width: 100% !important;
             }}
 
-    /* Change AgGrid Header Background and Text Color */
-        .ag-header-cell {{
-            background-color: #3E8C5E !important; /* FC Groningen Green */
+    /* 1. Target the CSS variables AgGrid uses for the theme */
+        .ag-theme-streamlit, .ag-theme-alpine {{
+            --ag-header-background-color: #3E8C5E !important;
+            --ag-header-foreground-color: #FFFFFF !important;
             }}
 
-    /* Target the text inside the header */
-        .ag-header-cell-text {{
+    /* 2. Target the specific header container */
+        .ag-header {{
+            background-color: #3E8C5E !important;
+            border-bottom: 1px solid #2d6a47 !important;
+        }}
+
+    /* 3. Force the text color on all header labels */
+        .ag-header-cell-label, .ag-header-cell-text {{
             color: #FFFFFF !important;
-            font-weight: 600 !important;
-            font-size: 14px !important;
-            }}
+        }}
 
-    /* Change the color of the sort icons (arrows) so they are visible on green */
-        .ag-header-icon {{
-            color: #FFFFFF !important;
-            }}
-
-    /* Optional: Change the background of the pinned header specifically 
-    (where player_name is) to match */
+    /* 4. Fix the pinned left header background */
         .ag-pinned-left-header {{
             background-color: #3E8C5E !important;
-            }}
+            border-right: 1px solid #2d6a47 !important;
+        }}
     
     </style>
     """,
