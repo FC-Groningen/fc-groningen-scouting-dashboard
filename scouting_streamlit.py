@@ -824,7 +824,7 @@ gb = GridOptionsBuilder.from_dataframe(df_show)
 gb.configure_column(table_columns["original_rank"], width=75, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
-gb.configure_column(table_columns["position_profile"], width=150)
+# gb.configure_column(table_columns["position_profile"], width=150)
 
 # 2. Automatically configure the rest of the columns from your dictionary
 # This saves you from writing 10+ lines of repetitive code
@@ -834,7 +834,7 @@ for key, label in table_columns.items():
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         gb.configure_column(
             label, 
-            width=120, 
+            width=140, 
             type=["numericColumn"] if is_numeric else []
         )
 
