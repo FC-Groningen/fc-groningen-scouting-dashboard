@@ -493,13 +493,19 @@ st.markdown(
         padding-bottom: 0rem !important;
       }}
 
-    /* Standardize all labels in the sidebar */
-      section[data-testid="stSidebar"] label {{
-        color: #000000 !important;
+    /* This targets the actual text element inside the label */
+      section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{
+         font-size: 26px !important; /* Massive size to confirm it works */
+         color: #000000 !important;
+         font-weight: 700 !important;
+         line-height: 1.2 !important;
+        }}
+
+/* This handles the checkbox label which is structured slightly differently */
+    section[data-testid="stSidebar"] .stCheckbox label span {{
         font-size: 26px !important;
-        font-weight: 600 !important;
-        margin-bottom: 8px !important;
-      }}
+        color: #000000 !important;
+    }}
 
     /* Set margins for dropdowns in the sidebar */  
       section[data-testid="stSidebar"] div[data-baseweb="select"] {{
@@ -535,7 +541,7 @@ st.markdown(
 
     /* Set fontcolor for sliderscan  */   
       section[data-testid="stSidebar"] div[data-testid="stSlider"] label {{
-          color: #FFFFFF !important;
+          color: #000000 !important;
       }}
 
     /* Set padding for all vertical blocks */       
