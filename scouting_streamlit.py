@@ -418,19 +418,19 @@ validate_profiles(metrics, position_profiles)
 # X. Not sure where to put this yet
 table_columns = {
     "original_rank": "#",
-    "player_name": "Player",
-    "team_with_logo_html": "Team",
-    "country": "Nationality",
-    "age": "Age",
-    "position_profile": "Position",
-    "total_minutes": "Total min.",
-    "position_minutes": "Position min.",
-    "competition_name": "Competition",
-    "season_name": "Season",
-    "physical": "Physical",
-    "attacking": "Attack",
-    "defending": "Defense",
-    "total": "Total",
+    "player_name": "Speler",
+    "team_with_logo_html": "Club",
+    "country": "Nationaliteit",
+    "age": "Leeftijd",
+    "position_profile": "Positie",
+    "total_minutes": "Alle minuten",
+    "position_minutes": "Minuten",
+    "competition_name": "Competitie",
+    "season_name": "Seizoen",
+    "physical": "Fysiek",
+    "attacking": "Aanvallend",
+    "defending": "Verdedigend",
+    "total": "Totaal",
 }
 
 FC_GRONINGEN_GREEN = "#3E8C5E"
@@ -606,11 +606,11 @@ with col4:
 
 # X. GET DATA
 # Get percentile data
-with st.spinner('Loading player data...'):
+with st.spinner('Ophalen van de data...'):
     df_player_data = load_data_from_supabase()
 
 # Get Impect urls
-with st.spinner('Loading Impect connection...'):
+with st.spinner('Creëeren van Impect connectie...'):
     df_impect_urls = load_impect_urls_from_supabase()
 
 # Merge Impect url to the players data
@@ -718,10 +718,10 @@ technical_cols = ["team_name", "impect_url"]
 df_show = df_top.copy()
 
 # Round numeric columns
-numeric_columns = ["age", "total_minutes", "physical", "attacking", "defending", "total"]
+numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
 for col in numeric_columns:
     if col in df_show.columns:
-        decimals = 0 if col == "total_minutes" else 1
+        decimals = 0 if col in ["total_minutes", "position_minutes"] else 1
         df_show[col] = df_show[col].round(decimals)
 
 # Create dynamic url and team logo columns
