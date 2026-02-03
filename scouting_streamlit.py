@@ -551,7 +551,22 @@ st.markdown(
             padding-bottom: 10px !important;
             }}
 
+    /* 1. Target the main content container specifically */
+        [data-testid="stAppViewBlockContainer"] {{
+            padding-top: 1rem !important; /* Reduces the 6rem default to 1rem */
+            margin-top: 0px !important;
+            }}
 
+    /* 2. Pull the Title (h1) up even further if needed */
+        h1 {{
+            margin-top: -30px !important;
+            padding-top: 0px !important;
+            }}
+
+    /* 3. Reduce the gap between the Ranking headers and the column inputs */
+        .stSubheader {{
+            margin-top: -10px !important;
+            }}
     
     </style>
     """,
