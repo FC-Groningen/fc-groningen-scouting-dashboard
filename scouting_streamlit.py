@@ -551,17 +551,22 @@ st.markdown(
             padding-bottom: 10px !important;
             }}
 
-    /* Hide the default "Choose options" text */
-        section[data-testid="stSidebar"] div[data-baseweb="select"] [data-testid="stText"] {{
-            display: none !important;
+
+    /* 1. Target the specific BaseWeb placeholder div */
+        div[data-baseweb="select"] div[aria-hidden="true"] {{
+            visibility: hidden;
+            position: relative;
             }}
 
-    /* Insert custom placeholder text */
-        section[data-testid="stSidebar"] div[data-baseweb="select"] div[role="combobox"]:after {{
+    /* 2. Inject the new text into that same container */
+        div[data-baseweb="select"] div[aria-hidden="true"]:after {{
             content: "Selecteer optie...";
-            color: #666666;
+            visibility: visible;
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #666666; /* Adjust color as needed */
             font-size: 14px;
-            padding-left: 8px;
             }}
     
     </style>
