@@ -546,11 +546,23 @@ st.markdown(
             padding-bottom: 0.05rem;
             }}
 
-    /* 2. Target ONLY the label inside a slider to push the slider bar down */
-    /* This won't affect Multiselects because they use a different internal structure */
-    section[data-testid="stSidebar"] .stSlider > label {{
-        padding-bottom: 10px !important;
-    }}
+    /* Add some spacing between slider header */
+        section[data-testid="stSidebar"] .stSlider > label {{
+            padding-bottom: 10px !important;
+            }}
+
+    /* Hide the default "Choose options" text */
+        section[data-testid="stSidebar"] div[data-baseweb="select"] [data-testid="stText"] {{
+            display: none !important;
+            }}
+
+    /* Insert custom placeholder text */
+        section[data-testid="stSidebar"] div[data-baseweb="select"] div[role="combobox"]:after {{
+            content: "Selecteer optie...";
+            color: #666666;
+            font-size: 14px;
+            padding-left: 8px;
+            }}
     
     </style>
     """,
@@ -641,9 +653,9 @@ default_seasons = ["2025/2026"] if "2025/2026" in seasons else seasons
 default_positions = [p for p in ["DM/CM (DEF)", "DM/CM (CRE)", "DM/CM (BTB)"] if p in positions]    
 
 # Create dropdowns
-dropdown_competition = st.sidebar.multiselect("Competition", competitions, default=default_competitions)
-dropdown_season = st.sidebar.multiselect("Season", seasons, default=default_seasons)
-dropdown_positions = st.sidebar.multiselect("Position", positions, default=positions)
+dropdown_competition = st.sidebar.multiselect("Competitie", competitions, default=default_competitions)
+dropdown_season = st.sidebar.multiselect("Seizoen", seasons, default=default_seasons)
+dropdown_positions = st.sidebar.multiselect("Positie (profiel)", positions, default=positions)
 
 # Make the teams dropdown dynamic for the selected competition and season
 teams = sorted(df_player_data[
@@ -651,24 +663,24 @@ teams = sorted(df_player_data[
     df_player_data["season_name"].isin(dropdown_season)
 ]["team_name"].dropna().unique())
 
-dropdown_teams = st.sidebar.multiselect("Team", teams, default=[])
-
-# Create EU player selection
-show_eu_only = st.sidebar.checkbox(
-    "EU players only",
-    value=False,
-    help="Filter to show only players from countries part of the EU"
-)
+dropdown_teams = st.sidebar.multiselect("Club", teams, default=[])
 
 # Create age range slider
 age_min = int(np.nanmin(df_player_data["age"].values))
 age_max = int(np.nanmax(df_player_data["age"].values))
 age_range_slider = st.sidebar.slider(
-    "Age range",
+    "Leeftijd range",
     min_value=age_min,
     max_value=age_max,
     value=(age_min, age_max),
     step=1,
+)
+
+# Create EU player selection
+show_eu_only = st.sidebar.checkbox(
+    "EU spelers",
+    value=False,
+    help="Selecteer alleen spelers die een EU paspoort hebben"
 )
 
 # Create a filter mask based on the dropdowns
