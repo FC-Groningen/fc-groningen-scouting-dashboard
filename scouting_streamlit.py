@@ -496,7 +496,7 @@ st.markdown(
     /* Set sidebar labels and their margin */    
     section[data-testid="stSidebar"] label {{
         margin-bottom: 0.2rem !important;
-        font-size: 16px !important;
+        font-size: 24px !important;
       }}
 
     /* Set margins for dropdowns in the sidebar */  
