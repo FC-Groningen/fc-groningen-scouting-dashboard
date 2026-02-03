@@ -473,9 +473,11 @@ st.markdown(
             overflow-y: visible !important;
             }}
 
-    /* Remove top padding of first element */ 
-        section[data-testid="stSidebar"] > div:first-child {{
-            padding-top: 0 !important;
+
+
+    /* Create space underneath logo */
+        section[data-testid="stSidebar"] div[style*="text-align: center"] {{
+            margin-bottom: 50px !important;
             }}
 
     /* Set padding for the block containing all dropdowns and sliders */
@@ -514,30 +516,32 @@ st.markdown(
             margin-bottom: 0.2rem !important;
             }}
 
-
-
-    /* Create small horizontal lines under headers */    
-      .sb-rule {{
-        height: 1px;
-        background: rgba(0,0,0,0.12);
-        margin: 0 0 8px 0;
+    /* Set fontstyle for headers in sidebar */
+        .sb-title {{
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+            padding: 0;
+            font-family: 'Proxima Nova', sans-serif !important;
       }}
 
-    /* Set fontcolor for sliderscan  */   
-      section[data-testid="stSidebar"] div[data-testid="stSlider"] label {{
-          color: #000000 !important;
-      }}
+    /* Create small horizontal lines under headers */
+        .sb-rule {{
+            height: 1px;
+            background: rgba(0,0,0,0.12);
+            margin: 0 0 8px 0;
+            }}
 
-    /* Set padding for all vertical blocks */       
-      div[data-testid="stVerticalBlock"] > div {{
-        padding-top: 0.05rem;
-        padding-bottom: 0.05rem;
-      }}
+    /* Set fontcolor for slider  */   
+        section[data-testid="stSidebar"] div[data-testid="stSlider"] label {{
+            color: #000000 !important;
+            }}
 
-    /* 1. Target ONLY the logo container to push down the title */
-    section[data-testid="stSidebar"] div[style*="text-align: center"] {{
-        margin-bottom: 50px !important;
-    }}
+    /* Set padding for all vertical blocks */
+        div[data-testid="stVerticalBlock"] > div {{
+            padding-top: 0.05rem;
+            padding-bottom: 0.05rem;
+            }}
 
     /* 2. Target ONLY the label inside a slider to push the slider bar down */
     /* This won't affect Multiselects because they use a different internal structure */
