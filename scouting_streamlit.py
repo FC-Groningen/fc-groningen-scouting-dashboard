@@ -797,10 +797,11 @@ class TeamLogoRenderer {
 
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
-# 1. Handle the Pinned/Special Columns specifically
+# 1. Set the width of specific columns
 gb.configure_column(table_columns["original_rank"], width=70, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
+gb.configure_column(table_columns["position_profile"], width=250)
 
 # 2. Automatically configure the rest of the columns from your dictionary
 # This saves you from writing 10+ lines of repetitive code
