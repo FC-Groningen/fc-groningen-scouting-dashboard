@@ -208,8 +208,8 @@ def build_radar_3_shapes(row, profile_name):
     # Add the three specific layers with  color scheme
     layers = [
         ('physical', "Fysiek", "#3E8C5E", "rgba(62, 140, 94, 0.25)"),
-        ('attack',   "Aanval",  "#E83F2A", "rgba(232, 63, 42, 0.25)"),
-        ('defense',  "Verdediging", "#F2B533", "rgba(242, 181, 51, 0.25)")
+        ('attacking',   "Aanval",  "#E83F2A", "rgba(232, 63, 42, 0.25)"),
+        ('defending',  "Verdediging", "#F2B533", "rgba(242, 181, 51, 0.25)")
     ]
 
     for key, label, line_col, fill_col in layers:
@@ -350,8 +350,8 @@ def create_team_html_with_logo(row):
 # Enumeration of metric categories
 class MetricCategory(str, Enum):
     PHYSICAL = "physical"
-    ATTACK = "attack"
-    DEFENSE = "defense"
+    ATTACK = "attacking"
+    DEFENSE = "defending"
 
 # Single metric definition
 @dataclass(frozen=True)
@@ -428,8 +428,8 @@ table_columns = {
     "competition_name": "Competition",
     "season_name": "Season",
     "physical": "Physical",
-    "attack": "Attack",
-    "defense": "Defense",
+    "attacking": "Attack",
+    "defending": "Defense",
     "total": "Total",
 }
 
@@ -696,7 +696,7 @@ technical_cols = ["team_name", "impect_url"]
 df_show = df_top.copy()
 
 # Round numeric columns
-numeric_columns = ["age", "total_minutes", "physical", "attack", "defense", "total"]
+numeric_columns = ["age", "total_minutes", "physical", "attacking", "defending", "total"]
 for col in numeric_columns:
     if col in df_show.columns:
         decimals = 0 if col == "total_minutes" else 1
@@ -753,7 +753,7 @@ gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRendere
 for key, label in table_columns.items():
     if key not in ["original_rank", "player_name", "team_with_logo_html"]:
         # Check if it's a numeric column for right-alignment
-        is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attack", "defense", "total"]
+        is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         gb.configure_column(
             label, 
             width=110, 
