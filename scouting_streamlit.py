@@ -550,7 +550,7 @@ st.markdown(
 
     /* 1. Target ONLY the logo container to push down the title */
     section[data-testid="stSidebar"] div[style*="text-align: center"] {{
-        margin-bottom: 30px !important;
+        margin-bottom: 50px !important;
     }}
 
     /* 2. Target ONLY the label inside a slider to push the slider bar down */
