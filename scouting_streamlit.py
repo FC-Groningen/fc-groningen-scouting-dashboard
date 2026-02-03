@@ -818,6 +818,12 @@ class TeamLogoRenderer {
 }
 """)
 
+custom_css = {
+    ".ag-header-cell": {"background-color": "#3E8C5E !important"},
+    ".ag-header-cell-text": {"color": "#FFFFFF !important"},
+    ".ag-pinned-left-header": {"background-color": "#3E8C5E !important"}
+}
+
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
 # 1. Set the width of specific columns
@@ -829,12 +835,12 @@ gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRendere
 # 2. Automatically configure the rest of the columns from your dictionary
 # This saves you from writing 10+ lines of repetitive code
 for key, label in table_columns.items():
-    if key not in ["original_rank", "player_name", "team_with_logo_html"]:
+    if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
         # Check if it's a numeric column for right-alignment
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         gb.configure_column(
             label, 
-            width=140, 
+            width=150, 
             type=["numericColumn"] if is_numeric else []
         )
 
