@@ -495,8 +495,8 @@ st.markdown(
 
     /* Standardize all labels in the sidebar */
       section[data-testid="stSidebar"] label {{
-        color: #FFFFFF !important;
-        font-size: 16px !important;
+        color: #000000 !important;
+        font-size: 26px !important;
         font-weight: 600 !important;
         margin-bottom: 8px !important;
       }}
