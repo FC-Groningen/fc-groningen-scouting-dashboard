@@ -829,7 +829,7 @@ gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRendere
 # 2. Automatically configure the rest of the columns from your dictionary
 # This saves you from writing 10+ lines of repetitive code
 for key, label in table_columns.items():
-    if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
+    if key not in ["original_rank", "player_name", "team_with_logo_html"]:
         # Check if it's a numeric column for right-alignment
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         gb.configure_column(
