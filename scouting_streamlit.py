@@ -621,20 +621,25 @@ if not df_impect_urls.empty:
 # Find unique variables to show in the dropdowns
 competitions = sorted(df_player_data["competition_name"].dropna().unique())
 seasons = sorted(df_player_data["season_name"].dropna().unique())
-teams = sorted(df_player_data["team_name"].dropna().unique())
 positions = sorted(df_player_data["position_profile"].dropna().unique())
 
 # Set default in the selection
 default_competitions = ["Eredivisie"] if "Eredivisie" in competitions else competitions
 default_seasons = ["2025/2026"] if "2025/2026" in seasons else seasons
-default_teams = []
 default_positions = [p for p in ["DM/CM (DEF)", "DM/CM (CRE)", "DM/CM (BTB)"] if p in positions]    
 
 # Create dropdowns
 dropdown_competition = st.sidebar.multiselect("Competition", competitions, default=default_competitions)
 dropdown_season = st.sidebar.multiselect("Season", seasons, default=default_seasons)
-dropdown_teams = st.sidebar.multiselect("Team", teams, default=default_teams)
 dropdown_positions = st.sidebar.multiselect("Position", positions, default=positions)
+
+# Make the teams dropdown dynamic for the selected competition and season
+teams = sorted(df_player_data[
+    df_player_data["competition_name"].isin(dropdown_competition) & 
+    df_player_data["season_name"].isin(dropdown_season)
+]["team_name"].dropna().unique())
+
+dropdown_teams = st.sidebar.multiselect("Team", teams, default=[])
 
 # Create EU player selection
 show_eu_only = st.sidebar.checkbox(
@@ -658,10 +663,12 @@ age_range_slider = st.sidebar.slider(
 mask = (
     df_player_data["competition_name"].isin(dropdown_competition)
     & df_player_data["season_name"].isin(dropdown_season)
-    #& df_player_data["team_name"].isin(dropdown_teams)
     & df_player_data["age"].between(age_range_slider[0], age_range_slider[1])
     & df_player_data["position_profile"].isin(dropdown_positions)
 )
+
+if dropdown_teams:
+    mask &= df_player_data["team_name"].isin(dropdown_teams)
 
 if show_eu_only and 'european' in df_player_data.columns:
     mask &= (df_player_data["european"] == True)
