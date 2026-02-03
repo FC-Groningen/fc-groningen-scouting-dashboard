@@ -465,7 +465,7 @@ st.markdown(
 
     /* Create sidebar, set background color and allow vertical scrolling */ 
       section[data-testid="stSidebar"] {{
-        background-color: #94CDAA;
+        background-color: #E9F4ED;
         overflow-y: auto !important;
       }}
 
