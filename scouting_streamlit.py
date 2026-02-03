@@ -550,6 +550,23 @@ st.markdown(
         section[data-testid="stSidebar"] .stSlider > label {{
             padding-bottom: 10px !important;
             }}
+
+    /* 1. Pull the main page content up */
+        .stAppViewMain [data-testid="stVerticalBlock"]:first-child {{
+            padding-top: 0rem !important;
+            margin-top: -30px !important;
+            }}
+
+    /* 2. Remove the empty header bar space */
+        header[data-testid="stHeader"] {{
+            height: 0px !important;
+            display: none !important;
+            }}
+
+    /* 3. Tighten the gap between the green title line and the subheader */
+        .sb-rule + div .stSubheader {{
+            margin-top: -15px !important;
+            }}
     
     </style>
     """,
