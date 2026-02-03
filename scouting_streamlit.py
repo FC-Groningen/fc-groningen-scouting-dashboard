@@ -854,7 +854,7 @@ grid_response = AgGrid(
     enable_enterprise_modules=False,
     allow_unsafe_jscode=True,
     update_mode=GridUpdateMode.SELECTION_CHANGED,
-    height=200,
+    height=615,
     fit_columns_on_grid_load=False,
-    theme='alpine'
+    theme='streamlit'
 )
