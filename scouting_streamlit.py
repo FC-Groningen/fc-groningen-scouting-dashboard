@@ -567,6 +567,21 @@ st.markdown(
         .stSubheader {{
             margin-top: -10px !important;
             }}
+
+    /* 1. Adjust the sidebar width */
+        [data-testid="stSidebar"] {{
+            width: 250px !important; /* Default is usually ~336px */
+            }}
+
+    /* 2. Adjust the main content margin to match the new sidebar width */
+        [data-testid="stAppViewMain"] {{
+            margin-left: 0px !important;
+            }}
+
+    /* 3. Ensure the main container expands to fill the freed-up space */
+        [data-testid="stMainViewContainer"] {{
+            width: 100% !important;
+            }}
     
     </style>
     """,
