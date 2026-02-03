@@ -499,7 +499,7 @@ st.markdown(
          color: #000000 !important;
         }}
 
-/* This handles the checkbox label which is structured slightly differently */
+    /* This handles the checkbox label which is structured slightly differently */
     section[data-testid="stSidebar"] .stCheckbox label span {{
         font-size: 26px !important;
         color: #000000 !important;
@@ -547,6 +547,22 @@ st.markdown(
         padding-top: 0.05rem;
         padding-bottom: 0.05rem;
       }}
+
+    /* 1. Add space between the Logo and the "Filters" title */
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{
+        margin-bottom: 10px;
+    }}
+
+    /* 2. Add space between Slider Header and the Slider bar */
+    section[data-testid="stSidebar"] .stSlider [data-testid="stWidgetLabel"] {{
+        margin-bottom: 25px !important; /* Adjust this number to increase/decrease space */
+    }}
+
+    /* 3. Extra breathing room for the logo container specifically */
+    section[data-testid="stSidebar"] div:first-child img {{
+        margin-bottom: 20px !important;
+    }}
+    
 
     </style>
     """,
