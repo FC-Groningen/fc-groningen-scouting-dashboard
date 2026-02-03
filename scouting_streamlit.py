@@ -818,12 +818,6 @@ class TeamLogoRenderer {
 }
 """)
 
-custom_css = {
-    ".ag-header-cell": {"background-color": "#3E8C5E !important"},
-    ".ag-header-cell-text": {"color": "#FFFFFF !important"},
-    ".ag-pinned-left-header": {"background-color": "#3E8C5E !important"}
-}
-
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
 # 1. Set the width of specific columns
