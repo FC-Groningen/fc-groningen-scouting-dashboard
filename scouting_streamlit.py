@@ -473,7 +473,10 @@ st.markdown(
             overflow-y: visible !important;
             }}
 
-
+    /* Remove top padding of first element */ 
+        section[data-testid="stSidebar"] > div:first-child {{
+            padding-top: 0 !important;
+            }}
 
     /* Create space underneath logo */
         section[data-testid="stSidebar"] div[style*="text-align: center"] {{
