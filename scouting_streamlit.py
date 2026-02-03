@@ -584,7 +584,7 @@ st.markdown(
             }}
 
     /* 1. Target the CSS variables AgGrid uses for the theme */
-        .ag-theme-streamlit, .ag-theme-alpine {{
+        .ag-theme-streamlit {{
             --ag-header-background-color: #3E8C5E !important;
             --ag-header-foreground-color: #FFFFFF !important;
             }}
