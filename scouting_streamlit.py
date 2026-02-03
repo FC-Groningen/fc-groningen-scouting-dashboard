@@ -652,7 +652,7 @@ age_range_slider = st.sidebar.slider(
 mask = (
     df_player_data["competition_name"].isin(dropdown_competition)
     & df_player_data["season_name"].isin(dropdown_season)
-    & df_player_data["team_name"].isin(dropdown_teams)
+    #& df_player_data["team_name"].isin(dropdown_teams)
     & df_player_data["age"].between(age_range_slider[0], age_range_slider[1])
     & df_player_data["position_profile"].isin(dropdown_positions)
 )
@@ -685,8 +685,8 @@ if len(df_top) == 0:
 # TEMP: Not sure if this is needed
 df_filtered = df_filtered[
     (df_filtered["physical"] >= min_physical) &
-    (df_filtered["attack"] >= min_attack) &
-    (df_filtered["defense"] >= min_defense)
+    (df_filtered["attacking"] >= min_attack) &
+    (df_filtered["defending"] >= min_defense)
 ]
 
 # Add technical columns you need for the logic but don't want to show
