@@ -556,7 +556,7 @@ st.markdown(
     /* 2. Target ONLY the label inside a slider to push the slider bar down */
     /* This won't affect Multiselects because they use a different internal structure */
     section[data-testid="stSidebar"] .stSlider > label {{
-        padding-bottom: 20px !important;
+        padding-bottom: 10px !important;
     }}
     
     </style>
