@@ -1123,7 +1123,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 showgrid=True,            # Built-in vertical lines
                 gridcolor='rgba(0,0,0,0.1)', 
                 ticks='', 
-                showline=False,
+                showline=True,
                 layer='below traces'      # Correct placement: inside angularaxis
             )
         ),
@@ -1135,13 +1135,12 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 text="",
                 showarrow=False,
                 height=80, width=80,
-                bgcolor="white",
                 opacity=1,
                 ax=0, ay=0
             ),
             # The actual score
             dict(
-                text=f"<b>{overall_avg:.0f}</b>", 
+                text=f"<b>{overall_avg:.1f}</b>", 
                 x=0.5, y=0.5, 
                 showarrow=False,
                 font=dict(size=28, color='black'), 
