@@ -804,31 +804,55 @@ function(params) {
 """)
 
 # Conditional formatting
+COLOR_THRESHOLD = 40
 gradient_js = JsCode("""
-function(params) {
-    if (params.value == null || isNaN(params.value)) return {};
+function(params) {{
+    if (params.value == null || isNaN(params.value)) return {{}};
     
     let val = params.value;
-    val = Math.max(50, Math.min(100, val));
+    let threshold = {COLOR_THRESHOLD};
+    
+    // 1. If the value is below the threshold, keep it white/neutral
+    if (val < threshold) {{
+        return {{
+            'backgroundColor': '#FFFFFF',
+            'color': 'black',
+            'borderRadius': '8px',
+            'margin': '4px auto',
+            'height': '32px',
+            'width': '95%',
+            'display': 'flex',
+            'alignItems': 'center',
+            'justifyContent': 'center',
+            'border': '1px solid #f0f0f0'
+        }};
+    }}
+    
+    // 2. Map the 50-100 (or threshold-100) range to a 0-1.0 scale
+    let factor = (val - threshold) / (100 - threshold); 
+    factor = Math.min(1, Math.max(0, factor)); 
     
     // Target Color: FC Groningen Green (#3E8C5E) -> RGB(62, 140, 94)
-    // Start Color: White (#FFFFFF) -> RGB(255, 255, 255)
-    
-    let r = Math.round(255 - (val / 100) * (255 - 62));
-    let g = Math.round(255 - (val / 100) * (255 - 140));
-    let b = Math.round(255 - (val / 100) * (255 - 94));
+    let r = Math.round(255 - (factor * (255 - 62)));
+    let g = Math.round(255 - (factor * (255 - 140)));
+    let b = Math.round(255 - (factor * (255 - 94)));
     
     let backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')';
+    let textColor = factor > 0.6 ? 'white' : 'black';
     
-    // Switch text to white for darker backgrounds (scores above 60)
-    let textColor = val > 60 ? 'white' : 'black';
-    
-    return {
+    return {{
         'backgroundColor': backgroundColor,
         'color': textColor,
-        'fontWeight': 'normal'
-    };
-}
+        'fontWeight': val > 85 ? 'bold' : 'normal',
+        'borderRadius': '8px',
+        'margin': '4px auto',
+        'height': '32px',
+        'width': '95%',
+        'display': 'flex',
+        'alignItems': 'center',
+        'justifyContent': 'center'
+    }};
+}}
 """)
 
 # Create first table
