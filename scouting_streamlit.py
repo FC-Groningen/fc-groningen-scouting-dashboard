@@ -944,8 +944,7 @@ df_selected_players = df_selected_players.rename(columns=table_columns)
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
 # Set the width of specific columns
-gb.configure_column("original_rank", headerName="#", width=80, pinned="left", sortable=True, type=["numericColumn"])
-# gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
+gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
 
