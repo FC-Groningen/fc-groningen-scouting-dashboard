@@ -583,22 +583,32 @@ st.markdown(
             width: 100% !important;
             }}
 
-    /* Make cell backgrounds fill the entire space */
-        .ag-theme-streamlit .ag-cell {{
-            padding: 5 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important; /* Center metrics for better look */
-            }}
-        
-        /* Ensure the text inside gradient cells is readable */
-        .ag-theme-streamlit .ag-cell-value {{
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            }}
+/* 1. Reset the cell wrapper to allow absolute centering */
+    .ag-theme-streamlit .ag-cell {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+    }}
+
+    /* 2. Target the internal value wrapper that AgGrid uses */
+    .ag-theme-streamlit .ag-cell-wrapper,
+    .ag-theme-streamlit .ag-selection-checkbox {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+    }}
+
+    /* 3. Force the pill to expand and then apply its own margins */
+    .ag-theme-streamlit .ag-cell-value {{
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
     
     </style>
     """,
@@ -826,7 +836,7 @@ function(params) {
     if (params.value == null || isNaN(params.value)) return {};
     
     let val = params.value;
-    val = Math.max(0, Math.min(100, val)); 
+    val = Math.max(20, Math.min(100, val)); 
     
     let r = Math.round(255 - (val / 100) * (255 - 62));
     let g = Math.round(255 - (val / 100) * (255 - 140));
