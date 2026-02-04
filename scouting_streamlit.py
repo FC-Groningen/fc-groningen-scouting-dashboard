@@ -941,7 +941,7 @@ df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_te
 df_selected_players = df_selected_players[list(table_columns.keys()) + ["player_url", "original_rank"]]
 df_selected_players = df_selected_players.rename(columns=table_columns)
 
-gb = GridOptionsBuilder.from_dataframe(df_show)
+gb = GridOptionsBuilder.from_dataframe(df_selected_players)
 
 # Set the width of specific columns
 gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
