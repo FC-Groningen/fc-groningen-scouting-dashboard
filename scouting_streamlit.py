@@ -1147,18 +1147,11 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         annotations=[
             dict(
                 text=f"<b>{overall_avg:.1f}</b>", 
-                x=0.5, y=0.45, # Adjusted for visual centering
+                x=0.5, y=0.5, # Adjusted for visual centering
                 showarrow=False,
                 font=dict(size=28, color='black'), 
                 xref="paper", yref="paper"
-            ),
-            dict(
-                text="TOTAAL", 
-                x=0.5, y=0.37, 
-                showarrow=False,
-                font=dict(size=10, color='gray'), 
-                xref="paper", yref="paper"
-            ),
+            )
         ],
         showlegend=False,
         height=500,
