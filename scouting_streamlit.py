@@ -904,6 +904,8 @@ grid_response = AgGrid(
 st.subheader("Radarplots")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
+
+
 # Create player search
 st.subheader("Zoekopdracht")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
@@ -921,7 +923,8 @@ search_selected_players = st.multiselect(
 #     st.warning("Please select at least one player to view the data.")
 #     st.stop()
 
-df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)]
+df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().reset_index(drop=True)
+df_selected_players['display_rank'] = df_selected_players.index + 1
 
 # Round numeric columns
 numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
@@ -941,13 +944,14 @@ df_selected_players = df_selected_players.rename(columns=table_columns)
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
 # Set the width of specific columns
-gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
+gb.configure_column("display_rank", headerName="#", width=80, pinned="left", sortable=True, type=["numericColumn"])
+# gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
 
 # Automatically configure the rest of the columns from your dictionary
 for key, label in table_columns.items():
-    if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
+    if key not in ["display_rank", "player_name", "team_with_logo_html", "position_profile"]:
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         
         col_config = {
@@ -968,7 +972,7 @@ for key, label in table_columns.items():
 
 # Hide the technical helper columns
 gb.configure_column("player_url", hide=True)
-gb.configure_column("_original_index", hide=True)
+gb.configure_column("display_rank", hide=True)
 
 # Final settings
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
