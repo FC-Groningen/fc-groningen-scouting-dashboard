@@ -837,12 +837,6 @@ function(params) {{
         'color': textColor,
         'fontWeight': 'normal',
         'borderRadius': '8px',
-        'height': '28px',         // Smaller than the row height
-        'width': '85%',           // Smaller than the column width
-        'display': 'flex',
-        'alignItems': 'center',
-        'justifyContent': 'center',
-        'margin': 'auto'
     }};
 }}
 """)
