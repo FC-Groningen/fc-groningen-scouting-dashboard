@@ -836,8 +836,8 @@ function(params) {{
         'backgroundColor': backgroundColor,
         'color': textColor,
         'fontWeight': 'normal',
-        'border': '1px solid #FFFFFF',
-        //'borderRadius': '8px',
+        'border': '3px solid #FFFFFF',
+        'borderRadius': '8px',
     }};
 }}
 """)
