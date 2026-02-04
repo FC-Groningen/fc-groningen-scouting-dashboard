@@ -881,7 +881,7 @@ for key, label in table_columns.items():
 
 # Hide the technical helper columns
 gb.configure_column("player_url", hide=True)
-gb.configure_column("index", hide=True)
+gb.configure_column("_original_index", hide=True)
 
 # Final settings
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
@@ -978,7 +978,7 @@ for key, label in table_columns.items():
 
 # 6. Hide helper
 gb.configure_column("player_url", hide=True)
-gb.configure_column("_original_index", hide=True)
+gb.configure_column("index", hide=True)
 
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
 gb.configure_selection(selection_mode='multiple', use_checkbox=True)
