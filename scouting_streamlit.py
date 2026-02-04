@@ -582,69 +582,6 @@ st.markdown(
         [data-testid="stMainViewContainer"] {{
             width: 100% !important;
             }}
-
-    /* 1. Target the CSS variables AgGrid uses for the theme */
-        .ag-theme-streamlit {{
-            --ag-header-background-color: #3E8C5E !important;
-            --ag-header-foreground-color: #FFFFFF !important;
-            }}
-
-    /* 2. Target the specific header container */
-        .ag-header {{
-            background-color: #3E8C5E !important;
-            border-bottom: 1px solid #2d6a47 !important;
-            }}
-
-    /* 3. Force the text color on all header labels */
-        .ag-header-cell-label, .ag-header-cell-text {{
-            color: #FFFFFF !important;
-            }}
-
-    /* 4. Fix the pinned left header background */
-        .ag-pinned-left-header {{
-            background-color: #3E8C5E !important;
-            border-right: 1px solid #2d6a47 !important;
-            }}
-
-    /* 1. Force the colors at the root level */
-        .ag-theme-streamlit {{
-            --ag-header-background-color: #3E8C5E !important;
-            --ag-header-foreground-color: #FFFFFF !important;
-            --ag-secondary-foreground-color: #FFFFFF !important;
-            --ag-border-color: #2d6a47 !important;
-            }}
-
-        /* 2. Target the actual header row to ensure green background */
-            .ag-theme-streamlit .ag-header {{
-                background-color: #3E8C5E !important;
-            }}
-
-        /* 3. Force the white lines (separators) */
-        /* We target the 'side-bar' of the cell which AgGrid uses for the divider */
-            .ag-theme-streamlit .ag-header-cell::after, 
-            .ag-theme-streamlit .ag-header-group-cell::after {{
-                content: "" !important;
-                position: absolute !important;
-                right: 0 !important;
-                height: 60% !important;
-                top: 20% !important;
-                width: 1.5px !important;
-                background-color: rgba(255, 255, 255, 0.4) !important;
-                display: block !important;
-                opacity: 1 !important;
-                }}
-
-        /* 4. Fix for the Pinned Column (Player Name) specifically */
-            .ag-theme-streamlit .ag-pinned-left-header {{
-                background-color: #3E8C5E !important;
-                background: #3E8C5E !important;
-                }}
-
-        /* 5. Clean up the text labels to ensure they stay white */
-            .ag-theme-streamlit .ag-header-cell-text {{
-                color: #FFFFFF !important;
-                font-weight: 600 !important;
-                }}
     
     </style>
     """,
@@ -858,12 +795,6 @@ class TeamLogoRenderer {
 }
 """)
 
-# custom_css = {
-#     ".ag-header-cell": {"background-color": "#3E8C5E !important"},
-#     ".ag-header-cell-text": {"color": "#FFFFFF !important"},
-#     ".ag-pinned-left-header": {"background-color": "#3E8C5E !important"}
-# }
-
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
 # 1. Set the width of specific columns
@@ -902,6 +833,86 @@ grid_response = AgGrid(
     update_mode=GridUpdateMode.SELECTION_CHANGED,
     height=615,
     fit_columns_on_grid_load=False,
-    # custom_css=custom_css,
     theme='streamlit'
 )
+
+
+
+
+
+
+
+
+
+
+# Old CSS code
+    # /* 1. Target the CSS variables AgGrid uses for the theme */
+    #     .ag-theme-streamlit {{
+    #         --ag-header-background-color: #3E8C5E !important;
+    #         --ag-header-foreground-color: #FFFFFF !important;
+    #         }}
+
+    # /* 2. Target the specific header container */
+    #     .ag-header {{
+    #         background-color: #3E8C5E !important;
+    #         border-bottom: 1px solid #2d6a47 !important;
+    #         }}
+
+    # /* 3. Force the text color on all header labels */
+    #     .ag-header-cell-label, .ag-header-cell-text {{
+    #         color: #FFFFFF !important;
+    #         }}
+
+    # /* 4. Fix the pinned left header background */
+    #     .ag-pinned-left-header {{
+    #         background-color: #3E8C5E !important;
+    #         border-right: 1px solid #2d6a47 !important;
+    #         }}
+
+    # /* 1. Force the colors at the root level */
+    #     .ag-theme-streamlit {{
+    #         --ag-header-background-color: #3E8C5E !important;
+    #         --ag-header-foreground-color: #FFFFFF !important;
+    #         --ag-secondary-foreground-color: #FFFFFF !important;
+    #         --ag-border-color: #2d6a47 !important;
+    #         }}
+
+    #     /* 2. Target the actual header row to ensure green background */
+    #         .ag-theme-streamlit .ag-header {{
+    #             background-color: #3E8C5E !important;
+    #         }}
+
+    #     /* 3. Force the white lines (separators) */
+    #     /* We target the 'side-bar' of the cell which AgGrid uses for the divider */
+    #         .ag-theme-streamlit .ag-header-cell::after, 
+    #         .ag-theme-streamlit .ag-header-group-cell::after {{
+    #             content: "" !important;
+    #             position: absolute !important;
+    #             right: 0 !important;
+    #             height: 60% !important;
+    #             top: 20% !important;
+    #             width: 1.5px !important;
+    #             background-color: rgba(255, 255, 255, 0.4) !important;
+    #             display: block !important;
+    #             opacity: 1 !important;
+    #             }}
+
+    #     /* 4. Fix for the Pinned Column (Player Name) specifically */
+    #         .ag-theme-streamlit .ag-pinned-left-header {{
+    #             background-color: #3E8C5E !important;
+    #             background: #3E8C5E !important;
+    #             }}
+
+    #     /* 5. Clean up the text labels to ensure they stay white */
+    #         .ag-theme-streamlit .ag-header-cell-text {{
+    #             color: #FFFFFF !important;
+    #             font-weight: 600 !important;
+    #             }}
+
+
+# Way to change the header background to green using custom_css=custom_css
+# custom_css = {
+#     ".ag-header-cell": {"background-color": "#3E8C5E !important"},
+#     ".ag-header-cell-text": {"color": "#FFFFFF !important"},
+#     ".ag-pinned-left-header": {"background-color": "#3E8C5E !important"}
+# }
