@@ -1094,30 +1094,29 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     # 6. Build Figure
     fig = go.Figure()
 
-    # Trace 1: The Bars
-    fig.add_trace(go.Barpolar(
-        r=percentile_values,
-        theta=metric_labels,
-        marker=dict(color=colors, line=dict(color='white', width=1.5)),
-        text=[f'{v:.0f}' for v in percentile_values],
-        hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
-    ))
-
-    # Trace 2: The Custom Grid Lines (Radial Spikes)
-    # We create ONE trace and use 'None' to break the lines between spokes
+    # --- LAYER 1: THE LINES (Added first so they are at the bottom) ---
     r_coords = []
     theta_coords = []
     for label in metric_labels:
-        r_coords.extend([0, 100, None])  # Start at 0, go to 100, then "lift the pen"
+        r_coords.extend([0, 100, None]) 
         theta_coords.extend([label, label, None])
 
     fig.add_trace(go.Scatterpolar(
         r=r_coords,
         theta=theta_coords,
         mode='lines',
-        line=dict(color='rgba(0,0,0,0.15)', width=1),
+        line=dict(color='rgba(0,0,0,0.1)', width=1), # Slightly lighter for a subtle look
         hoverinfo='skip',
         showlegend=False
+    ))
+
+    # --- LAYER 2: THE BARS (Added second so they sit on top of the lines) ---
+    fig.add_trace(go.Barpolar(
+        r=percentile_values,
+        theta=metric_labels,
+        marker=dict(color=colors, line=dict(color='white', width=1.5)),
+        text=[f'{v:.0f}' for v in percentile_values],
+        hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
     ))
 
     fig.update_layout(
