@@ -818,6 +818,31 @@ function(params) {
 }
 """)
 
+# Conditional formatting
+metric_color_js = JsCode("""
+function(params) {
+    if (params.value == null) return {};
+    if (params.value >= 85) {
+        return {
+            'backgroundColor': '#2d6a47',
+            'color': 'white',
+            'fontWeight': 'bold'
+        };
+    } else if (params.value >= 70) {
+        return {
+            'backgroundColor': '#b7e4c7',
+            'color': 'black'
+        };
+    } else if (params.value <= 30) {
+        return {
+            'color': '#a7a7a7',
+            'fontStyle': 'italic'
+        };
+    }
+    return null;
+}
+""")
+
 # Create first table
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
@@ -829,13 +854,18 @@ gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRendere
 
 # Automatically configure the rest of the columns from your dictionary
 for key, label in table_columns.items():
-    if key not in ["original_rank", "player_name", "team_with_logo_html"]:
+    if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
+        
         col_config = {"width": 140, "type": ["numericColumn"] if is_numeric else []}
         
-        # Apply the dot formatter specifically to minute columns
+        # Apply the thousand separator for minutes
         if key in ["total_minutes", "position_minutes"]:
             col_config["valueFormatter"] = number_dot_formatter
+            
+        # Apply conditional formatting to specific metrics
+        if key in ["physical", "attacking", "defending", "total"]:
+            col_config["cellStyle"] = metric_color_js
             
         gb.configure_column(label, **col_config)
 
