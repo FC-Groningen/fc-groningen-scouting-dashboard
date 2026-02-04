@@ -845,7 +845,7 @@ function(params) {{
         'color': textColor,
         'fontWeight': 'normal',
         'borderRadius': '8px',
-        //'margin': '4px auto',
+        'margin': '4px auto',
         //'height': '32px',
         //'width': '95%',
         //'display': 'flex',
