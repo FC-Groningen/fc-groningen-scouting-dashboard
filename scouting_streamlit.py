@@ -826,7 +826,7 @@ function(params) {
     return {
         'backgroundColor': backgroundColor,
         'color': textColor,
-        'fontWeight': val > 80 ? 'bold' : 'normal'
+        'fontWeight': 'normal'
     };
 }
 """)
@@ -838,7 +838,6 @@ gb = GridOptionsBuilder.from_dataframe(df_show)
 gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
-# gb.configure_column(table_columns["position_profile"], width=150)
 
 # Automatically configure the rest of the columns from your dictionary
 for key, label in table_columns.items():
