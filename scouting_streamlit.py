@@ -852,7 +852,7 @@ for key, label in table_columns.items():
             col_config["valueFormatter"] = number_dot_formatter
             
         # Apply the dynamic gradient to metrics
-        if key in ["physical", "attacking", "defending", "total"]:
+        if key in ["physical", "attacking", "defending"]:
             col_config["cellStyle"] = gradient_js
             
         gb.configure_column(label, **col_config)
