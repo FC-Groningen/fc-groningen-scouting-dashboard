@@ -956,26 +956,32 @@ gb.configure_column(name_label, width=180, pinned="left", cellRenderer=player_li
 gb.configure_column(team_label, width=200, cellRenderer=team_logo_renderer)
 
 for key, label in table_columns.items():
+    # Only process columns that aren't already handled (Rank, Name, Team)
     if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
+        
+        # Determine if the column should be treated as a number
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         
         col_config = {
-                "width": 140, 
-                "type": ["numericColumn"] if is_numeric else [],
-                "sortingOrder": ["desc", "asc", None]
-            }
+            "width": 140, 
+            "type": ["numericColumn"] if is_numeric else [],
+            "sortingOrder": ["desc", "asc", None]
+        }
         
+        # 1. Apply formatting for minutes (using the LABEL because DF is renamed)
         if key in ["total_minutes", "position_minutes"]:
             col_config["valueFormatter"] = number_dot_formatter
             
+        # 2. Apply the dynamic gradient to metrics (using the LABEL)
         if key in ["physical", "attacking", "defending"]:
             col_config["cellStyle"] = gradient_js
             
+        # IMPORTANT: We use 'label' here because the DataFrame columns 
+        # now match the values in your table_columns dict, not the keys.
         gb.configure_column(label, **col_config)
 
 # 6. Hide helper
 gb.configure_column("player_url", hide=True)
-# NOTICE: I removed the line hiding 'original_rank' here
 
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
 gb.configure_selection(selection_mode='multiple', use_checkbox=True)
