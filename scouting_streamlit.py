@@ -817,14 +817,14 @@ function(params) {{
         return {{
             'backgroundColor': '#FFFFFF',
             'color': 'black',
-            'borderRadius': '8px',
-            'margin': '4px auto',
-            'height': '32px',
-            'width': '95%',
-            'display': 'flex',
-            'alignItems': 'center',
-            'justifyContent': 'center',
-            'border': '1px solid #f0f0f0'
+            //'borderRadius': '8px',
+            //'margin': '4px auto',
+            //'height': '32px',
+            //'width': '95%',
+            //'display': 'flex',
+            //'alignItems': 'center',
+            //'justifyContent': 'center',
+            //'border': '1px solid #f0f0f0'
         }};
     }}
     
@@ -843,14 +843,14 @@ function(params) {{
     return {{
         'backgroundColor': backgroundColor,
         'color': textColor,
-        'fontWeight': val > 85 ? 'bold' : 'normal',
-        'borderRadius': '8px',
-        'margin': '4px auto',
-        'height': '32px',
-        'width': '95%',
-        'display': 'flex',
-        'alignItems': 'center',
-        'justifyContent': 'center'
+        'fontWeight': 'normal',
+        //'borderRadius': '8px',
+        //'margin': '4px auto',
+        //'height': '32px',
+        //'width': '95%',
+        //'display': 'flex',
+        //'alignItems': 'center',
+        //'justifyContent': 'center'
     }};
 }}
 """)
