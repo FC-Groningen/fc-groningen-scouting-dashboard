@@ -795,31 +795,40 @@ class TeamLogoRenderer {
 }
 """)
 
+# Add thousand seperator
+number_dot_formatter = JsCode("""
+function(params) {
+    if (params.value == null) return '';
+    return params.value.toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, ".");
+}
+""")
+
+# Create first table
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
-# 1. Set the width of specific columns
+# Set the width of specific columns
 gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
 # gb.configure_column(table_columns["position_profile"], width=150)
 
-# 2. Automatically configure the rest of the columns from your dictionary
-# This saves you from writing 10+ lines of repetitive code
+# Automatically configure the rest of the columns from your dictionary
 for key, label in table_columns.items():
     if key not in ["original_rank", "player_name", "team_with_logo_html"]:
-        # Check if it's a numeric column for right-alignment
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
-        gb.configure_column(
-            label, 
-            width=140, 
-            type=["numericColumn"] if is_numeric else []
-        )
+        col_config = {"width": 140, "type": ["numericColumn"] if is_numeric else []}
+        
+        # Apply the dot formatter specifically to minute columns
+        if key in ["total_minutes", "position_minutes"]:
+            col_config["valueFormatter"] = number_dot_formatter
+            
+        gb.configure_column(label, **col_config)
 
-# 3. Hide the technical helper columns
+# Hide the technical helper columns
 gb.configure_column("player_url", hide=True)
 gb.configure_column("_original_index", hide=True)
 
-# 4. Final settings
+# Final settings
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
 gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 
