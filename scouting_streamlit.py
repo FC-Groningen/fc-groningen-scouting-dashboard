@@ -923,38 +923,38 @@ search_selected_players = st.multiselect(
 #     st.warning("Please select at least one player to view the data.")
 #     st.stop()
 
-# 1. Filter and prepare the data
+# 1. Prepare Data
 df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().reset_index(drop=True)
 
-# 2. Add the rank and helper columns BEFORE renaming
+# 2. Add helper columns
 df_selected_players['original_rank'] = df_selected_players.index + 1
 df_selected_players["player_url"] = df_selected_players.apply(get_player_url, axis=1)
 df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
 
 # 3. Round numeric columns
-for col in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]:
+numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
+for col in numeric_columns:
     if col in df_selected_players.columns:
         decimals = 0 if col in ["total_minutes", "position_minutes"] else 1
         df_selected_players[col] = df_selected_players[col].round(decimals)
 
-# 4. Reorder and Rename (Crucial step: must match the builder source)
-# Note: we use 'original_rank' here because it exists in the DF currently
-df_selected_players = df_selected_players[list(table_columns.keys()) + ["player_url"]] 
+# 4. Reorder and Rename (Only select columns that exist)
+all_needed_cols = list(table_columns.keys()) + ["player_url"]
+df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
 df_selected_players = df_selected_players.rename(columns=table_columns)
 
-# 5. Build options FROM the second table's dataframe
-gb_search = GridOptionsBuilder.from_dataframe(df_selected_players)
+# 5. Build Grid Options
+gb = GridOptionsBuilder.from_dataframe(df_selected_players)
 
-# 6. Configure using the LABELS (the values now in the renamed DF)
+# Set labels from dictionary for configuration
 rank_label = table_columns["original_rank"]
 name_label = table_columns["player_name"]
 team_label = table_columns["team_with_logo_html"]
 
-gb_search.configure_column(rank_label, headerName="#", width=80, pinned="left", sortable=True, type=["numericColumn"])
-gb_search.configure_column(name_label, width=180, pinned="left", cellRenderer=player_link_renderer)
-gb_search.configure_column(team_label, width=200, cellRenderer=team_logo_renderer)
+gb.configure_column(rank_label, headerName="#", width=80, pinned="left", sortable=True, type=["numericColumn"])
+gb.configure_column(name_label, width=180, pinned="left", cellRenderer=player_link_renderer)
+gb.configure_column(team_label, width=200, cellRenderer=team_logo_renderer)
 
-# 7. Metrics loop
 for key, label in table_columns.items():
     if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
@@ -967,29 +967,33 @@ for key, label in table_columns.items():
         
         if key in ["total_minutes", "position_minutes"]:
             col_config["valueFormatter"] = number_dot_formatter
+            
         if key in ["physical", "attacking", "defending"]:
             col_config["cellStyle"] = gradient_js
             
-        gb_search.configure_column(label, **col_config)
+        gb.configure_column(label, **col_config)
 
-# 8. Hide helper and build
-gb_search.configure_column("player_url", hide=True)
-gb_search.configure_default_column(sortable=True, filterable=False, resizable=True)
+# 6. Hide helper
+gb.configure_column("player_url", hide=True)
+# NOTICE: I removed the line hiding 'original_rank' here
 
-gridOptions_search = gb_search.build()
+gb.configure_default_column(sortable=True, filterable=False, resizable=True)
+gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 
-# 9. Render with a check to prevent crashing on empty selection
+gridOptions = gb.build()
+
+# 7. Render with unique KEY
 if not df_selected_players.empty:
-    grid_response_search = AgGrid(
+    grid_response = AgGrid(
         df_selected_players,
-        gridOptions=gridOptions_search,
+        gridOptions=gridOptions,
         enable_enterprise_modules=False,
         allow_unsafe_jscode=True,
         update_mode=GridUpdateMode.SELECTION_CHANGED,
         height=300,
         fit_columns_on_grid_load=False,
         theme='streamlit',
-        key="search_table" # Unique key is required for a second table!
+        key="search_grid" # <--- THIS IS VITAL
     )
 
 
