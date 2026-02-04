@@ -817,14 +817,6 @@ function(params) {{
         return {{
             'backgroundColor': '#FFFFFF',
             'color': 'black',
-            //'borderRadius': '8px',
-            //'margin': '4px auto',
-            //'height': '32px',
-            //'width': '95%',
-            //'display': 'flex',
-            //'alignItems': 'center',
-            //'justifyContent': 'center',
-            //'border': '1px solid #f0f0f0'
         }};
     }}
     
@@ -844,14 +836,13 @@ function(params) {{
         'backgroundColor': backgroundColor,
         'color': textColor,
         'fontWeight': 'normal',
-        'padding': '2px',
         'borderRadius': '8px',
-        //'margin': '4px auto',
-        //'height': '32px',
-        //'width': '95%',
-        //'display': 'flex',
-        //'alignItems': 'center',
-        //'justifyContent': 'center'
+        'height': '28px',         // Smaller than the row height
+        'width': '85%',           // Smaller than the column width
+        'display': 'flex',
+        'alignItems': 'center',
+        'justifyContent': 'center',
+        'margin': 'auto'
     }};
 }}
 """)
