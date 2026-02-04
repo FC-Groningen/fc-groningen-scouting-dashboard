@@ -1053,7 +1053,154 @@ if search_grid_response and search_grid_response.get('selected_rows') is not Non
 st.subheader("Radarplots")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
+def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, season_name: str) -> go.Figure:
+    # 1. Determine the profile key (e.g., "DMCM")
+    # We strip extra info to match your position_profiles keys
+    raw_pos = str(player_data.get('position_profile', '')).split(' (')[0]
+    profile_key = raw_pos if raw_pos in position_profiles else "DMCM" # Fallback to DMCM
 
+    # 2. Automatically sort metrics into categories based on your metrics dict
+    active_metric_keys = position_profiles.get(profile_key, [])
+    
+    physical_keys = [k for k in active_metric_keys if metrics[k].category == MetricCategory.PHYSICAL]
+    attack_keys   = [k for k in active_metric_keys if metrics[k].category == MetricCategory.ATTACK]
+    defense_keys  = [k for k in active_metric_keys if metrics[k].category == MetricCategory.DEFENSE]
+    
+    all_keys = physical_keys + attack_keys + defense_keys
+
+    # 3. Pull values and labels
+    percentile_values = [float(player_data.get(k, 0)) for k in all_keys]
+    # Uses the .label property from your Metric dataclass
+    metric_labels = [metrics[k].label.replace('\n', '<br>') for k in all_keys]
+
+    # 4. Averages (using original keys for group scores)
+    physical_avg = float(player_data.get('physical', 0))
+    attack_avg   = float(player_data.get('attacking', 0))
+    defense_avg  = float(player_data.get('defending', 0))
+    overall_avg  = float(player_data.get('total', np.mean([physical_avg, attack_avg, defense_avg])))
+
+    # 5. Styling
+    green, red, yellow = '#3E8C5E', '#E83F2A', '#F2B533'
+    
+    def get_color(score, base_hex):
+        norm = max(0, min(1, score / 100))
+        base = [int(base_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)]
+        return f'rgb({int(255-(255-base[0])*norm)}, {int(255-(255-base[1])*norm)}, {int(255-(255-base[2])*norm)})'
+
+    colors = ([get_color(v, green) for v in percentile_values[:len(physical_keys)]] +
+              [get_color(v, red) for v in percentile_values[len(physical_keys):len(physical_keys)+len(attack_keys)]] +
+              [get_color(v, yellow) for v in percentile_values[-len(defense_keys):]])
+
+    # 6. Build Figure
+    fig = go.Figure()
+    fig.add_trace(go.Barpolar(
+        r=percentile_values,
+        theta=metric_labels,
+        marker=dict(color=colors, line=dict(color='white', width=1.5)),
+        text=[f'{v:.0f}' for v in percentile_values],
+        hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(range=[-25, 100], visible=True, showticklabels=False, gridcolor='rgba(0,0,0,0.1)'),
+            angularaxis=dict(tickfont=dict(size=10), rotation=90, direction='clockwise'),
+            bgcolor='white'
+        ),
+        annotations=[
+            dict(text=f"<b>{overall_avg:.0f}</b>", x=0.5, y=0.44, showarrow=False,
+                 font=dict(size=28, color='black'), xref="paper", yref="paper"),
+            dict(text="TOTAAL", x=0.5, y=0.36, showarrow=False,
+                 font=dict(size=10, color='gray'), xref="paper", yref="paper")
+        ],
+        showlegend=False,
+        height=500,
+        margin=dict(l=50, r=50, t=100, b=50),
+        title=dict(
+            text=(f"<b>{player_data.get('player_name', 'Speler')}</b><br>"
+                  f"<span style='font-size:13px'>🟢 Fysiek: {physical_avg:.1f} | 🔴 Aanval: {attack_avg:.1f} | 🟡 Defensie: {defense_avg:.1f}</span>"),
+            x=0.5, y=0.98, xanchor='center'
+        )
+    )
+
+    return fig
+
+# 1. Combine the selections from both tables
+players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
+players_data_to_compare = (selected_from_top_table_full_data + selected_from_search_table_full_data)[:2]
+
+# 2. Determine the source message for the UI
+if selected_from_top_table and selected_from_search_table:
+    source_message = "from both tables"
+elif selected_from_top_table:
+    source_message = "from search table"
+else:
+    source_message = "from top table"
+
+# 3. Execution Block
+if len(players_to_compare) > 0:
+    # Warning if the user gets click-happy
+    total_selected = len(selected_from_top_table) + len(selected_from_search_table)
+    if total_selected > 2:
+        st.warning("Je hebt meer dan 2 spelers geselecteerd, alleen de eerste 2 worden getoond.")
+
+    # --- Animation & Column Layout ---
+    st.markdown("""
+    <style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .stPlotlyChart { animation: fadeIn 0.5s ease-in-out; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    cols = st.columns(2)
+
+    for i, player_name in enumerate(players_to_compare):
+        # We can now rely 100% on players_data_to_compare 
+        # because our new retrieval logic is so robust
+        player_data = players_data_to_compare[i]
+
+        with cols[i]:
+            st.markdown(
+                f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;'>{player_name}</p>",
+                unsafe_allow_html=True
+            )
+
+            # Metadata Retrieval
+            team_name = player_data['team_name']
+            competition = player_data.get('competition_name')
+            team_logo_b64 = get_team_logo_base64(team_name, competition)
+
+            # Build Clean Caption
+            pos = player_data.get('display_position') or player_data.get('position_profile') or player_data.get('position', '')
+            caption_parts = [
+                f"{team_name}",
+                f"{player_data['country']}",
+                f"Age {int(player_data['age'])}",
+                f"{pos}",
+                f"{int(player_data['total_minutes'])} mins"
+            ]
+
+            # Display Logo and Caption
+            logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
+            st.markdown(
+                f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.6;">
+                    {logo_html} {' · '.join(caption_parts)}
+                </div>""", 
+                unsafe_allow_html=True
+            )
+
+            # Render Chart
+            fig = create_polarized_bar_chart(
+                player_data,
+                player_data['competition_name'],
+                player_data['season_name']
+            )
+            
+            chart_key = f"comparison_chart_{i}_{player_name.replace(' ', '_')}"
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=chart_key)
 
 
 
