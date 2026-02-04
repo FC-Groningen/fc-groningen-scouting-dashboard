@@ -899,6 +899,7 @@ grid_response = AgGrid(
     fit_columns_on_grid_load=False,
     theme='streamlit'
 )
+st.markdown("Alleen spelers die minimaal 400 minuten op een positie hebben gespeeld zijn meegenomen.")
 
 # Create plot section
 st.subheader("Radarplots")
