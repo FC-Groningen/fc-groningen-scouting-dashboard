@@ -1093,6 +1093,8 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 
     # 6. Build Figure
     fig = go.Figure()
+
+    # Trace 1: The Bars
     fig.add_trace(go.Barpolar(
         r=percentile_values,
         theta=metric_labels,
@@ -1101,32 +1103,46 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
     ))
 
-    # Calculate the angles for each metric to draw the lines
-    num_metrics = len(all_keys)
-    # Angles in degrees, matched to Plotly's clockwise rotation starting at 90 (Top)
-    angles = [i * (360 / num_metrics) for i in range(num_metrics)]
-
-    for angle in angles:
-        # We add shapes to the layout
-        fig.add_shape(
-            type="line",
-            # We use 'paper' coordinates for positioning or 'polar' coordinates 
-            # But the easiest way in Plotly is using the 'polar' overlay:
-            xref="polar", yref="polar",
-            x0=0, y0=0,          # Start at 0 (the base of the bars)
-            x1=angle, y1=100,    # End at the outer edge
-            line=dict(color="rgba(0,0,0,0.1)", width=1),
-        )
+    # Trace 2: The Custom Grid Lines (Radial Spikes)
+    # We create a line for every metric that goes from 0 to 100
+    for label in metric_labels:
+        fig.add_trace(go.Scatterpolar(
+            r=[0, 100],  # Start at 0, end at 100
+            theta=[label, label],
+            mode='lines',
+            line=dict(color='rgba(0,0,0,0.1)', width=1),
+            hoverinfo='skip', # Don't show popups for the lines
+            showlegend=False
+        ))
 
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(range=[-25, 100], visible=True, showticklabels=False, gridcolor='rgba(0,0,0,0.1)', tickvals=[25, 50, 75, 100], ticks='', showline=False),
-            angularaxis=dict(tickfont=dict(size=10), rotation=90, direction='clockwise', showgrid=False, ticks=''),
+            radialaxis=dict(
+                range=[-25, 100], # The 'hole' remains clear
+                visible=True, 
+                showticklabels=False, 
+                gridcolor='rgba(0,0,0,0.1)', 
+                tickvals=[25, 50, 75, 100], 
+                ticks='', 
+                showline=False
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=10, color='black'), 
+                rotation=90, 
+                direction='clockwise', 
+                showgrid=False, # We use our Scatterpolar lines instead of this grid
+                ticks=''
+            ),
             bgcolor='white'
         ),
         annotations=[
-            dict(text=f"<b>{overall_avg:.0f}</b>", x=0.5, y=0.5, showarrow=False,
-                 font=dict(size=28, color='black'), xref="paper", yref="paper"),
+            dict(
+                text=f"<b>{overall_avg:.0f}</b>", 
+                x=0.5, y=0.44, # Centered in the 'hole'
+                showarrow=False,
+                font=dict(size=28, color='black'), 
+                xref="paper", yref="paper"
+            ),
         ],
         showlegend=False,
         height=500,
@@ -1137,8 +1153,6 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
             x=0.5, y=0.98, xanchor='center'
         )
     )
-
-    return fig
 
 # 1. Combine the selections from both tables
 players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
