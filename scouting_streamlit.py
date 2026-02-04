@@ -914,7 +914,6 @@ st.markdown("Selecteer speler(s) en zie alle beschikbare data.")
 available_players = sorted(df_player_data["player_name"].unique().tolist())
 
 search_selected_players = st.multiselect(
-    "",
     options=available_players,
     default=[],
     help="Een speler kan er niet tussen staan als we geen data van die competitie afnemen of als hij onvoldoende minuten op een specifieke positie heeft gemaakt"
