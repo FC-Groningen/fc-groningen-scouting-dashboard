@@ -1104,6 +1104,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     fig.update_layout(
         polar=dict(
             radialaxis=dict(range=[-25, 100], visible=True, showticklabels=False, gridcolor='rgba(0,0,0,0.1)'),
+            tickvals=[25, 50, 75, 100],
             angularaxis=dict(tickfont=dict(size=10), rotation=90, direction='clockwise'),
             bgcolor='white'
         ),
