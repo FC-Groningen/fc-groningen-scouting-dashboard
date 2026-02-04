@@ -930,7 +930,7 @@ search_selected_players = st.multiselect(
 #     st.stop()
 
 # 1. Prepare Data
-df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().reset_index(drop=True)
+df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().sort_values(by='total', ascending=False).reset_index(drop=True)
 
 # 2. Add helper columns
 df_selected_players['original_rank'] = df_selected_players.index + 1
