@@ -855,7 +855,11 @@ for key, label in table_columns.items():
     if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         
-        col_config = {"width": 140, "type": ["numericColumn"] if is_numeric else []}
+        col_config = {
+                "width": 140, 
+                "type": ["numericColumn"] if is_numeric else [],
+                "sortingOrder": ["desc", "asc", None]
+            }
         
         # Keep the thousand separator for minutes
         if key in ["total_minutes", "position_minutes"]:
@@ -886,6 +890,7 @@ grid_response = AgGrid(
     height=615,
     fit_columns_on_grid_load=False,
     theme='streamlit'
+
 )
 
 
