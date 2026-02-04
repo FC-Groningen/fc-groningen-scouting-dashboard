@@ -838,6 +838,10 @@ function(params) {{
         'fontWeight': 'normal',
         'border': '3px solid #FFFFFF',
         'borderRadius': '8px',
+        'display': 'flex',           // Enables Flexbox
+        'alignItems': 'center',      // Vertical centering
+        'justifyContent': 'center',  // Horizontal centering
+        'textAlign': 'center'
     }};
 }}
 """)
