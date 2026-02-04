@@ -1123,6 +1123,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 
     # --- THE LAYOUT ---
     fig.update_layout(
+        renderers="svg",
         polar=dict(
             bgcolor='white',
             radialaxis=dict(
