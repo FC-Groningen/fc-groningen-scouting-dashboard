@@ -999,8 +999,7 @@ if not df_selected_players.empty:
         update_mode=GridUpdateMode.SELECTION_CHANGED,
         height=300,
         fit_columns_on_grid_load=False,
-        theme='streamlit',
-        key="search_grid" # <--- THIS IS VITAL
+        theme='streamlit'
     )
 
 
