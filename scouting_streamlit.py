@@ -620,7 +620,7 @@ with st.sidebar:
 st.title("Scouting dashboard")
 st.subheader("Ranglijst")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
-st.markdown("Vind de spelers met de hoogste scores o.b.v. filters en bechnmarks.")
+st.markdown("Ranglijst van spelers op basis van geselecteerde filters en benchmarks.")
 
 # Create selection options for first table
 col1, col2, col3, col4 = st.columns(4, gap="large")
