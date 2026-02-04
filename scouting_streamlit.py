@@ -583,22 +583,7 @@ st.markdown(
             width: 100% !important;
             }}
 
-    /* Make cell backgrounds fill the entire space */
-        .ag-theme-streamlit .ag-cell {{
-            padding: 5 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important; /* Center metrics for better look */
-            }}
-        
-        /* Ensure the text inside gradient cells is readable */
-        .ag-theme-streamlit .ag-cell-value {{
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            }}
+
     
     </style>
     """,
