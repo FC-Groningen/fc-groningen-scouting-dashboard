@@ -817,6 +817,10 @@ function(params) {{
         return {{
             'backgroundColor': '#FFFFFF',
             'color': 'black',
+            'display': 'flex',           // Enables Flexbox
+            'alignItems': 'center',      // Vertical centering
+            'justifyContent': 'center',  // Horizontal centering
+            'textAlign': 'center'
         }};
     }}
     
