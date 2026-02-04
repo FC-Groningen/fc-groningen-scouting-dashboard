@@ -1101,10 +1101,27 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
     ))
 
+    # Calculate the angles for each metric to draw the lines
+    num_metrics = len(all_keys)
+    # Angles in degrees, matched to Plotly's clockwise rotation starting at 90 (Top)
+    angles = [i * (360 / num_metrics) for i in range(num_metrics)]
+
+    for angle in angles:
+        # We add shapes to the layout
+        fig.add_shape(
+            type="line",
+            # We use 'paper' coordinates for positioning or 'polar' coordinates 
+            # But the easiest way in Plotly is using the 'polar' overlay:
+            xref="polar", yref="polar",
+            x0=0, y0=0,          # Start at 0 (the base of the bars)
+            x1=angle, y1=100,    # End at the outer edge
+            line=dict(color="rgba(0,0,0,0.1)", width=1),
+        )
+
     fig.update_layout(
         polar=dict(
             radialaxis=dict(range=[-25, 100], visible=True, showticklabels=False, gridcolor='rgba(0,0,0,0.1)', tickvals=[25, 50, 75, 100], ticks='', showline=False),
-            angularaxis=dict(tickfont=dict(size=10), rotation=90, direction='clockwise', showgrid=True, ticks=''),
+            angularaxis=dict(tickfont=dict(size=10), showgrid=False, rotation=90, direction='clockwise', showgrid=True, ticks=''),
             bgcolor='white'
         ),
         annotations=[
