@@ -906,6 +906,12 @@ st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
 
 
+
+
+
+
+
+
 # Create player search
 st.subheader("Zoekopdracht")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
@@ -956,28 +962,23 @@ gb.configure_column(name_label, width=180, pinned="left", cellRenderer=player_li
 gb.configure_column(team_label, width=200, cellRenderer=team_logo_renderer)
 
 for key, label in table_columns.items():
-    # Only process columns that aren't already handled (Rank, Name, Team)
     if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
-        
-        # Determine if the column should be treated as a number
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         
         col_config = {
-            "width": 140, 
-            "type": ["numericColumn"] if is_numeric else [],
-            "sortingOrder": ["desc", "asc", None]
-        }
+                "width": 140, 
+                "type": ["numericColumn"] if is_numeric else [],
+                "sortingOrder": ["desc", "asc", None]
+            }
         
-        # 1. Apply formatting for minutes (using the LABEL because DF is renamed)
+        # Keep the thousand separator for minutes
         if key in ["total_minutes", "position_minutes"]:
             col_config["valueFormatter"] = number_dot_formatter
             
-        # 2. Apply the dynamic gradient to metrics (using the LABEL)
+        # Apply the dynamic gradient to metrics
         if key in ["physical", "attacking", "defending"]:
             col_config["cellStyle"] = gradient_js
             
-        # IMPORTANT: We use 'label' here because the DataFrame columns 
-        # now match the values in your table_columns dict, not the keys.
         gb.configure_column(label, **col_config)
 
 # 6. Hide helper
