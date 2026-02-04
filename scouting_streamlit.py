@@ -918,6 +918,11 @@ search_selected_players = st.multiselect(
     help="Een speler kan er niet tussen staan als we geen data van die competitie afnemen of als hij onvoldoende minuten op een specifieke positie heeft gemaakt"
 )
 
+if not search_selected_players:
+    st.warning("Please select at least one player to view the data.")
+    st.stop()
+
+df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)]
 
 
 
