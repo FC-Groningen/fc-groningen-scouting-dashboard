@@ -811,24 +811,26 @@ function(params) {
     if (params.value == null || isNaN(params.value)) return {};
     
     let val = params.value;
-    val = Math.max(0, Math.min(100, val)); // Clamp between 0 and 100
-    
-    // Target Color: FC Groningen Green (#3E8C5E) -> RGB(62, 140, 94)
-    // Start Color: White (#FFFFFF) -> RGB(255, 255, 255)
+    val = Math.max(0, Math.min(100, val)); 
     
     let r = Math.round(255 - (val / 100) * (255 - 62));
     let g = Math.round(255 - (val / 100) * (255 - 140));
     let b = Math.round(255 - (val / 100) * (255 - 94));
     
     let backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')';
-    
-    // Switch text to white for darker backgrounds (scores above 60)
     let textColor = val > 60 ? 'white' : 'black';
     
     return {
         'backgroundColor': backgroundColor,
         'color': textColor,
-        'fontWeight': val > 80 ? 'bold' : 'normal'
+        'fontWeight': val > 80 ? 'bold' : 'normal',
+        'borderRadius': '6px',
+        'margin': '4px',
+        'height': '32px',
+        'display': 'flex',
+        'alignItems': 'center',
+        'justifyContent': 'center',
+        'boxShadow': 'inset 0 0 0 1px rgba(0,0,0,0.05)'
     };
 }
 """)
