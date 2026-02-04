@@ -593,18 +593,40 @@ st.markdown(
         .ag-header {{
             background-color: #3E8C5E !important;
             border-bottom: 1px solid #2d6a47 !important;
-        }}
+            }}
 
     /* 3. Force the text color on all header labels */
         .ag-header-cell-label, .ag-header-cell-text {{
             color: #FFFFFF !important;
-        }}
+            }}
 
     /* 4. Fix the pinned left header background */
         .ag-pinned-left-header {{
             background-color: #3E8C5E !important;
             border-right: 1px solid #2d6a47 !important;
-        }}
+            }}
+
+    /* 1. Make the vertical lines (separators) between headers visible and white */
+        .ag-header-cell::after, .ag-header-group-cell::after {{
+            content: "";
+            position: absolute;
+            right: 0;
+            height: 50%; /* Makes the line a bit shorter than the full header height for a modern look */
+            top: 25%;
+            width: 1px;
+            background-color: rgba(255, 255, 255, 0.5) !important; /* Semi-transparent white */
+            display: block !important;
+            }}
+
+    /* 2. Remove the last separator on the far right */
+        .ag-header-cell:last-child::after {{
+            display: none !important;
+            }}
+
+    /* 3. Ensure the 'pinned' header separator is also styled */
+        .ag-pinned-left-header .ag-header-cell::after {{
+            background-color: rgba(255, 255, 255, 0.5) !important;
+            }}
     
     </style>
     """,
