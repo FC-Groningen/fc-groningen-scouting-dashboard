@@ -1104,14 +1104,12 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     fig.update_layout(
         polar=dict(
             radialaxis=dict(range=[-25, 100], visible=True, showticklabels=False, gridcolor='rgba(0,0,0,0.1)', tickvals=[25, 50, 75, 100]),
-            angularaxis=dict(tickfont=dict(size=10), rotation=90, direction='clockwise'),
+            angularaxis=dict(tickfont=dict(size=10), rotation=90, direction='clockwise', showgrid=False, showline=False, ticks=''),
             bgcolor='white'
         ),
         annotations=[
-            dict(text=f"<b>{overall_avg:.0f}</b>", x=0.5, y=0.44, showarrow=False,
+            dict(text=f"<b>{overall_avg:.0f}</b>", x=0.5, y=0.5, showarrow=False,
                  font=dict(size=28, color='black'), xref="paper", yref="paper"),
-            dict(text="TOTAAL", x=0.5, y=0.36, showarrow=False,
-                 font=dict(size=10, color='gray'), xref="paper", yref="paper")
         ],
         showlegend=False,
         height=500,
