@@ -1104,45 +1104,31 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     ))
 
     # Trace 2: The Custom Grid Lines (Radial Spikes)
-    # We create a line for every metric that goes from 0 to 100
+    # We create ONE trace and use 'None' to break the lines between spokes
+    r_coords = []
+    theta_coords = []
     for label in metric_labels:
-        fig.add_trace(go.Scatterpolar(
-            r=[0, 100],  # Start at 0, end at 100
-            theta=[label, label],
-            mode='lines',
-            line=dict(color='rgba(0,0,0,0.1)', width=1),
-            hoverinfo='skip', # Don't show popups for the lines
-            showlegend=False
-        ))
+        r_coords.extend([0, 100, None])  # Start at 0, go to 100, then "lift the pen"
+        theta_coords.extend([label, label, None])
+
+    fig.add_trace(go.Scatterpolar(
+        r=r_coords,
+        theta=theta_coords,
+        mode='lines',
+        line=dict(color='rgba(0,0,0,0.15)', width=1),
+        hoverinfo='skip',
+        showlegend=False
+    ))
 
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(
-                range=[-25, 100], # The 'hole' remains clear
-                visible=True, 
-                showticklabels=False, 
-                gridcolor='rgba(0,0,0,0.1)', 
-                tickvals=[25, 50, 75, 100], 
-                ticks='', 
-                showline=False
-            ),
-            angularaxis=dict(
-                tickfont=dict(size=10, color='black'), 
-                rotation=90, 
-                direction='clockwise', 
-                showgrid=False, # We use our Scatterpolar lines instead of this grid
-                ticks=''
-            ),
+            radialaxis=dict(range=[-25, 100], visible=True, showticklabels=False, gridcolor='rgba(0,0,0,0.1)', tickvals=[25, 50, 75, 100], ticks='', showline=False),
+            angularaxis=dict(tickfont=dict(size=10), rotation=90, direction='clockwise', showgrid=True, ticks=''),
             bgcolor='white'
         ),
         annotations=[
-            dict(
-                text=f"<b>{overall_avg:.0f}</b>", 
-                x=0.5, y=0.44, # Centered in the 'hole'
-                showarrow=False,
-                font=dict(size=28, color='black'), 
-                xref="paper", yref="paper"
-            ),
+            dict(text=f"<b>{overall_avg:.0f}</b>", x=0.5, y=0.5, showarrow=False,
+                 font=dict(size=28, color='black'), xref="paper", yref="paper"),
         ],
         showlegend=False,
         height=500,
@@ -1153,6 +1139,8 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
             x=0.5, y=0.98, xanchor='center'
         )
     )
+
+    return fig
 
 # 1. Combine the selections from both tables
 players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
