@@ -996,7 +996,7 @@ if not df_selected_players.empty:
         allow_unsafe_jscode=True,
         update_mode=GridUpdateMode.SELECTION_CHANGED,
         # height = 64,
-        height= 34 + len(df_selected_players) * 30,
+        height= 35 + len(df_selected_players) * 29.5,
         fit_columns_on_grid_load=False,
         theme='streamlit'
     )
