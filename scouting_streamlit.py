@@ -950,7 +950,7 @@ df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df
 df_selected_players = df_selected_players.rename(columns=table_columns)
 
 # 5. Build Grid Options
-gb = GridOptionsBuilder.from_dataframe(df_show, auto_index=False)
+gb = GridOptionsBuilder.from_dataframe(df_show)
 
 gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
