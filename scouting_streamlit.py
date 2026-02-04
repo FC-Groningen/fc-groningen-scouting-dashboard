@@ -804,7 +804,7 @@ function(params) {
 """)
 
 # Conditional formatting
-COLOR_THRESHOLD = 40
+COLOR_THRESHOLD = 10
 gradient_js = JsCode(f"""
 function(params) {{
     if (params.value == null || isNaN(params.value)) return {{}};
