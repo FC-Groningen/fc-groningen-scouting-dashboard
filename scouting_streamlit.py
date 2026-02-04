@@ -1094,23 +1094,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     # 6. Build Figure
     fig = go.Figure()
 
-    # --- LAYER 1: THE LINES (Added first so they are at the bottom) ---
-    r_coords = []
-    theta_coords = []
-    for label in metric_labels:
-        r_coords.extend([0, 100, None]) 
-        theta_coords.extend([label, label, None])
-
-    fig.add_trace(go.Scatterpolar(
-        r=r_coords,
-        theta=theta_coords,
-        mode='lines',
-        line=dict(color='rgba(0,0,0,0.1)', width=1), # Slightly lighter for a subtle look
-        hoverinfo='skip',
-        showlegend=False
-    ))
-
-    # --- LAYER 2: THE BARS (Added second so they sit on top of the lines) ---
+    # Add ONLY the bars. We will use the layout to handle the lines.
     fig.add_trace(go.Barpolar(
         r=percentile_values,
         theta=metric_labels,
@@ -1121,13 +1105,48 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
 
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(range=[-25, 100], visible=True, showticklabels=False, gridcolor='rgba(0,0,0,0.1)', tickvals=[25, 50, 75, 100], ticks='', showline=False), layer='below traces',
-            angularaxis=dict(tickfont=dict(size=10), rotation=90, direction='clockwise', showgrid=True, ticks='', layer='below traces'),
-            bgcolor='white'
+            bgcolor='white',
+            radialaxis=dict(
+                range=[-25, 100], 
+                visible=True, 
+                showticklabels=False, 
+                gridcolor='rgba(0,0,0,0.1)', 
+                tickvals=[25, 50, 75, 100], 
+                ticks='', 
+                showline=False,
+                layer='below traces' # Correct placement: inside radialaxis
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=10, color='black'), 
+                rotation=90, 
+                direction='clockwise', 
+                showgrid=True,            # Built-in vertical lines
+                gridcolor='rgba(0,0,0,0.1)', 
+                ticks='', 
+                showline=False,
+                layer='below traces'      # Correct placement: inside angularaxis
+            )
         ),
         annotations=[
-            dict(text=f"<b>{overall_avg:.0f}</b>", x=0.5, y=0.5, showarrow=False,
-                 font=dict(size=28, color='black'), xref="paper", yref="paper"),
+            # This white circle masks the lines so they don't enter the "hole"
+            dict(
+                x=0.5, y=0.5,
+                xref="paper", yref="paper",
+                text="",
+                showarrow=False,
+                height=80, width=80,
+                bgcolor="white",
+                opacity=1,
+                ax=0, ay=0
+            ),
+            # The actual score
+            dict(
+                text=f"<b>{overall_avg:.0f}</b>", 
+                x=0.5, y=0.5, 
+                showarrow=False,
+                font=dict(size=28, color='black'), 
+                xref="paper", yref="paper"
+            ),
         ],
         showlegend=False,
         height=500,
