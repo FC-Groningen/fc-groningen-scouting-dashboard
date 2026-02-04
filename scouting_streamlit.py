@@ -933,7 +933,7 @@ search_selected_players = st.multiselect(
 df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().reset_index(drop=True)
 
 # 2. Add helper columns
-df_selected_players['_original_rank'] = df_selected_players.index + 1
+df_selected_players['original_rank'] = df_selected_players.index + 1
 df_selected_players["player_url"] = df_selected_players.apply(get_player_url, axis=1)
 df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
 
@@ -950,16 +950,16 @@ df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df
 df_selected_players = df_selected_players.rename(columns=table_columns)
 
 # 5. Build Grid Options
-gb = GridOptionsBuilder.from_dataframe(df_selected_players)
+gb = GridOptionsBuilder.from_dataframe(df_show)
 
 # Set labels from dictionary for configuration
 rank_label = table_columns["original_rank"]
 name_label = table_columns["player_name"]
 team_label = table_columns["team_with_logo_html"]
 
-gb.configure_column(rank_label, headerName="#", width=80, pinned="left", sortable=True, type=["numericColumn"])
-gb.configure_column(name_label, width=180, pinned="left", cellRenderer=player_link_renderer)
-gb.configure_column(team_label, width=200, cellRenderer=team_logo_renderer)
+gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
+gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
+gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
 
 for key, label in table_columns.items():
     if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
@@ -992,7 +992,7 @@ gridOptions = gb.build()
 # 7. Render with unique KEY
 if not df_selected_players.empty:
     grid_response = AgGrid(
-        df_selected_players,
+        df_show,
         gridOptions=gridOptions,
         enable_enterprise_modules=False,
         allow_unsafe_jscode=True,
