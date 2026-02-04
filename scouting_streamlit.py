@@ -898,7 +898,6 @@ grid_response = AgGrid(
     height=615,
     fit_columns_on_grid_load=False,
     theme='streamlit'
-
 )
 
 # Create plot section
@@ -918,15 +917,75 @@ search_selected_players = st.multiselect(
     help="Een speler kan er niet tussen staan als we geen data van die competitie afnemen of als hij onvoldoende minuten op een specifieke positie heeft gemaakt"
 )
 
-if not search_selected_players:
-    st.warning("Please select at least one player to view the data.")
-    st.stop()
+# if not search_selected_players:
+#     st.warning("Please select at least one player to view the data.")
+#     st.stop()
 
 df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)]
 
+# Round numeric columns
+numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
+for col in numeric_columns:
+    if col in df_selected_players.columns:
+        decimals = 0 if col in ["total_minutes", "position_minutes"] else 1
+        df_selected_players[col] = df_selected_players[col].round(decimals)
 
+# Create dynamic url and team logo columns
+df_selected_players["player_url"] = df_selected_players.apply(get_player_url, axis=1)
+df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
 
+# Reorder and rename columns
+df_selected_players = df_selected_players[list(table_columns.keys()) + ["player_url", "_original_index"]]
+df_selected_players = df_selected_players.rename(columns=table_columns)
 
+gb = GridOptionsBuilder.from_dataframe(df_show)
+
+# Set the width of specific columns
+gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
+gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
+gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
+
+# Automatically configure the rest of the columns from your dictionary
+for key, label in table_columns.items():
+    if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
+        is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
+        
+        col_config = {
+                "width": 140, 
+                "type": ["numericColumn"] if is_numeric else [],
+                "sortingOrder": ["desc", "asc", None]
+            }
+        
+        # Keep the thousand separator for minutes
+        if key in ["total_minutes", "position_minutes"]:
+            col_config["valueFormatter"] = number_dot_formatter
+            
+        # Apply the dynamic gradient to metrics
+        if key in ["physical", "attacking", "defending"]:
+            col_config["cellStyle"] = gradient_js
+            
+        gb.configure_column(label, **col_config)
+
+# Hide the technical helper columns
+gb.configure_column("player_url", hide=True)
+gb.configure_column("_original_index", hide=True)
+
+# Final settings
+gb.configure_default_column(sortable=True, filterable=False, resizable=True)
+gb.configure_selection(selection_mode='multiple', use_checkbox=True)
+
+gridOptions = gb.build()
+
+grid_response = AgGrid(
+    df_selected_players,
+    gridOptions=gridOptions,
+    enable_enterprise_modules=False,
+    allow_unsafe_jscode=True,
+    update_mode=GridUpdateMode.SELECTION_CHANGED,
+    height=615,
+    fit_columns_on_grid_load=False,
+    theme='streamlit'
+)
 
 
 
