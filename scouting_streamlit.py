@@ -909,11 +909,11 @@ st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 # Create player search
 st.subheader("Zoekopdracht")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
-st.markdown("Selecteer speler(s) en zie alle beschikbare data.")
 
 available_players = sorted(df_player_data["player_name"].unique().tolist())
 
 search_selected_players = st.multiselect(
+    "Selecteer speler(s) en zie alle beschikbare data.",
     options=available_players,
     default=[],
     help="Een speler kan er niet tussen staan als we geen data van die competitie afnemen of als hij onvoldoende minuten op een specifieke positie heeft gemaakt"
