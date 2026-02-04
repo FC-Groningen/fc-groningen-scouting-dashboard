@@ -889,7 +889,7 @@ gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 
 gridOptions = gb.build()
 
-grid_response = AgGrid(
+top_grid_response = AgGrid(
     df_show,
     gridOptions=gridOptions,
     enable_enterprise_modules=False,
@@ -899,6 +899,30 @@ grid_response = AgGrid(
     fit_columns_on_grid_load=False,
     theme='streamlit'
 )
+
+# Check which boxes are checked
+selected_from_top_table = []
+selected_from_top_table_full_data = []
+
+# Ensure grid_response isn't empty and has selected rows
+if top_grid_response and top_grid_response.get('selected_rows') is not None:
+    selected_rows = top_grid_response['selected_rows']
+    
+    # Standardize AgGrid's output
+    if isinstance(selected_rows, pd.DataFrame):
+        rows = selected_rows.to_dict('records')
+    else:
+        rows = selected_rows
+
+    # Process up to 2 selected players
+    for row in rows[:2]:
+        # Get the human-readable name for display
+        name_col = table_columns.get('player_name', 'player_name')
+        selected_from_top_table.append(row.get(name_col))
+
+        idx = row.get('_original_index')
+        if idx is not None and idx in df_top.index:
+            selected_from_top_table_full_data.append(df_top.loc[idx])
 
 # Create plot section
 st.subheader("Radarplots")
@@ -989,7 +1013,7 @@ gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 gridOptions = gb.build()
 
 if not df_selected_players.empty:
-    grid_response = AgGrid(
+    search_grid_response = AgGrid(
         df_selected_players,
         gridOptions=gridOptions,
         enable_enterprise_modules=False,
@@ -1000,8 +1024,34 @@ if not df_selected_players.empty:
         theme='streamlit'
     )
 
+# Check which boxes are checked
+selected_from_search_table = []
+selected_from_search_table_full_data = []
 
+# Get the human-readable label for "Player Name"
+name_col = table_columns.get('player_name', 'Player Name')
 
+# Process only if rows are selected
+if search_grid_response and search_grid_response.get('selected_rows') is not None:
+    search_selected_rows = search_grid_response['selected_rows']
+    
+    # Standardize AgGrid output to a list of dictionaries
+    rows = (search_selected_rows.to_dict('records') 
+            if isinstance(search_selected_rows, pd.DataFrame) 
+            else search_selected_rows)
+
+    # Extract data for the first 2 selected players
+    for row in rows[:2]:
+        selected_from_search_table.append(row.get(name_col))
+        
+        # Pull full data from search_df using the hidden unique index
+        idx = row.get('_search_original_index')
+        if idx is not None and idx in df_selected_players.index:
+            selected_from_search_table_full_data.append(df_selected_players.loc[idx])
+
+# Create plot section
+st.subheader("Radarplots")
+st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
 
 
@@ -1088,3 +1138,61 @@ if not df_selected_players.empty:
 #     ".ag-header-cell-text": {"color": "#FFFFFF !important"},
 #     ".ag-pinned-left-header": {"background-color": "#3E8C5E !important"}
 # }
+
+
+# Extended player selection code
+# selected_from_grid = []
+# selected_from_grid_full_data = []
+
+# # Map the labels from the dictionary
+# labels_to_keys = {v: k for k, v in table_columns.items()}
+
+# if grid_response and 'selected_rows' in grid_response:
+#     selected_rows = grid_response['selected_rows']
+    
+#     if selected_rows is not None and len(selected_rows) > 0:
+#         if isinstance(selected_rows, pd.DataFrame):
+#             rows_to_process = selected_rows.to_dict('records')
+#         else:
+#             rows_to_process = selected_rows
+
+#         # Limit to 2 players for the radar plot
+#         for row_dict in rows_to_process[:2]:
+#             name_label = table_columns.get('player_name', 'player_name')
+#             team_label = table_columns.get('team_with_logo_html', 'team_with_logo_html')
+#             pos_label  = table_columns.get('display_position', 'display_position')
+#             comp_label = table_columns.get('competition_name', 'competition_name')
+#             season_label = table_columns.get('season_name', 'season_name')
+
+#             selected_from_grid.append(row_dict.get(name_label))
+
+#             # Use the hidden index
+#             if '_original_index' in row_dict:
+#                 orig_idx = row_dict['_original_index']
+#                 if orig_idx in df_top.index:
+#                     selected_from_grid_full_data.append(df_top.loc[orig_idx])
+#                     continue
+
+#             # Fallback if hidden index does not work
+#             import re
+#             player_name = row_dict.get(name_label)
+            
+#             # Clean HTML from team name
+#             raw_team = str(row_dict.get(team_label, ''))
+#             team_name = raw_team
+#             if '<img' in raw_team:
+#                 match = re.search(r'margin-right: 8px;">(.+?)(?:<|$)', raw_team)
+#                 if match:
+#                     team_name = match.group(1).strip()
+
+#             # Match against df_top using original keys
+#             matched_row = df_top[
+#                 (df_top['player_name'] == player_name) &
+#                 (df_top['team_name'] == team_name) &
+#                 (df_top['display_position'] == row_dict.get(pos_label)) &
+#                 (df_top['competition_name'] == row_dict.get(comp_label)) &
+#                 (df_top['season_name'] == row_dict.get(season_label))
+#             ]
+
+#             if not matched_row.empty:
+#                 selected_from_grid_full_data.append(matched_row.iloc[0])
