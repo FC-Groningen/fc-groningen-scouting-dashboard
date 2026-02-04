@@ -582,6 +582,21 @@ st.markdown(
         [data-testid="stMainViewContainer"] {{
             width: 100% !important;
             }}
+
+    /* 1. Add Vertical Lines between all cells */
+        .ag-theme-streamlit .ag-cell {{
+            border-right: 1px solid #e0e0e0 !important;
+            }}
+
+    /* 2. Add Horizontal Lines between all rows */
+        .ag-theme-streamlit .ag-row {{
+            border-bottom: 1px solid #e0e0e0 !important;
+            }}
+
+    /* 3. Ensure the header vertical lines match the row lines */
+        .ag-theme-streamlit .ag-header-cell {{
+            border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+            }}  
     
     </style>
     """,
