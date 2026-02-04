@@ -582,33 +582,6 @@ st.markdown(
         [data-testid="stMainViewContainer"] {{
             width: 100% !important;
             }}
-
-/* 1. Reset the cell wrapper to allow absolute centering */
-    .ag-theme-streamlit .ag-cell {{
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 !important;
-    }}
-
-    /* 2. Target the internal value wrapper that AgGrid uses */
-    .ag-theme-streamlit .ag-cell-wrapper,
-    .ag-theme-streamlit .ag-selection-checkbox {{
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 100% !important;
-        height: 100% !important;
-    }}
-
-    /* 3. Force the pill to expand and then apply its own margins */
-    .ag-theme-streamlit .ag-cell-value {{
-        width: 100% !important;
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }}
     
     </style>
     """,
@@ -836,26 +809,24 @@ function(params) {
     if (params.value == null || isNaN(params.value)) return {};
     
     let val = params.value;
-    val = Math.max(20, Math.min(100, val)); 
+    val = Math.max(30, Math.min(100, val));
+    
+    // Target Color: FC Groningen Green (#3E8C5E) -> RGB(62, 140, 94)
+    // Start Color: White (#FFFFFF) -> RGB(255, 255, 255)
     
     let r = Math.round(255 - (val / 100) * (255 - 62));
     let g = Math.round(255 - (val / 100) * (255 - 140));
     let b = Math.round(255 - (val / 100) * (255 - 94));
     
     let backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')';
+    
+    // Switch text to white for darker backgrounds (scores above 60)
     let textColor = val > 60 ? 'white' : 'black';
     
     return {
         'backgroundColor': backgroundColor,
         'color': textColor,
-        'fontWeight': val > 80 ? 'bold' : 'normal',
-        'borderRadius': '6px',
-        'margin': '4px',
-        'height': '32px',
-        'display': 'flex',
-        'alignItems': 'center',
-        'justifyContent': 'center',
-        'boxShadow': 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+        'fontWeight': val > 80 ? 'bold' : 'normal'
     };
 }
 """)
