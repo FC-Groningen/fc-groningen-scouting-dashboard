@@ -844,12 +844,13 @@ function(params) {{
         'backgroundColor': backgroundColor,
         'color': textColor,
         'fontWeight': 'normal',
+        'padding': '2px',
         'borderRadius': '8px',
-        'margin': '4px auto',
+        //'margin': '4px auto',
         //'height': '32px',
         //'width': '95%',
         //'display': 'flex',
-        'alignItems': 'center',
+        //'alignItems': 'center',
         //'justifyContent': 'center'
     }};
 }}
