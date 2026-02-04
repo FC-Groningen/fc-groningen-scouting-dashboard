@@ -606,27 +606,45 @@ st.markdown(
             border-right: 1px solid #2d6a47 !important;
             }}
 
-    /* 1. Make the vertical lines (separators) between headers visible and white */
-        .ag-header-cell::after, .ag-header-group-cell::after {{
-            content: "";
-            position: absolute;
-            right: 0;
-            height: 50%; /* Makes the line a bit shorter than the full header height for a modern look */
-            top: 25%;
-            width: 1px;
-            background-color: rgba(255, 255, 255, 0.5) !important; /* Semi-transparent white */
-            display: block !important;
+    /* 1. Force the colors at the root level */
+        .ag-theme-streamlit {{
+            --ag-header-background-color: #3E8C5E !important;
+            --ag-header-foreground-color: #FFFFFF !important;
+            --ag-secondary-foreground-color: #FFFFFF !important;
+            --ag-border-color: #2d6a47 !important;
             }}
 
-    /* 2. Remove the last separator on the far right */
-        .ag-header-cell:last-child::after {{
-            display: none !important;
+        /* 2. Target the actual header row to ensure green background */
+            .ag-theme-streamlit .ag-header {{
+                background-color: #3E8C5E !important;
             }}
 
-    /* 3. Ensure the 'pinned' header separator is also styled */
-        .ag-pinned-left-header .ag-header-cell::after {{
-            background-color: rgba(255, 255, 255, 0.5) !important;
-            }}
+        /* 3. Force the white lines (separators) */
+        /* We target the 'side-bar' of the cell which AgGrid uses for the divider */
+            .ag-theme-streamlit .ag-header-cell::after, 
+            .ag-theme-streamlit .ag-header-group-cell::after {{
+                content: "" !important;
+                position: absolute !important;
+                right: 0 !important;
+                height: 60% !important;
+                top: 20% !important;
+                width: 1.5px !important;
+                background-color: rgba(255, 255, 255, 0.4) !important;
+                display: block !important;
+                opacity: 1 !important;
+                }}
+
+        /* 4. Fix for the Pinned Column (Player Name) specifically */
+            .ag-theme-streamlit .ag-pinned-left-header {{
+                background-color: #3E8C5E !important;
+                background: #3E8C5E !important;
+                }}
+
+        /* 5. Clean up the text labels to ensure they stay white */
+            .ag-theme-streamlit .ag-header-cell-text {{
+                color: #FFFFFF !important;
+                font-weight: 600 !important;
+                }}
     
     </style>
     """,
