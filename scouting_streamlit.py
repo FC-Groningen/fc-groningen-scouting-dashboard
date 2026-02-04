@@ -583,20 +583,22 @@ st.markdown(
             width: 100% !important;
             }}
 
-    /* 1. Add Vertical Lines between all cells */
+    /* Make cell backgrounds fill the entire space */
         .ag-theme-streamlit .ag-cell {{
-            border-right: 1px solid #e0e0e0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important; /* Center metrics for better look */
             }}
-
-    /* 2. Add Horizontal Lines between all rows */
-        .ag-theme-streamlit .ag-row {{
-            border-bottom: 1px solid #e0e0e0 !important;
+        
+        /* Ensure the text inside gradient cells is readable */
+        .ag-theme-streamlit .ag-cell-value {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             }}
-
-    /* 3. Ensure the header vertical lines match the row lines */
-        .ag-theme-streamlit .ag-header-cell {{
-            border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
-            }}  
     
     </style>
     """,
@@ -819,27 +821,30 @@ function(params) {
 """)
 
 # Conditional formatting
-metric_color_js = JsCode("""
+gradient_js = JsCode("""
 function(params) {
-    if (params.value == null) return {};
-    if (params.value >= 85) {
-        return {
-            'backgroundColor': '#2d6a47',
-            'color': 'white',
-            'fontWeight': 'bold'
-        };
-    } else if (params.value >= 70) {
-        return {
-            'backgroundColor': '#b7e4c7',
-            'color': 'black'
-        };
-    } else if (params.value <= 30) {
-        return {
-            'color': '#a7a7a7',
-            'fontStyle': 'italic'
-        };
-    }
-    return null;
+    if (params.value == null || isNaN(params.value)) return {};
+    
+    let val = params.value;
+    val = Math.max(0, Math.min(100, val)); // Clamp between 0 and 100
+    
+    // Target Color: FC Groningen Green (#3E8C5E) -> RGB(62, 140, 94)
+    // Start Color: White (#FFFFFF) -> RGB(255, 255, 255)
+    
+    let r = Math.round(255 - (val / 100) * (255 - 62));
+    let g = Math.round(255 - (val / 100) * (255 - 140));
+    let b = Math.round(255 - (val / 100) * (255 - 94));
+    
+    let backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')';
+    
+    // Switch text to white for darker backgrounds (scores above 60)
+    let textColor = val > 60 ? 'white' : 'black';
+    
+    return {
+        'backgroundColor': backgroundColor,
+        'color': textColor,
+        'fontWeight': val > 80 ? 'bold' : 'normal'
+    };
 }
 """)
 
@@ -859,13 +864,13 @@ for key, label in table_columns.items():
         
         col_config = {"width": 140, "type": ["numericColumn"] if is_numeric else []}
         
-        # Apply the thousand separator for minutes
+        # Keep the thousand separator for minutes
         if key in ["total_minutes", "position_minutes"]:
             col_config["valueFormatter"] = number_dot_formatter
             
-        # Apply conditional formatting to specific metrics
+        # Apply the dynamic gradient to metrics
         if key in ["physical", "attacking", "defending", "total"]:
-            col_config["cellStyle"] = metric_color_js
+            col_config["cellStyle"] = gradient_js
             
         gb.configure_column(label, **col_config)
 
