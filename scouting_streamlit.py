@@ -938,7 +938,7 @@ df_selected_players["player_url"] = df_selected_players.apply(get_player_url, ax
 df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
 
 # Reorder and rename columns
-df_selected_players = df_selected_players[list(table_columns.keys()) + ["player_url", "_original_index"]]
+df_selected_players = df_selected_players[list(table_columns.keys()) + ["player_url", "display_rank"]]
 df_selected_players = df_selected_players.rename(columns=table_columns)
 
 gb = GridOptionsBuilder.from_dataframe(df_show)
