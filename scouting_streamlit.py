@@ -950,7 +950,7 @@ df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df
 df_selected_players = df_selected_players.rename(columns=table_columns)
 
 # 5. Build Grid Options
-gb = GridOptionsBuilder.from_dataframe(df_show)
+gb = GridOptionsBuilder.from_dataframe(df_selected_players)
 
 gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
@@ -989,7 +989,7 @@ gridOptions = gb.build()
 # 7. Render with unique KEY
 if not df_selected_players.empty:
     grid_response = AgGrid(
-        df_show,
+        df_selected_players,
         gridOptions=gridOptions,
         enable_enterprise_modules=False,
         allow_unsafe_jscode=True,
