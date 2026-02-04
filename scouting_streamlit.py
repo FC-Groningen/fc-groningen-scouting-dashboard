@@ -858,7 +858,7 @@ gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sor
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
 
-# Automatically configure the rest of the columns from your dictionary
+# Automatically configure the rest of the columns from the dictionary
 for key, label in table_columns.items():
     if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
@@ -912,12 +912,15 @@ st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
 
 
-# Create player search
+# X. Create player search
+# Add title
 st.subheader("Zoekopdracht")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
+# Create list with all available players
 available_players = sorted(df_player_data["player_name"].unique().tolist())
 
+# Create search field
 search_selected_players = st.multiselect(
     "Selecteer speler(s) en zie alle beschikbare data.",
     options=available_players,
@@ -925,37 +928,35 @@ search_selected_players = st.multiselect(
     help="Een speler kan er niet tussen staan als we geen data van die competitie afnemen of als hij onvoldoende minuten op een specifieke positie heeft gemaakt"
 )
 
-# if not search_selected_players:
-#     st.warning("Please select at least one player to view the data.")
-#     st.stop()
-
-# 1. Prepare Data
+# Filter and sort data
 df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().sort_values(by='total', ascending=False).reset_index(drop=True)
 
-# 2. Add helper columns
+# Add helper columns
 df_selected_players['original_rank'] = df_selected_players.index + 1
 df_selected_players["player_url"] = df_selected_players.apply(get_player_url, axis=1)
 df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
 
-# 3. Round numeric columns
+# Round numeric columns
 numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
 for col in numeric_columns:
     if col in df_selected_players.columns:
         decimals = 0 if col in ["total_minutes", "position_minutes"] else 1
         df_selected_players[col] = df_selected_players[col].round(decimals)
 
-# 4. Reorder and Rename (Only select columns that exist)
+# Reorder and rename columns
 all_needed_cols = list(table_columns.keys()) + ["player_url"]
 df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
 df_selected_players = df_selected_players.rename(columns=table_columns)
 
-# 5. Build Grid Options
+# Create third table
 gb = GridOptionsBuilder.from_dataframe(df_selected_players)
 
+# Set the width of specific columns
 gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
 
+# Automatically configure the rest of the columns from the dictionary
 for key, label in table_columns.items():
     if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
@@ -976,17 +977,17 @@ for key, label in table_columns.items():
             
         gb.configure_column(label, **col_config)
 
-# 6. Hide helper
+# Hide the technical helper columns
 gb.configure_column("player_url", hide=True)
 gb.configure_column("_original_index", hide=True)
 gb.configure_column("::auto_unique_id::", hide=True)
 
+# Final settings
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
 gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 
 gridOptions = gb.build()
 
-# 7. Render with unique KEY
 if not df_selected_players.empty:
     grid_response = AgGrid(
         df_selected_players,
@@ -994,7 +995,7 @@ if not df_selected_players.empty:
         enable_enterprise_modules=False,
         allow_unsafe_jscode=True,
         update_mode=GridUpdateMode.SELECTION_CHANGED,
-        height=min(400, 50 + len(df_selected_players) * 35),
+        height=min(50 + len(df_selected_players) * 35),
         fit_columns_on_grid_load=False,
         theme='streamlit'
     )
