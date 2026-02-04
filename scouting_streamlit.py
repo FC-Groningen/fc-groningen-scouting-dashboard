@@ -585,7 +585,7 @@ st.markdown(
 
     /* Make cell backgrounds fill the entire space */
         .ag-theme-streamlit .ag-cell {{
-            padding: 0 !important;
+            padding: 5 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important; /* Center metrics for better look */
