@@ -1123,7 +1123,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 showgrid=True,            # Built-in vertical lines
                 gridcolor='rgba(0,0,0,0.1)', 
                 ticks='', 
-                showline=True,
+                showline=False,
                 layer='below traces'      # Correct placement: inside angularaxis
             )
         ),
