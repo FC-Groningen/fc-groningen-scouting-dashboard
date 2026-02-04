@@ -803,7 +803,7 @@ function(params) {
 }
 """)
 
-# Conditional formatting
+# Create conditional formatting
 COLOR_THRESHOLD = 30
 gradient_js = JsCode(f"""
 function(params) {{
@@ -812,23 +812,23 @@ function(params) {{
     let val = params.value;
     let threshold = {COLOR_THRESHOLD};
     
-    // 1. If the value is below the threshold, keep it white/neutral
+    // If the value is below the threshold, keep it white/neutral
     if (val < threshold) {{
         return {{
             'backgroundColor': '#FFFFFF',
             'color': 'black',
-            'display': 'flex',           // Enables Flexbox
-            'alignItems': 'center',      // Vertical centering
-            'justifyContent': 'center',  // Horizontal centering
+            'display': 'flex',
+            'alignItems': 'center',
+            'justifyContent': 'center',
             'textAlign': 'center'
         }};
     }}
     
-    // 2. Map the 50-100 (or threshold-100) range to a 0-1.0 scale
+    // Scale the score
     let factor = (val - threshold) / (100 - threshold); 
     factor = Math.min(1, Math.max(0, factor)); 
     
-    // Target Color: FC Groningen Green (#3E8C5E) -> RGB(62, 140, 94)
+    // Get RGB score of FC Groningen green
     let r = Math.round(255 - (factor * (255 - 62)));
     let g = Math.round(255 - (factor * (255 - 140)));
     let b = Math.round(255 - (factor * (255 - 94)));
@@ -842,9 +842,9 @@ function(params) {{
         'fontWeight': 'normal',
         'border': '3px solid #FFFFFF',
         'borderRadius': '8px',
-        'display': 'flex',           // Enables Flexbox
-        'alignItems': 'center',      // Vertical centering
-        'justifyContent': 'center',  // Horizontal centering
+        'display': 'flex',
+        'alignItems': 'center',
+        'justifyContent': 'center',
         'textAlign': 'center'
     }};
 }}
@@ -900,6 +900,26 @@ grid_response = AgGrid(
     theme='streamlit'
 
 )
+
+# Create plot section
+st.subheader("Radarplots")
+st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
