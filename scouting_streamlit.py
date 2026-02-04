@@ -1094,7 +1094,25 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     # 6. Build Figure
     fig = go.Figure()
 
-    # Add ONLY the bars. We will use the layout to handle the lines.
+    # --- LAYER 1: THE RADIAL SPOKES (Manual Grid) ---
+    # We build these first so they are naturally behind the bars
+    r_coords = []
+    theta_coords = []
+    for label in metric_labels:
+        # This tells Plotly: Start at 0, go to 100, then stop drawing
+        r_coords.extend([0, 100, None]) 
+        theta_coords.extend([label, label, None])
+
+    fig.add_trace(go.Scatterpolar(
+        r=r_coords,
+        theta=theta_coords,
+        mode='lines',
+        line=dict(color='rgba(0,0,0,0.1)', width=1),
+        hoverinfo='skip',
+        showlegend=False
+    ))
+
+    # --- LAYER 2: THE BARS ---
     fig.add_trace(go.Barpolar(
         r=percentile_values,
         theta=metric_labels,
@@ -1103,6 +1121,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
     ))
 
+    # --- THE LAYOUT ---
     fig.update_layout(
         polar=dict(
             bgcolor='white',
@@ -1111,39 +1130,33 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 visible=True, 
                 showticklabels=False, 
                 gridcolor='rgba(0,0,0,0.1)', 
-                tickvals=[25, 50, 75, 100], 
+                tickvals=[25, 50, 75, 100], # Circular rings
                 ticks='', 
-                showline=False,
-                layer='below traces' # Correct placement: inside radialaxis
+                showline=False
             ),
             angularaxis=dict(
                 tickfont=dict(size=10, color='black'), 
                 rotation=90, 
                 direction='clockwise', 
-                showgrid=True,            # Built-in vertical lines
-                gridcolor='rgba(0,0,0,0.1)', 
+                showgrid=False,           # <--- WE HIDE BUILT-IN GRID
                 ticks='', 
-                showline=False,
-                layer='below traces'      # Correct placement: inside angularaxis
+                showline=True,            # <--- THE OUTER BORDER
+                linecolor='rgba(0,0,0,0.2)'
             )
         ),
         annotations=[
-            # This white circle masks the lines so they don't enter the "hole"
-            dict(
-                x=0.5, y=0.5,
-                xref="paper", yref="paper",
-                text="",
-                showarrow=False,
-                height=80, width=80,
-                opacity=1,
-                ax=0, ay=0
-            ),
-            # The actual score
             dict(
                 text=f"<b>{overall_avg:.1f}</b>", 
-                x=0.5, y=0.5, 
+                x=0.5, y=0.45, # Adjusted for visual centering
                 showarrow=False,
                 font=dict(size=28, color='black'), 
+                xref="paper", yref="paper"
+            ),
+            dict(
+                text="TOTAAL", 
+                x=0.5, y=0.37, 
+                showarrow=False,
+                font=dict(size=10, color='gray'), 
                 xref="paper", yref="paper"
             ),
         ],
