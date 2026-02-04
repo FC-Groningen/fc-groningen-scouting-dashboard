@@ -809,7 +809,7 @@ function(params) {
     if (params.value == null || isNaN(params.value)) return {};
     
     let val = params.value;
-    val = Math.max(40, Math.min(100, val));
+    val = Math.max(50, Math.min(100, val));
     
     // Target Color: FC Groningen Green (#3E8C5E) -> RGB(62, 140, 94)
     // Start Color: White (#FFFFFF) -> RGB(255, 255, 255)
