@@ -446,7 +446,7 @@ def create_polarized_bar_chart(player_data):
                 text=f"{overall_avg:.1f}", 
                 x=0.5, y=0.5,
                 showarrow=False,
-                font=dict(size=28, color='black', family="Proxima Nova, sans-serif", weight="bold"), 
+                font=dict(size=28, color='black', family="ProximaNova-Bold"), 
                 xref="paper", yref="paper"
             )
         ],
