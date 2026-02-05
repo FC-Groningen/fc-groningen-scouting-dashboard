@@ -1097,23 +1097,23 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     # 6. Build Figure
     fig = go.Figure()
 
-    # --- LAYER 1: THE RADIAL SPOKES (Manual Grid) ---
-    # We build these first so they are naturally behind the bars
-    r_coords = []
-    theta_coords = []
-    for label in metric_labels:
-        # This tells Plotly: Start at 0, go to 100, then stop drawing
-        r_coords.extend([0, 100, None]) 
-        theta_coords.extend([label, label, None])
+    # # --- LAYER 1: THE RADIAL SPOKES (Manual Grid) ---
+    # # We build these first so they are naturally behind the bars
+    # r_coords = []
+    # theta_coords = []
+    # for label in metric_labels:
+    #     # This tells Plotly: Start at 0, go to 100, then stop drawing
+    #     r_coords.extend([0, 100, None]) 
+    #     theta_coords.extend([label, label, None])
 
-    fig.add_trace(go.Scatterpolar(
-        r=r_coords,
-        theta=theta_coords,
-        mode='lines',
-        line=dict(color='rgba(0,0,0,0.1)', width=1),
-        hoverinfo='skip',
-        showlegend=False
-    ))
+    # fig.add_trace(go.Scatterpolar(
+    #     r=r_coords,
+    #     theta=theta_coords,
+    #     mode='lines',
+    #     line=dict(color='rgba(0,0,0,0.1)', width=1),
+    #     hoverinfo='skip',
+    #     showlegend=False
+    # ))
 
     # --- LAYER 2: THE BARS ---
     fig.add_trace(go.Barpolar(
