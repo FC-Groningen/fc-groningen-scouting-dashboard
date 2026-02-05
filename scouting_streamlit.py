@@ -1068,60 +1068,37 @@ search_selected_players = st.multiselect(
 # Filter and sort data
 df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().sort_values(by='total', ascending=False).reset_index(drop=True)
 
-# Add helper columns
+# Add helper columns (Still English keys)
 df_selected_players['original_rank'] = df_selected_players.index + 1
 df_selected_players["player_url"] = df_selected_players.apply(get_player_url, axis=1)
 df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
 
-# Round numeric columns
-numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
-for col in numeric_columns:
-    if col in df_selected_players.columns:
-        decimals = 0 if col in ["total_minutes", "position_minutes"] else 1
-        df_selected_players[col] = df_selected_players[col].round(decimals)
-
-# Reorder and rename columns
-all_needed_cols = list(table_columns.keys()) + ["player_url"]
-df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
-# df_selected_players = df_selected_players.rename(columns=table_columns)
-
-# Create third table
+# 2. DO NOT RENAME df_selected_players here. 
+# We build the grid using the English dataframe.
 gb = GridOptionsBuilder.from_dataframe(df_selected_players)
 
-# Set the width of specific columns
-gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
-gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
-gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
-
-# Automatically configure the rest of the columns from the dictionary
+# 3. Tell AgGrid to show Dutch labels using 'header_name'
+# This is how the Top Table works!
 for key, label in table_columns.items():
-    if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
+    if key in df_selected_players.columns:
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
         
         col_config = {
-                "width": 140, 
-                "type": ["numericColumn"] if is_numeric else [],
-                "sortingOrder": ["desc", "asc", None]
-            }
+            "header_name": label, # This shows Dutch to the user
+            "width": 140, 
+            "type": ["numericColumn"] if is_numeric else [],
+            "sortingOrder": ["desc", "asc", None]
+        }
         
-        # Keep the thousand separator for minutes
         if key in ["total_minutes", "position_minutes"]:
             col_config["valueFormatter"] = number_dot_formatter
-            
-        # Apply the dynamic gradient to metrics
         if key in ["physical", "attacking", "defending"]:
             col_config["cellStyle"] = gradient_js
             
-        gb.configure_column(label, **col_config)
+        gb.configure_column(key, **col_config) # Configure by English key
 
-# Hide the technical helper columns
-gb.configure_column("player_url", hide=True)
-gb.configure_column("_original_index", hide=True)
-gb.configure_column("::auto_unique_id::", hide=True)
-
-# Final settings
-gb.configure_default_column(sortable=True, filterable=False, resizable=True)
-gb.configure_selection(selection_mode='multiple', use_checkbox=True)
+# (Keep your other column configurations like pinned, hide, etc. using English keys)
+gb.configure_column("player_name", pinned="left", width=180, cellRenderer=player_link_renderer)
 
 gridOptions = gb.build()
 
