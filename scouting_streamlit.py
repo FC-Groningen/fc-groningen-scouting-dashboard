@@ -1133,7 +1133,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 visible=True, 
                 showticklabels=False, 
                 gridcolor='rgba(0,0,0,0.1)', 
-                tickvals=[-0.1, 25, 50, 75, 100], # Circular rings
+                tickvals=[-0.5, 25, 50, 75, 100], # Circular rings
                 ticks='', 
                 showline=False
             ),
