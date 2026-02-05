@@ -1210,7 +1210,7 @@ for i, player_name in enumerate(players_to_compare):
 
         with cols[i]:
             pos_profile = player_data.get('position_profile', '')
-            title_text = f"{player_name} | {pos_profile}"
+            title_text = f"{player_name}  |  {pos_profile}"
 
             st.markdown(
                 f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;'>{title_text}</p>",
@@ -1220,15 +1220,15 @@ for i, player_name in enumerate(players_to_compare):
             # Metadata Retrieval
             team_name = player_data['team_name']
             competition = player_data.get('competition_name')
+            season = player_data.get('season_name')
             team_logo_b64 = get_team_logo_base64(team_name, competition)
 
             # Build Clean Caption - Split into two parts
-            pos = player_data.get('display_position') or player_data.get('position_profile') or player_data.get('position', '')
             
             # Line 1: Team and Country
-            line1 = f"{team_name} · {player_data['country']}"
+            line1 = f"{team_name} | {competition} | {season}"
             # Line 2: Age, Position, and Minutes
-            line2 = f"Age {int(player_data['age'])} · {pos} · {int(player_data['total_minutes'])} mins"
+            line2 = f"{int(player_data['age'])} jaar | {player_data['nationality']}"
 
             # Display Logo and Caption using <br> for the enter key effect
             logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
