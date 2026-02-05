@@ -709,11 +709,10 @@ st.markdown(
 
     /* Custom info box for radar charts */
         .custom-info-box {{
-            background-color: #d0f0fd; /* light blue */
-            color: #000000;             /* text color */
+            background-color: #E9F4ED;
+            color: #000000; 
             padding: 12px 20px;
             border-radius: 8px;
-            border: 1px solid #a0d4e8;
             font-size: 1rem;
             margin-bottom: 10px;
         }}
@@ -1270,7 +1269,7 @@ with radar_plot_container:
         st.markdown(
         """
         <div class="custom-info-box">
-            Select players from the top table or search table below (using checkboxes) to view comparison charts.
+            Selecteer spelers in de ranglijst en/of zoekopdracht tabellen om hun radarplots te zien.
         </div>
         """,
         unsafe_allow_html=True
