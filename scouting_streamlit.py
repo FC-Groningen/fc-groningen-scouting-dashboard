@@ -1082,7 +1082,7 @@ for col in numeric_columns:
         df_selected_players[col] = df_selected_players[col].round(decimals)
 
 # Reorder and rename columns
-all_needed_cols = list(table_columns.keys()) + ["player_url"]
+all_needed_cols = list(table_columns.keys()) + ["player_url", "_original_index"]
 df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
 df_selected_players = df_selected_players.rename(columns=table_columns)
 
