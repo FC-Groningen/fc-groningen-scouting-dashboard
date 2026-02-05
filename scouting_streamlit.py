@@ -1164,8 +1164,7 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         height=500,
         margin=dict(l=50, r=50, t=100, b=50),
         title=dict(
-            text=(f"<b>{player_data.get('player_name', 'Speler')}</b><br>"
-                  f"<span style='font-size:13px'>🟢 Fysiek: {physical_avg:.1f} | 🔴 Aanval: {attack_avg:.1f} | 🟡 Defensie: {defense_avg:.1f}</span>"),
+            text=(f"<span style='font-size:16px'>Fysiek: {physical_avg:.1f} | Aanvallend: {attack_avg:.1f} | Verdedigend: {defense_avg:.1f}</span>"),
             x=0.5, y=0.98, xanchor='center',
             # Add this font dictionary here:
             font=dict(
