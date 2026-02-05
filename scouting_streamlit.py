@@ -1126,8 +1126,6 @@ gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 
 gridOptions = gb.build()
 
-df_selected_players["_search_original_index"] = df_selected_players.index
-
 if not df_selected_players.empty:
     search_grid_response = AgGrid(
         df_selected_players,
@@ -1137,7 +1135,6 @@ if not df_selected_players.empty:
         update_mode=GridUpdateMode.SELECTION_CHANGED,
         height= min(615, 34.5 + len(df_selected_players) * 29.1),
         fit_columns_on_grid_load=False,
-        key='search_grid',
         theme='streamlit'
     )
 
@@ -1168,18 +1165,16 @@ if search_grid_response and search_grid_response.get('selected_rows') is not Non
 
 # X. Finalize radar plot area
 with radar_plot_container:
-    # Calculate how many players are selected
-    all_selected_names = selected_from_top_table + selected_from_search_table
-    all_selected_data = selected_from_top_table_full_data + selected_from_search_table_full_data
-
-    # Select first two players
-    players_to_compare = all_selected_names[:2]
-    players_data_to_compare = all_selected_data[:2]
+    # Combine the selections from both tables
+    players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
+    players_data_to_compare = (selected_from_top_table_full_data + selected_from_search_table_full_data)[:2]
 
     if len(players_to_compare) > 0:
-        # 3. Now the warning will trigger correctly
-        if len(all_selected_names) > 2:
-            st.warning(f"Je hebt {len(all_selected_names)} spelers geselecteerd. Alleen de eerste 2 worden getoond.")
+
+        # Warning when more than tweo players are selected
+        total_selected = len(selected_from_top_table) + len(selected_from_search_table)
+        if total_selected > 2:
+            st.warning("Je hebt meer dan 2 spelers geselecteerd, alleen de eerste 2 worden getoond.")
 
         st.markdown("""
         <style>
