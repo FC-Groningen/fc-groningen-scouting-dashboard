@@ -365,29 +365,29 @@ metrics = {
 
     # Physical metrics
     "total_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL,label="Totale\nafstand", tooltip="De totale afgelegde afstand per 90 minuten."),
-    "running_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL, label="15–20km/u\nafstand"),
-    "hsr_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL,label="20-25km/u\nafstand"),
-    "sprint_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL, label="25+km/u\nafstand"),
-    "hi_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL,label="20+km/u\nafstand"),
-    "total_minutes_percentile": Metric(category=MetricCategory.PHYSICAL, label="Totale\nspeeltijd"),
+    "running_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL, label="15–20km/u\nafstand", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "hsr_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL,label="20-25km/u\nafstand", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "sprint_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL, label="25+km/u\nafstand", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "hi_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL,label="20+km/u\nafstand", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "total_minutes_percentile": Metric(category=MetricCategory.PHYSICAL, label="Totale\nspeeltijd", tooltip="De totale afgelegde afstand per 90 minuten."),
 
     # Attacking metrics
-    "bypass_midfield_defense_tip_p30_percentile": Metric(category=MetricCategory.ATTACK,label="Uitgespeelde\ntegenstanders"),
-    "bypass_midfield_defense_pass_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Uitgespeelde\ntegenstanders\n(pass)"),
-    "bypass_midfield_defense_dribble_tip_p30_percentile": Metric(category=MetricCategory.ATTACK,label="Uitgespeelde\ntegenstanders\n(dribbel)"),
-    "bypass_opponents_rec_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Uitgespeelde\ntegenstanders\nals ontvanger"),
-    "involvement_chances_tip_p30_percentile": Metric(category=MetricCategory.ATTACK,label="Betrokkenheid\nkansen"),
-    "off_ball_runs_total_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Loopacties\nzonder bal"),
+    "bypass_midfield_defense_tip_p30_percentile": Metric(category=MetricCategory.ATTACK,label="Uitgespeelde\ntegenstanders", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "bypass_midfield_defense_pass_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Uitgespeelde\ntegenstanders\n(pass)", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "bypass_midfield_defense_dribble_tip_p30_percentile": Metric(category=MetricCategory.ATTACK,label="Uitgespeelde\ntegenstanders\n(dribbel)", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "bypass_opponents_rec_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Uitgespeelde\ntegenstanders\nals ontvanger", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "involvement_chances_tip_p30_percentile": Metric(category=MetricCategory.ATTACK,label="Betrokkenheid\nkansen", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "off_ball_runs_total_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Loopacties\nzonder bal", tooltip="De totale afgelegde afstand per 90 minuten."),
 
     # Defending metrics
-    "ball_win_removed_opponents_otip_p30_percentile": Metric(category=MetricCategory.DEFENSE,label="Aanvallende\nveroveringen"),
-    "ball_win_added_teammates_otip_p30_percentile": Metric(category=MetricCategory.DEFENSE, label="Verdedigende\nveroveringen"),
-    "ground_duels_won_p90_percentile": Metric(category=MetricCategory.DEFENSE,label="Gewonnen\ngrondduels"),
-    "ground_duels_won_percentage_percentile": Metric(category=MetricCategory.DEFENSE, label="Winstpercentage\ngrondduels"),
-    "aerial_duels_won_p90_percentile": Metric(category=MetricCategory.DEFENSE, label="Gewonnen\nluchtduels"),
-    "aerial_duels_won_percentage_percentile": Metric(category=MetricCategory.DEFENSE, label="Winstpercentage\nluchtduels"),
-    "press_total_count_otip_p30_percentile": Metric(category=MetricCategory.DEFENSE,label="Druk\nzetten"),
-    "press_total_stop_danger_otip_p30_percentile": Metric(category=MetricCategory.DEFENSE, label="Gestopt gevaar\nmet verdedigende acties"),
+    "ball_win_removed_opponents_otip_p30_percentile": Metric(category=MetricCategory.DEFENSE,label="Aanvallende\nveroveringen", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "ball_win_added_teammates_otip_p30_percentile": Metric(category=MetricCategory.DEFENSE, label="Verdedigende\nveroveringen", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "ground_duels_won_p90_percentile": Metric(category=MetricCategory.DEFENSE,label="Gewonnen\ngrondduels", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "ground_duels_won_percentage_percentile": Metric(category=MetricCategory.DEFENSE, label="Winstpercentage\ngrondduels", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "aerial_duels_won_p90_percentile": Metric(category=MetricCategory.DEFENSE, label="Gewonnen\nluchtduels", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "aerial_duels_won_percentage_percentile": Metric(category=MetricCategory.DEFENSE, label="Winstpercentage\nluchtduels", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "press_total_count_otip_p30_percentile": Metric(category=MetricCategory.DEFENSE,label="Druk\nzetten", tooltip="De totale afgelegde afstand per 90 minuten."),
+    "press_total_stop_danger_otip_p30_percentile": Metric(category=MetricCategory.DEFENSE, label="Gestopt gevaar\nmet verdedigende acties", tooltip="De totale afgelegde afstand per 90 minuten."),
 
 }
 
