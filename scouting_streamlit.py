@@ -358,6 +358,7 @@ class MetricCategory(str, Enum):
 class Metric:
     category: MetricCategory
     label: str
+    tooltip: str
 
 # Set metric variables
 metrics = {
