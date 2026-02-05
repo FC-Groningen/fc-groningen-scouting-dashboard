@@ -1150,29 +1150,32 @@ selected_from_search_table = []
 selected_from_search_table_full_data = []
 
 # This block should be at the same indentation level as your search table setup
-if search_grid_response and search_grid_response.get('selected_rows') is not None:
-    search_selected_rows = search_grid_response['selected_rows']
-    
-    # Handle both DataFrame and List of Dicts (Standard for newer AgGrid)
-    if isinstance(search_selected_rows, pd.DataFrame):
-        rows = search_selected_rows.to_dict('records')
+selected_rows = []
+if search_grid_response is not None:
+    selected_rows = search_grid_response.get('selected_rows', [])
+
+# Only process if at least one row is selected
+if len(selected_rows) > 0:
+
+    # Convert DF to list-of-dicts if necessary
+    if isinstance(selected_rows, pd.DataFrame):
+        rows = selected_rows.to_dict('records')
     else:
-        rows = search_selected_rows
+        rows = selected_rows
 
     for row in rows:
-        # 1. Get the name using the Dutch label from your table_columns
+        # Name extraction
         name_label = table_columns.get('player_name', 'Speler')
         p_name = row.get(name_label)
         
-        # 2. Get the index. AgGrid often adds '_row_index' or uses your '_original_index'
-        # We check both to be safe.
+        # Index extraction
         idx = row.get('_original_index')
         if idx is None:
-            idx = row.get('_search_original_index') # Fallback to the name used in your search code
+            idx = row.get('_search_original_index')
             
+        # Only valid if pointing into df_player_data
         if idx is not None and idx in df_player_data.index:
             selected_from_search_table.append(p_name)
-            # Pull from the MASTER data (English keys)
             selected_from_search_table_full_data.append(df_player_data.loc[idx])
 
 # X. Finalize radar plot area
