@@ -469,7 +469,7 @@ def create_polarized_bar_chart(player_data):
 
     return fig
 
-# X. METRICS AND POSITION_PROFILES
+# 2. METRICS AND POSITION_PROFILES
 # Enumeration of metric categories
 class MetricCategory(str, Enum):
     PHYSICAL = "physical"
@@ -743,7 +743,7 @@ with st.sidebar:
 # Add title
 st.title("Scouting dashboard")
 
-# X. Create the top table
+# 3. Create the top table
 # Add title and divider
 st.subheader("Ranglijst")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
@@ -763,7 +763,7 @@ with col3:
 with col4:
     min_defense = st.slider("Defensieve benchmark", min_value=0, max_value=100, value=0, step=1)
 
-# X. GET DATA
+# 4. GET DATA
 # Get percentile data
 with st.spinner('Ophalen van de data...'):
     df_player_data = load_data_from_supabase()
@@ -1020,7 +1020,7 @@ top_grid_response = AgGrid(
     theme='streamlit'
 )
 
-# Check which boxes are checked
+# Check which players are selected
 selected_from_top_table = []
 selected_from_top_table_full_data = []
 
@@ -1034,7 +1034,7 @@ if top_grid_response and top_grid_response.get('selected_rows') is not None:
     else:
         rows = selected_rows
 
-    # Process up to 2 selected players
+    # Get the data of the selected players
     for row in rows: 
         name_col = table_columns.get('player_name', 'player_name')
         selected_from_top_table.append(row.get(name_col))
@@ -1044,12 +1044,12 @@ if top_grid_response and top_grid_response.get('selected_rows') is not None:
             selected_from_top_table_full_data.append(df_top.loc[idx])
 
 
-# X. Create  radar plot section (with container)
+# 5. Create  radar plot section (with container)
 st.subheader("Radarplots")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 radar_plot_container = st.container()
 
-# X. Create player search
+# 6. Create player search
 # Add title
 st.subheader("Zoekopdracht")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
@@ -1066,14 +1066,12 @@ search_selected_players = st.multiselect(
 )
 
 # Filter and sort data
-df_selected_players = df_player_data[
-    df_player_data['player_name'].isin(search_selected_players)
-].copy().sort_values(by='total', ascending=False)
+df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().sort_values(by='total', ascending=False)
 
-# Preserve master index
+# Create master index
 df_selected_players["_original_index"] = df_selected_players.index
 
-# NOW reset for display
+# Reset the index
 df_selected_players.reset_index(drop=True, inplace=True)
 
 # Add helper columns
@@ -1151,9 +1149,8 @@ if not df_selected_players.empty:
 selected_from_search_table = []
 selected_from_search_table_full_data = []
 
-# This block should be at the same indentation level as your search table setup
+# Check whether players are selected in the search table, only when it is actually filled
 selected_rows = []
-
 if 'search_grid_response' in locals() and search_grid_response is not None:
     selected_rows = search_grid_response.get('selected_rows', [])
 
@@ -1161,14 +1158,11 @@ if 'search_grid_response' in locals() and search_grid_response is not None:
 if isinstance(selected_rows, pd.DataFrame):
     selected_rows = selected_rows.to_dict('records')
 
-# Now we can safely check if there are any selected rows
+# Check if there are any selected rows
 if isinstance(selected_rows, list) and len(selected_rows) > 0:
     for row in selected_rows:
-        # Name extraction
         name_label = table_columns.get('player_name', 'Speler')
         p_name = row.get(name_label)
-        
-        # Index extraction (with fallback)
         idx = row.get('_original_index') or row.get('_search_original_index')
         
         # Only append if index is valid
@@ -1176,22 +1170,22 @@ if isinstance(selected_rows, list) and len(selected_rows) > 0:
             selected_from_search_table.append(p_name)
             selected_from_search_table_full_data.append(df_player_data.loc[idx])
 
-# X. Finalize radar plot area
+# 7. Finalize radar plot area
 with radar_plot_container:
     
     # Combine the selections from both tables
     all_selected_names = selected_from_top_table + selected_from_search_table
     all_selected_data = selected_from_top_table_full_data + selected_from_search_table_full_data
 
-    # 2. Check the length of the FULL list for the warning
+    # Check how many players are selected
     total_selected = len(all_selected_names)
     
     if total_selected > 0:
-        # Show the warning if the total count is 3 or more
+        # Show warning if more than 2 players are selected
         if total_selected > 2:
             st.warning(f"Je hebt {total_selected} spelers geselecteerd, alleen de eerste 2 worden getoond.")
 
-        # 3. NOW slice the lists to only get the first 2 for rendering
+        # Only show the first two players
         players_to_compare = all_selected_names[:2]
         players_data_to_compare = all_selected_data[:2]
 
@@ -1262,101 +1256,6 @@ with radar_plot_container:
                     unsafe_allow_html=True
                 )
 
-
-
-
-
-
-
-
-# # 1. Combine the selections from both tables
-# players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
-# players_data_to_compare = (selected_from_top_table_full_data + selected_from_search_table_full_data)[:2]
-
-# # 2. Determine the source message for the UI
-# if selected_from_top_table and selected_from_search_table:
-#     source_message = "from both tables"
-# elif selected_from_top_table:
-#     source_message = "from search table"
-# else:
-#     source_message = "from top table"
-
-# # 3. Execution Block
-# if len(players_to_compare) > 0:
-#     # Warning if the user gets click-happy
-#     total_selected = len(selected_from_top_table) + len(selected_from_search_table)
-#     if total_selected > 2:
-#         st.warning("Je hebt meer dan 2 spelers geselecteerd, alleen de eerste 2 worden getoond.")
-
-#     # --- Animation & Column Layout ---
-#     st.markdown("""
-#     <style>
-#     @keyframes fadeIn {
-#         from { opacity: 0; transform: translateY(10px); }
-#         to { opacity: 1; transform: translateY(0); }
-#     }
-#     .stPlotlyChart { animation: fadeIn 0.5s ease-in-out; }
-#     </style>
-#     """, unsafe_allow_html=True)
-
-#     cols = st.columns(2)
-
-# for i, player_name in enumerate(players_to_compare):
-#         # We can now rely 100% on players_data_to_compare 
-#         player_data = players_data_to_compare[i]
-
-#         with cols[i]:
-#             pos_profile = player_data.get('position_profile', '')
-#             title_text = f"{player_name}  |  {pos_profile}"
-
-#             st.markdown(
-#                 f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; text-align: center;'>{title_text}</p>",
-#                 unsafe_allow_html=True
-#             )
-
-#             # Metadata Retrieval
-#             team_name = player_data['team_name']
-#             competition = player_data.get('competition_name')
-#             season = player_data.get('season_name')
-#             team_logo_b64 = get_team_logo_base64(team_name, competition)
-
-#             # Format the numbers with a period as thousands separator
-#             total_minutes = f"{int(player_data['total_minutes']):,}".replace(',', '.')
-#             position_minutes = f"{int(player_data['position_minutes']):,}".replace(',', '.')
-            
-#             # Line 1: Team and Country
-#             line1 = f"{team_name} | {competition} | {season}"
-#             # Line 2: Age, Position, and Minutes
-#             line2 = f"{int(player_data['age'])} jaar · Nationaliteit: {player_data['country']} · Totale minuten: {total_minutes} · Minuten op positie: {position_minutes}"
-
-#             # Display Logo and Caption using <br> for the enter key effect
-#             logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px; text-align: center;">' if team_logo_b64 else ""
-#             st.markdown(
-#                 f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4; text-align: center;">
-#                     {logo_html} <b>{line1}</b><br>
-#                     <span style="font-size: 0.95rem; color: #666;">{line2}</span>
-#                 </div>""", 
-#                 unsafe_allow_html=True
-#             )
-
-#             # Render Chart
-#             fig = create_polarized_bar_chart(
-#                 player_data,
-#                 player_data['competition_name'],
-#                 player_data['season_name']
-#             )
-            
-#             chart_key = f"comparison_chart_{i}_{player_name.replace(' ', '_')}"
-#             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=chart_key)
-
-#             st.markdown(
-#                 """<p style='text-align: center; font-family: "Proxima Nova", sans-serif; 
-#                 font-size: 0.8rem; color: #888; margin-top: -15px;'>
-#                 Een score van 50 is het gemiddelde op die positie binnen die competitie <br>
-#                 Data is een combinatie van Impect en SkillCorner
-#                 </p>""", 
-#                 unsafe_allow_html=True
-#             )
 
 
 
@@ -1441,61 +1340,3 @@ with radar_plot_container:
 #     ".ag-header-cell-text": {"color": "#FFFFFF !important"},
 #     ".ag-pinned-left-header": {"background-color": "#3E8C5E !important"}
 # }
-
-
-# Extended player selection code
-# selected_from_grid = []
-# selected_from_grid_full_data = []
-
-# # Map the labels from the dictionary
-# labels_to_keys = {v: k for k, v in table_columns.items()}
-
-# if grid_response and 'selected_rows' in grid_response:
-#     selected_rows = grid_response['selected_rows']
-    
-#     if selected_rows is not None and len(selected_rows) > 0:
-#         if isinstance(selected_rows, pd.DataFrame):
-#             rows_to_process = selected_rows.to_dict('records')
-#         else:
-#             rows_to_process = selected_rows
-
-#         # Limit to 2 players for the radar plot
-#         for row_dict in rows_to_process[:2]:
-#             name_label = table_columns.get('player_name', 'player_name')
-#             team_label = table_columns.get('team_with_logo_html', 'team_with_logo_html')
-#             pos_label  = table_columns.get('display_position', 'display_position')
-#             comp_label = table_columns.get('competition_name', 'competition_name')
-#             season_label = table_columns.get('season_name', 'season_name')
-
-#             selected_from_grid.append(row_dict.get(name_label))
-
-#             # Use the hidden index
-#             if '_original_index' in row_dict:
-#                 orig_idx = row_dict['_original_index']
-#                 if orig_idx in df_top.index:
-#                     selected_from_grid_full_data.append(df_top.loc[orig_idx])
-#                     continue
-
-#             # Fallback if hidden index does not work
-#             import re
-#             player_name = row_dict.get(name_label)
-            
-#             # Clean HTML from team name
-#             raw_team = str(row_dict.get(team_label, ''))
-#             team_name = raw_team
-#             if '<img' in raw_team:
-#                 match = re.search(r'margin-right: 8px;">(.+?)(?:<|$)', raw_team)
-#                 if match:
-#                     team_name = match.group(1).strip()
-
-#             # Match against df_top using original keys
-#             matched_row = df_top[
-#                 (df_top['player_name'] == player_name) &
-#                 (df_top['team_name'] == team_name) &
-#                 (df_top['display_position'] == row_dict.get(pos_label)) &
-#                 (df_top['competition_name'] == row_dict.get(comp_label)) &
-#                 (df_top['season_name'] == row_dict.get(season_label))
-#             ]
-
-#             if not matched_row.empty:
-#                 selected_from_grid_full_data.append(matched_row.iloc[0])
