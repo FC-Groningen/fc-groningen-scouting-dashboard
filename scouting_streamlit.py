@@ -1131,7 +1131,7 @@ df_selected_players["_search_original_index"] = df_selected_players.index
 if not df_selected_players.empty:
     search_grid_response = AgGrid(
         df_selected_players,
-        gridOptions=gb.build(),
+        gridOptions=gridOptions,
         enable_enterprise_modules=False,
         allow_unsafe_jscode=True,
         update_mode=GridUpdateMode.SELECTION_CHANGED,
