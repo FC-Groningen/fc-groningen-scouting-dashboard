@@ -1031,6 +1031,9 @@ selected_from_search_table_full_data = []
 # Get the human-readable label for "Player Name"
 name_col = table_columns.get('player_name', 'Player Name')
 
+# Default if nothing is selected
+search_grid_response = None
+
 # Process only if rows are selected
 if search_grid_response and search_grid_response.get('selected_rows') is not None:
     search_selected_rows = search_grid_response['selected_rows']
