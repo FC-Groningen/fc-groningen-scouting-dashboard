@@ -1152,32 +1152,29 @@ selected_from_search_table = []
 selected_from_search_table_full_data = []
 
 # This block should be at the same indentation level as your search table setup
+selected_rows = []
 if 'search_grid_response' in locals() and search_grid_response is not None:
     selected_rows = search_grid_response.get('selected_rows', [])
 
-    # Only process if at least one row is selected
-    if len(selected_rows) > 0:
+# Only process if there are any rows selected
+if selected_rows:
+    # Convert DF to list-of-dicts if necessary
+    if isinstance(selected_rows, pd.DataFrame):
+        rows = selected_rows.to_dict('records')
+    else:
+        rows = selected_rows
 
-        # Convert DF to list-of-dicts if necessary
-        if isinstance(selected_rows, pd.DataFrame):
-            rows = selected_rows.to_dict('records')
-        else:
-            rows = selected_rows
-
-        for row in rows:
-            # Name extraction
-            name_label = table_columns.get('player_name', 'Speler')
-            p_name = row.get(name_label)
-            
-            # Index extraction
-            idx = row.get('_original_index')
-            if idx is None:
-                idx = row.get('_search_original_index')
-                
-            # Only valid if pointing into df_player_data
-            if idx is not None and idx in df_player_data.index:
-                selected_from_search_table.append(p_name)
-                selected_from_search_table_full_data.append(df_player_data.loc[idx])
+    for row in rows:
+        # Name extraction
+        name_label = table_columns.get('player_name', 'Speler')
+        p_name = row.get(name_label)
+        
+        # Index extraction
+        idx = row.get('_original_index') or row.get('_search_original_index')
+        
+        if idx is not None and idx in df_player_data.index:
+            selected_from_search_table.append(p_name)
+            selected_from_search_table_full_data.append(df_player_data.loc[idx])
 
 # X. Finalize radar plot area
 with radar_plot_container:
