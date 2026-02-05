@@ -1128,7 +1128,8 @@ def create_polarized_bar_chart(player_data):
                 showticklabels=False, 
                 gridcolor='rgba(0,0,0,0.1)', 
                 tickvals=[-0.5, 25, 50, 75, 100], 
-                showline=False
+                showline=False,
+                ticks=[]
             ),
 
             # Set lay-out of the vertical lines
