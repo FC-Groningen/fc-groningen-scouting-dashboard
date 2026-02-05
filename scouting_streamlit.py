@@ -1198,9 +1198,6 @@ with radar_plot_container:
         if total_selected > 2:
             st.warning("Je hebt meer dan 2 spelers geselecteerd, alleen de eerste 2 worden getoond.")
 
-        # Header for the comparison section
-        st.subheader("Speler Vergelijking")
-
         # --- Animation & Column Layout ---
         st.markdown("""
         <style>
@@ -1245,8 +1242,7 @@ with radar_plot_container:
                 logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-bottom: 5px;">' if team_logo_b64 else ""
                 st.markdown(
                     f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4; text-align: center;">
-                        {logo_html}<br>
-                        <b>{line1}</b><br>
+                        {logo_html} <b>{line1}</b><br>
                         <span style="font-size: 0.95rem; color: #666;">{line2}</span>
                     </div>""", 
                     unsafe_allow_html=True
