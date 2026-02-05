@@ -1141,7 +1141,73 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 showgrid=False,           # <--- WE HIDE BUILT-IN GRID
                 ticks='', 
                 showline=True,            # <--- THE OUTER BORDER
-                linecolor='rgba(0,0,0,0.2)'
+                linecolor='rgba(0,0,0,0.2)',
+
+That classic "tick" look on the outer ring is actually controlled by the ticks and ticklen properties of the angularaxis. In our recent attempts to clean up the chart, we set ticks='' which removed them.
+
+To get that specific look back while keeping the lines behind the bars and the center clean, we need to re-enable those ticks but keep the grid (the spokes) turned off.
+
+The "Tick" Restoration Code
+Here is the updated section 6. I have combined the manual lines (which stay behind the bars) with the angular axis ticks (which stay on the outer ring).
+
+Python
+    # 6. Build Figure
+    fig = go.Figure()
+
+    # --- LAYER 1: THE RADIAL SPOKES (Lines behind bars) ---
+    r_coords = []
+    theta_coords = []
+    for label in metric_labels:
+        r_coords.extend([0, 100, None]) 
+        theta_coords.extend([label, label, None])
+
+    fig.add_trace(go.Scatterpolar(
+        r=r_coords,
+        theta=theta_coords,
+        mode='lines',
+        line=dict(color='rgba(0,0,0,0.1)', width=1),
+        hoverinfo='skip',
+        showlegend=False
+    ))
+
+    # --- LAYER 2: THE BARS ---
+    fig.add_trace(go.Barpolar(
+        r=percentile_values,
+        theta=metric_labels,
+        marker=dict(
+            color=colors, 
+            line=dict(color='white', width=1.5) 
+        ),
+        text=[f'{v:.0f}' for v in percentile_values],
+        hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
+    ))
+
+    # --- THE LAYOUT ---
+    fig.update_layout(
+        polar=dict(
+            bgcolor='white',
+            radialaxis=dict(
+                range=[-25, 100], 
+                visible=True, 
+                showticklabels=False, 
+                gridcolor='rgba(0,0,0,0.1)', 
+                tickvals=[25, 50, 75, 100], 
+                ticks='', 
+                showline=False
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=10, family='Proxima Nova', color='black'), 
+                rotation=90, 
+                direction='clockwise', 
+                showgrid=False,           # Keep spokes off so they don't hit the center
+                showline=True,            # The outer circle
+                linecolor='black',
+                
+                # --- TICK RESTORATION ---
+                ticks='outside',          # Put the ticks back on the outside
+                ticklen=8,                # Length of the little lines
+                tickwidth=1,              # Thickness of the little lines
+                tickcolor='black'
             )
         ),
         annotations=[
