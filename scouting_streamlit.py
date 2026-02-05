@@ -1204,9 +1204,8 @@ if len(players_to_compare) > 0:
 
     cols = st.columns(2)
 
-    for i, player_name in enumerate(players_to_compare):
+for i, player_name in enumerate(players_to_compare):
         # We can now rely 100% on players_data_to_compare 
-        # because our new retrieval logic is so robust
         player_data = players_data_to_compare[i]
 
         with cols[i]:
@@ -1220,21 +1219,20 @@ if len(players_to_compare) > 0:
             competition = player_data.get('competition_name')
             team_logo_b64 = get_team_logo_base64(team_name, competition)
 
-            # Build Clean Caption
+            # Build Clean Caption - Split into two parts
             pos = player_data.get('display_position') or player_data.get('position_profile') or player_data.get('position', '')
-            caption_parts = [
-                f"{team_name}",
-                f"{player_data['country']}",
-                f"Age {int(player_data['age'])}",
-                f"{pos}",
-                f"{int(player_data['total_minutes'])} mins"
-            ]
+            
+            # Line 1: Team and Country
+            line1 = f"{team_name} · {player_data['country']}"
+            # Line 2: Age, Position, and Minutes
+            line2 = f"Age {int(player_data['age'])} · {pos} · {int(player_data['total_minutes'])} mins"
 
-            # Display Logo and Caption
+            # Display Logo and Caption using <br> for the enter key effect
             logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
             st.markdown(
-                f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.6;">
-                    {logo_html} {' · '.join(caption_parts)}
+                f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4;">
+                    {logo_html} <b>{line1}</b><br>
+                    <span style="font-size: 0.95rem; color: #666;">{line2}</span>
                 </div>""", 
                 unsafe_allow_html=True
             )
