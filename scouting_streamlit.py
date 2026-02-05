@@ -1142,24 +1142,21 @@ if not df_selected_players.empty:
 selected_from_search_table = []
 selected_from_search_table_full_data = []
 
-# Get the human-readable label for "Player Name"
-name_col = table_columns.get('player_name', 'Player Name')
-
-# Process only if rows are selected
-if search_grid_response and search_grid_response.get('selected_rows') is not None:
+# This block should be at the same indentation level as your search table setup
+if 'search_grid_response' in locals() and search_grid_response and search_grid_response.get('selected_rows') is not None:
     search_selected_rows = search_grid_response['selected_rows']
     
-    # Standardize AgGrid output to a list of dictionaries
-    rows = (search_selected_rows.to_dict('records') 
-            if isinstance(search_selected_rows, pd.DataFrame) 
-            else search_selected_rows)
+    # Standardize AgGrid output
+    search_rows = (search_selected_rows.to_dict('records') 
+                  if isinstance(search_selected_rows, pd.DataFrame) 
+                  else search_selected_rows)
 
-    # Extract data for the first 2 selected players
-    for row in rows[:2]:
-        selected_from_search_table.append(row.get(name_col))
+    for row in search_rows[:2]:
+        name_val = row.get(table_columns.get('player_name', 'Player Name'))
+        selected_from_search_table.append(name_val)
         
-        # Pull full data from search_df using the hidden unique index
-        idx = row.get('_search_original_index')
+        # Pull data using the index you established in the search table
+        idx = row.get('_original_index')
         if idx is not None and idx in df_selected_players.index:
             selected_from_search_table_full_data.append(df_selected_players.loc[idx])
 
