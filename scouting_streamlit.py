@@ -1125,8 +1125,9 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         marker=dict(color=colors, line=dict(color='white', width=1.5)),
         customdata=hover_descriptions,
         hovertemplate=(
-            "<b>%Score: %{r:.1f}</b><br>" +
-            "{customdata}" +
+            "<b>%{theta}</b><br>" +
+            "<b>Score: %{r:.1f}</b><br>" +
+            "%{customdata}" +
             "<extra></extra>"
         )
     ))
