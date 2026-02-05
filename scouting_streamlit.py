@@ -1150,7 +1150,7 @@ selected_from_search_table = []
 selected_from_search_table_full_data = []
 
 # This block should be at the same indentation level as your search table setup
-if search_grid_response and search_grid_response.get('selected_rows') is not None:
+if isinstance(search_grid_response, dict) and search_grid_response.get("selected_rows") is not None:
     search_selected_rows = search_grid_response['selected_rows']
     
     # Handle both DataFrame and List of Dicts (Standard for newer AgGrid)
