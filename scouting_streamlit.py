@@ -1133,6 +1133,8 @@ gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 
 gridOptions = gb.build()
 
+search_grid_response = None
+
 if not df_selected_players.empty:
     search_grid_response = AgGrid(
         df_selected_players,
