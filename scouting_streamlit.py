@@ -1148,37 +1148,36 @@ if not df_selected_players.empty:
     )
 
 # Check which boxes are checked
+# Always initialize
 selected_from_search_table = []
 selected_from_search_table_full_data = []
 
-# This block should be at the same indentation level as your search table setup
-selected_rows = []
+# Only process if the grid exists
 if search_grid_response is not None:
-    selected_rows = search_grid_response.get('selected_rows', [])
 
-# Only process if at least one row is selected
-if len(selected_rows) > 0:
+    # Safely get selected rows — returns [] if none
+    search_selected_rows = search_grid_response.get('selected_rows') or []
 
-    # Convert DF to list-of-dicts if necessary
-    if isinstance(selected_rows, pd.DataFrame):
-        rows = selected_rows.to_dict('records')
-    else:
-        rows = selected_rows
+    # If nothing is selected, do NOTHING (this is what we want!)
+    if len(search_selected_rows) > 0:
 
-    for row in rows:
-        # Name extraction
-        name_label = table_columns.get('player_name', 'Speler')
-        p_name = row.get(name_label)
-        
-        # Index extraction
-        idx = row.get('_original_index')
-        if idx is None:
-            idx = row.get('_search_original_index')
-            
-        # Only valid if pointing into df_player_data
-        if idx is not None and idx in df_player_data.index:
-            selected_from_search_table.append(p_name)
-            selected_from_search_table_full_data.append(df_player_data.loc[idx])
+        # Normalize
+        if isinstance(search_selected_rows, pd.DataFrame):
+            rows = search_selected_rows.to_dict("records")
+        else:
+            rows = search_selected_rows
+
+        # Extract players
+        for row in rows:
+            name_label = table_columns.get('player_name', 'Speler')
+            p_name = row.get(name_label)
+
+            idx = row.get('_original_index') or row.get('_search_original_index')
+
+            if idx is not None and idx in df_player_data.index:
+                selected_from_search_table.append(p_name)
+                selected_from_search_table_full_data.append(df_player_data.loc[idx])
+
 
 # X. Finalize radar plot area
 with radar_plot_container:
