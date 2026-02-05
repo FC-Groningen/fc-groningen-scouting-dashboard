@@ -1264,6 +1264,14 @@ for i, player_name in enumerate(players_to_compare):
             chart_key = f"comparison_chart_{i}_{player_name.replace(' ', '_')}"
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=chart_key)
 
+            st.markdown(
+                """<p style='text-align: center; font-family: "Proxima Nova", sans-serif; 
+                font-size: 0.8rem; color: #888; margin-top: -15px;'>
+                Data is een combinatie van Impect en SkillCorner | Een score van 50 is het gemiddelde op die positie binnen die competitie
+                </p>""", 
+                unsafe_allow_html=True
+            )
+
 
 
 
