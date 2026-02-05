@@ -1083,7 +1083,7 @@ for col in numeric_columns:
 # Reorder and rename columns
 all_needed_cols = list(table_columns.keys()) + ["player_url"]
 df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
-df_selected_players = df_selected_players.rename(columns=table_columns)
+# df_selected_players = df_selected_players.rename(columns=table_columns)
 
 # Create third table
 gb = GridOptionsBuilder.from_dataframe(df_selected_players)
