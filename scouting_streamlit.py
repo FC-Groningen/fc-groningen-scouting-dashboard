@@ -1225,7 +1225,7 @@ for i, player_name in enumerate(players_to_compare):
             title_text = f"{player_name}  |  {pos_profile}"
 
             st.markdown(
-                f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;'>{title_text}</p>",
+                f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; text-align: center;'>{title_text}</p>",
                 unsafe_allow_html=True
             )
 
@@ -1245,9 +1245,9 @@ for i, player_name in enumerate(players_to_compare):
             line2 = f"{int(player_data['age'])} jaar · Nationaliteit: {player_data['country']} · Totale minuten: {total_minutes} · Minuten op positie: {position_minutes}"
 
             # Display Logo and Caption using <br> for the enter key effect
-            logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
+            logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px; text-align: center;">' if team_logo_b64 else ""
             st.markdown(
-                f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4;">
+                f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4; text-align: center;">
                     {logo_html} <b>{line1}</b><br>
                     <span style="font-size: 0.95rem; color: #666;">{line2}</span>
                 </div>""", 
