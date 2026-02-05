@@ -1255,6 +1255,8 @@ with radar_plot_container:
                     </p>""", 
                     unsafe_allow_html=True
                 )
+    else:
+        st.info("Selecteer spelers in de ranglijst en/of zoekopdracht tabellen om hun radarplots te zien.")
 
 
 
