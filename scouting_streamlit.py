@@ -1228,7 +1228,7 @@ for i, player_name in enumerate(players_to_compare):
             # Line 1: Team and Country
             line1 = f"{team_name} | {competition} | {season}"
             # Line 2: Age, Position, and Minutes
-            line2 = f"{int(player_data['age'])} jaar | {player_data['nationality']}"
+            line2 = f"{int(player_data['age'])} jaar | {player_data['country']}"
 
             # Display Logo and Caption using <br> for the enter key effect
             logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
