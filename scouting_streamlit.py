@@ -742,6 +742,9 @@ with st.sidebar:
 
 # Add title
 st.title("Scouting dashboard")
+
+# X. Create the top table
+# Add title and divider
 st.subheader("Ranglijst")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
@@ -1041,17 +1044,11 @@ if top_grid_response and top_grid_response.get('selected_rows') is not None:
         if idx is not None and idx in df_top.index:
             selected_from_top_table_full_data.append(df_top.loc[idx])
 
-# Create plot section (with container)
+
+# X. Create  radar plot section (with container)
 st.subheader("Radarplots")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 radar_plot_container = st.container()
-
-
-
-
-
-
-
 
 # X. Create player search
 # Add title
@@ -1129,15 +1126,18 @@ gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 
 gridOptions = gb.build()
 
+df_selected_players["_search_original_index"] = df_selected_players.index
+
 if not df_selected_players.empty:
     search_grid_response = AgGrid(
         df_selected_players,
-        gridOptions=gridOptions,
+        gridOptions=gb.build(),
         enable_enterprise_modules=False,
         allow_unsafe_jscode=True,
         update_mode=GridUpdateMode.SELECTION_CHANGED,
         height= min(615, 34.5 + len(df_selected_players) * 29.1),
         fit_columns_on_grid_load=False,
+        key='search_grid',
         theme='streamlit'
     )
 
@@ -1147,9 +1147,6 @@ selected_from_search_table_full_data = []
 
 # Get the human-readable label for "Player Name"
 name_col = table_columns.get('player_name', 'Player Name')
-
-# Default if nothing is selected
-search_grid_response = None
 
 # Process only if rows are selected
 if search_grid_response and search_grid_response.get('selected_rows') is not None:
@@ -1169,24 +1166,21 @@ if search_grid_response and search_grid_response.get('selected_rows') is not Non
         if idx is not None and idx in df_selected_players.index:
             selected_from_search_table_full_data.append(df_selected_players.loc[idx])
 
-
-
-
-
-
-# 2. Populate the container at the end of your script
+# X. Finalize radar plot area
 with radar_plot_container:
-    # Combine the selections from both tables
-    players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
-    players_data_to_compare = (selected_from_top_table_full_data + selected_from_search_table_full_data)[:2]
+    # Calculate how many players are selected
+    all_selected_names = selected_from_top_table + selected_from_search_table
+    all_selected_data = selected_from_top_table_full_data + selected_from_search_table_full_data
+
+    # Select first two players
+    players_to_compare = all_selected_names[:2]
+    players_data_to_compare = all_selected_data[:2]
 
     if len(players_to_compare) > 0:
-        # Warning if the user gets click-happy
-        total_selected = len(selected_from_top_table) + len(selected_from_search_table)
-        if total_selected > 2:
-            st.warning("Je hebt meer dan 2 spelers geselecteerd, alleen de eerste 2 worden getoond.")
+        # 3. Now the warning will trigger correctly
+        if len(all_selected_names) > 2:
+            st.warning(f"Je hebt {len(all_selected_names)} spelers geselecteerd. Alleen de eerste 2 worden getoond.")
 
-        # --- Animation & Column Layout ---
         st.markdown("""
         <style>
         @keyframes fadeIn {
@@ -1199,10 +1193,13 @@ with radar_plot_container:
 
         cols = st.columns(2)
 
+        # Create radar plot
         for i, player_name in enumerate(players_to_compare):
             player_data = players_data_to_compare[i]
 
             with cols[i]:
+
+                # Create title
                 pos_profile = player_data.get('position_profile', '')
                 title_text = f"{player_name}  |  {pos_profile}"
 
@@ -1211,22 +1208,21 @@ with radar_plot_container:
                     unsafe_allow_html=True
                 )
 
-                # Metadata Retrieval
+                # Get information for subtitles
                 team_name = player_data['team_name']
                 competition = player_data.get('competition_name')
                 season = player_data.get('season_name')
                 team_logo_b64 = get_team_logo_base64(team_name, competition)
 
-                # Format the numbers with a period as thousands separator
+                # Format the numbers with a thousand separator
                 total_minutes = f"{int(player_data['total_minutes']):,}".replace(',', '.')
                 position_minutes = f"{int(player_data['position_minutes']):,}".replace(',', '.')
                 
-                # Line 1: Team and Competition
+                # Subtitles
                 line1 = f"{team_name} | {competition} | {season}"
-                # Line 2: Stats
                 line2 = f"{int(player_data['age'])} jaar · Nationaliteit: {player_data['country']} · Totale minuten: {total_minutes} · Minuten op positie: {position_minutes}"
 
-                # Display Logo and Caption
+                # Customaize substitle with team logo
                 logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
                 st.markdown(
                     f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4; text-align: center;">
@@ -1236,13 +1232,13 @@ with radar_plot_container:
                     unsafe_allow_html=True
                 )
 
-                # Render Chart
+                # Create the chart
                 fig = create_polarized_bar_chart(player_data)
                 
                 chart_key = f"comparison_chart_{i}_{player_name.replace(' ', '_')}"
                 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=chart_key)
 
-                # Centered Multi-line Footer
+                # Add information at the bottom
                 st.markdown(
                     """<p style='text-align: center; font-family: "Proxima Nova", sans-serif; 
                     font-size: 0.8rem; color: #888; margin-top: -15px;'>
