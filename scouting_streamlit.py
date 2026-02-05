@@ -1035,8 +1035,7 @@ if top_grid_response and top_grid_response.get('selected_rows') is not None:
         rows = selected_rows
 
     # Process up to 2 selected players
-    for row in rows[:2]:
-        # Get the human-readable name for display
+    for row in rows: 
         name_col = table_columns.get('player_name', 'player_name')
         selected_from_top_table.append(row.get(name_col))
 
