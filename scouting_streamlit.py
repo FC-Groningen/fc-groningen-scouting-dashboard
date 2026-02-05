@@ -330,7 +330,7 @@ def get_player_url(row):
     # If not found, return None (nothing)
     return None
 
-# 1.11
+# 1.11 Create team name column with logo
 def create_team_html_with_logo(row):
     """"
     Create column that combines team logo with name.
@@ -346,7 +346,7 @@ def create_team_html_with_logo(row):
         return f'<img src="{logo_b64}" height="20" style="vertical-align: middle; margin-right: 8px;">{team_name}'
     return team_name
 
-# 1.12 
+# 1.12 Get gradient of main color
 def get_gradient_color(score, base_hex):
     """
     Returns gradient of the main color based on its value.
@@ -355,7 +355,120 @@ def get_gradient_color(score, base_hex):
     norm = max(0, min(1, score / 100))
     base = [int(base_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)]
     return f'rgb({int(255-(255-base[0])*norm)}, {int(255-(255-base[1])*norm)}, {int(255-(255-base[2])*norm)})'
+
+# 1.13 Function that creates the bar chart
+def create_polarized_bar_chart(player_data):
+    """
+    Create polarized bar chart.
+    """
     
+    # Get the selected position
+    profile_key = player_data.get('position')
+
+    # Automatically sort metrics into categories based on the dictionary
+    active_metric_keys = position_profiles.get(profile_key, [])
+    
+    physical_keys = [k for k in active_metric_keys if metrics[k].category == MetricCategory.PHYSICAL]
+    attack_keys   = [k for k in active_metric_keys if metrics[k].category == MetricCategory.ATTACK]
+    defense_keys  = [k for k in active_metric_keys if metrics[k].category == MetricCategory.DEFENSE]
+    
+    all_keys = physical_keys + attack_keys + defense_keys
+
+    # Get the information shown per metric
+    hover_descriptions = [metrics[m].tooltip for m in active_metric_keys]
+
+    # Get percentile scores and labels
+    percentile_values = [float(player_data.get(k, 0)) for k in all_keys]
+    metric_labels = [metrics[k].label.replace('\n', '<br>') for k in all_keys]
+
+    # Get the category and total scores
+    physical_avg = float(player_data.get('physical', 0))
+    attack_avg   = float(player_data.get('attacking', 0))
+    defense_avg  = float(player_data.get('defending', 0))
+    overall_avg  = float(player_data.get('total', np.mean([physical_avg, attack_avg, defense_avg])))
+
+    # Set colors
+    colors = ([get_gradient_color(v, '#3E8C5E') for v in percentile_values[:len(physical_keys)]] +
+              [get_gradient_color(v, '#E83F2A') for v in percentile_values[len(physical_keys):len(physical_keys)+len(attack_keys)]] +
+              [get_gradient_color(v, '#F2B533') for v in percentile_values[-len(defense_keys):]])
+
+    # Build Figure
+    fig = go.Figure()
+
+    # Add the bars
+    fig.add_trace(go.Barpolar(
+        r=percentile_values,
+        theta=metric_labels,
+        marker=dict(color=colors, line=dict(color='white', width=1.5)),
+        customdata=hover_descriptions,
+        hovertemplate=(
+            "<span style='color:black;'><b>Score: %{r:.1f}</b></span><br>" +
+            "%{customdata}" +
+            "<extra></extra>"
+        )
+    ))
+
+    # Customize layout
+    fig.update_layout(
+
+        polar=dict(
+            bgcolor='white',
+
+            # Set layout of the horizontal rings
+            radialaxis=dict(
+                range=[-25, 100], 
+                visible=True, 
+                showticklabels=False, 
+                gridcolor='rgba(0,0,0,0.1)', 
+                tickvals=[-0.35, 25, 50, 75, 100], 
+                showline=False,
+                ticks=''
+            ),
+
+            # Set lay-out of the vertical lines
+            angularaxis=dict(
+                tickfont=dict(size=10, family='Proxima Nova', color='black'), 
+                rotation=90, 
+                direction='clockwise', 
+                showgrid=False,           
+                showline=True,            
+                linecolor='black',
+                ticks='outside',          
+                ticklen=8,                
+                tickwidth=1,              
+                tickcolor='black'
+            )
+        ),
+
+        # Add total score in the middle
+        annotations=[
+            dict(
+                text=f"<b>{overall_avg:.1f}</b>", 
+                x=0.5, y=0.5,
+                showarrow=False,
+                font=dict(size=28, color='black'), 
+                xref="paper", yref="paper"
+            )
+        ],
+        showlegend=False,
+        height=500,
+        margin=dict(l=50, r=50, t=100, b=50),
+
+        # Add category scores
+        title=dict(
+            text=(
+                f"<span style='color:#3E8C5E; font-size:18px; vertical-align: middle;'>●</span> Fysiek: {physical_avg:.1f} | "
+                f"<span style='color:#E83F2A; font-size:18px; vertical-align: middle;'>●</span> Aanvallend: {attack_avg:.1f} | "
+                f"<span style='color:#F2B533; font-size:18px; vertical-align: middle;'>●</span> Verdedigend: {defense_avg:.1f}"
+                f"</span>"
+            ),
+            x=0.5, y=0.98, xanchor='center',
+            font=dict(family='Proxima Nova', size=16, color='black')
+        )
+    )
+
+    return fig
+
 # X. METRICS AND POSITION_PROFILES
 # Enumeration of metric categories
 class MetricCategory(str, Enum):
@@ -747,13 +860,6 @@ if len(df_top) == 0:
     st.info("No players match the current filters.")
     st.stop()
 
-# TEMP: Not sure if this is needed
-df_filtered = df_filtered[
-    (df_filtered["physical"] >= min_physical) &
-    (df_filtered["attacking"] >= min_attack) &
-    (df_filtered["defending"] >= min_defense)
-]
-
 # Add technical columns you need for the logic but don't want to show
 technical_cols = ["team_name", "impect_url"] 
 
@@ -1064,117 +1170,7 @@ if search_grid_response and search_grid_response.get('selected_rows') is not Non
             selected_from_search_table_full_data.append(df_selected_players.loc[idx])
 
 
-def create_polarized_bar_chart(player_data):
-    """
-    Create polarized bar chart.
-    """
-    
-    # Get the selected position
-    profile_key = player_data.get('position')
 
-    # Automatically sort metrics into categories based on the dictionary
-    active_metric_keys = position_profiles.get(profile_key, [])
-    
-    physical_keys = [k for k in active_metric_keys if metrics[k].category == MetricCategory.PHYSICAL]
-    attack_keys   = [k for k in active_metric_keys if metrics[k].category == MetricCategory.ATTACK]
-    defense_keys  = [k for k in active_metric_keys if metrics[k].category == MetricCategory.DEFENSE]
-    
-    all_keys = physical_keys + attack_keys + defense_keys
-
-    # Get the information shown per metric
-    hover_descriptions = [metrics[m].tooltip for m in active_metric_keys]
-
-    # Get percentile scores and labels
-    percentile_values = [float(player_data.get(k, 0)) for k in all_keys]
-    metric_labels = [metrics[k].label.replace('\n', '<br>') for k in all_keys]
-
-    # Get the category and total scores
-    physical_avg = float(player_data.get('physical', 0))
-    attack_avg   = float(player_data.get('attacking', 0))
-    defense_avg  = float(player_data.get('defending', 0))
-    overall_avg  = float(player_data.get('total', np.mean([physical_avg, attack_avg, defense_avg])))
-
-    # Set colors
-    colors = ([get_gradient_color(v, '#3E8C5E') for v in percentile_values[:len(physical_keys)]] +
-              [get_gradient_color(v, '#E83F2A') for v in percentile_values[len(physical_keys):len(physical_keys)+len(attack_keys)]] +
-              [get_gradient_color(v, '#F2B533') for v in percentile_values[-len(defense_keys):]])
-
-    # Build Figure
-    fig = go.Figure()
-
-    # Add the bars
-    fig.add_trace(go.Barpolar(
-        r=percentile_values,
-        theta=metric_labels,
-        marker=dict(color=colors, line=dict(color='white', width=1.5)),
-        customdata=hover_descriptions,
-        hovertemplate=(
-            "<span style='color:black;'><b>Score: %{r:.1f}</b></span><br>" +
-            "%{customdata}" +
-            "<extra></extra>"
-        )
-    ))
-
-    # Customize layout
-    fig.update_layout(
-
-        polar=dict(
-            bgcolor='white',
-
-            # Set layout of the horizontal rings
-            radialaxis=dict(
-                range=[-25, 100], 
-                visible=True, 
-                showticklabels=False, 
-                gridcolor='rgba(0,0,0,0.1)', 
-                tickvals=[-0.35, 25, 50, 75, 100], 
-                showline=False,
-                ticks=''
-            ),
-
-            # Set lay-out of the vertical lines
-            angularaxis=dict(
-                tickfont=dict(size=10, family='Proxima Nova', color='black'), 
-                rotation=90, 
-                direction='clockwise', 
-                showgrid=False,           
-                showline=True,            
-                linecolor='black',
-                ticks='outside',          
-                ticklen=8,                
-                tickwidth=1,              
-                tickcolor='black'
-            )
-        ),
-
-        # Add total score in the middle
-        annotations=[
-            dict(
-                text=f"<b>{overall_avg:.1f}</b>", 
-                x=0.5, y=0.5,
-                showarrow=False,
-                font=dict(size=28, color='black'), 
-                xref="paper", yref="paper"
-            )
-        ],
-        showlegend=False,
-        height=500,
-        margin=dict(l=50, r=50, t=100, b=50),
-
-        # Add category scores
-        title=dict(
-            text=(
-                f"<span style='color:#3E8C5E; font-size:18px; vertical-align: middle;'>●</span> Fysiek: {physical_avg:.1f} | "
-                f"<span style='color:#E83F2A; font-size:18px; vertical-align: middle;'>●</span> Aanvallend: {attack_avg:.1f} | "
-                f"<span style='color:#F2B533; font-size:18px; vertical-align: middle;'>●</span> Verdedigend: {defense_avg:.1f}"
-                f"</span>"
-            ),
-            x=0.5, y=0.98, xanchor='center',
-            font=dict(family='Proxima Nova', size=16, color='black')
-        )
-    )
-
-    return fig
 
 
 
