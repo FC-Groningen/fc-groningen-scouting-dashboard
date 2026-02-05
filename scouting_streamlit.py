@@ -1142,22 +1142,25 @@ selected_from_search_table = []
 selected_from_search_table_full_data = []
 
 # This block should be at the same indentation level as your search table setup
-if 'search_grid_response' in locals() and search_grid_response and search_grid_response.get('selected_rows') is not None:
+if search_grid_response and search_grid_response.get('selected_rows') is not None:
     search_selected_rows = search_grid_response['selected_rows']
     
-    # Standardize AgGrid output
-    search_rows = (search_selected_rows.to_dict('records') 
-                  if isinstance(search_selected_rows, pd.DataFrame) 
-                  else search_selected_rows)
+    # Standardize AgGrid output to a list of dictionaries
+    rows = (search_selected_rows.to_dict('records') 
+            if isinstance(search_selected_rows, pd.DataFrame) 
+            else search_selected_rows)
 
-    for row in search_rows[:2]:
-        name_val = row.get(table_columns.get('player_name', 'Player Name'))
-        selected_from_search_table.append(name_val)
+    for row in rows:
+        # 1. Get the name using the Dutch label from your table_columns
+        name_col_dutch = table_columns.get('player_name', 'Speler')
+        p_name = row.get(name_col_dutch)
         
-        # Pull data using the index you established in the search table
-        idx = row.get('_original_index')
-        if idx is not None and idx in df_selected_players.index:
-            selected_from_search_table_full_data.append(df_selected_players.loc[idx])
+        if p_name:
+            selected_from_search_table.append(p_name)
+            
+            # 2. FIX: Instead of looking up by index, convert the row directly to a Series.
+            # This 'row' already contains all the stats needed for the radar plot!
+            selected_from_search_table_full_data.append(pd.Series(row))
 
 # X. Finalize radar plot area
 with radar_plot_container:
