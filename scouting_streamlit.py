@@ -1267,7 +1267,8 @@ for i, player_name in enumerate(players_to_compare):
             st.markdown(
                 """<p style='text-align: center; font-family: "Proxima Nova", sans-serif; 
                 font-size: 0.8rem; color: #888; margin-top: -15px;'>
-                Data is een combinatie van Impect en SkillCorner | Een score van 50 is het gemiddelde op die positie binnen die competitie
+                Een score van 50 is het gemiddelde op die positie binnen die competitie <br>
+                Data is een combinatie van Impect en SkillCorner
                 </p>""", 
                 unsafe_allow_html=True
             )
