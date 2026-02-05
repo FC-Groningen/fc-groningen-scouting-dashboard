@@ -1084,10 +1084,11 @@ for col in numeric_columns:
 # Reorder and rename columns
 all_needed_cols = list(table_columns.keys()) + ["player_url"]
 df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
-df_selected_players = df_selected_players.rename(columns=table_columns)
+df_selected_players['temp_id'] = range(len(df_selected_players))
+df_show_search = df_selected_players.rename(columns=table_columns)
 
 # Create third table
-gb = GridOptionsBuilder.from_dataframe(df_selected_players)
+gb = GridOptionsBuilder.from_dataframe(df_show_search)
 
 # Set the width of specific columns
 gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
@@ -1130,7 +1131,7 @@ df_selected_players["_search_original_index"] = df_selected_players.index
 
 if not df_selected_players.empty:
     search_grid_response = AgGrid(
-        df_selected_players,
+        df_show_search,
         gridOptions=gridOptions,
         enable_enterprise_modules=False,
         allow_unsafe_jscode=True,
@@ -1150,21 +1151,22 @@ name_col = table_columns.get('player_name', 'Player Name')
 
 # Process only if rows are selected
 if search_grid_response and search_grid_response.get('selected_rows') is not None:
-    search_selected_rows = search_grid_response['selected_rows']
+    selected_rows = search_grid_response['selected_rows']
     
-    # Standardize AgGrid output to a list of dictionaries
-    rows = (search_selected_rows.to_dict('records') 
-            if isinstance(search_selected_rows, pd.DataFrame) 
-            else search_selected_rows)
+    # Standardize to list of dicts
+    rows = (selected_rows.to_dict('records') if isinstance(selected_rows, pd.DataFrame) else selected_rows)
 
-    # Extract data for the first 2 selected players
-    for row in rows[:2]:
-        selected_from_search_table.append(row.get(name_col))
+    for row in rows:
+        # 1. Get the player name (using the Dutch key since the table is renamed)
+        dutch_name_key = table_columns.get('player_name', 'Speler')
+        selected_from_search_table.append(row.get(dutch_name_key))
         
-        # Pull full data from search_df using the hidden unique index
-        idx = row.get('_search_original_index')
-        if idx is not None:
-            selected_from_search_table_full_data.append(df_player_data.loc[idx])
+        # 2. Use the temp_id to find the RAW data in the original dataframe
+        # We find the row in the English DF where temp_id matches
+        t_id = row.get('temp_id') # temp_id wasn't renamed, so it's still 'temp_id'
+        if t_id is not None:
+            raw_player_data = df_selected_players.iloc[t_id]
+            selected_from_search_table_full_data.append(raw_player_data)
 
 # X. Finalize radar plot area
 with radar_plot_container:
