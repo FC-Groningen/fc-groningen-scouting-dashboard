@@ -1227,7 +1227,7 @@ with radar_plot_container:
                 line2 = f"{int(player_data['age'])} jaar · Nationaliteit: {player_data['country']} · Totale minuten: {total_minutes} · Minuten op positie: {position_minutes}"
 
                 # Display Logo and Caption
-                logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-bottom: 5px;">' if team_logo_b64 else ""
+                logo_html = f'<<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
                 st.markdown(
                     f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4; text-align: center;">
                         {logo_html} <b>{line1}</b><br>
