@@ -1163,8 +1163,8 @@ if search_grid_response and search_grid_response.get('selected_rows') is not Non
         
         # Pull full data from search_df using the hidden unique index
         idx = row.get('_search_original_index')
-        if idx is not None:
-            selected_from_search_table_full_data.append(df_player_data.loc[idx])
+        if idx is not None and idx in df_selected_players.index:
+            selected_from_search_table_full_data.append(df_selected_players.loc[idx])
 
 # X. Finalize radar plot area
 with radar_plot_container:
