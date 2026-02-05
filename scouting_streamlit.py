@@ -1165,6 +1165,35 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 showarrow=False,
                 font=dict(size=28, color='black'), 
                 xref="paper", yref="paper"
+            ),
+            # 2. CUSTOM LEGEND - Physical (Green)
+            dict(
+                x=0.25, y=-0.1, # Positions it below the chart
+                xref="paper", yref="paper",
+                text="<span style='color:#2ca02c;'>●</span> Fysiek",
+                showarrow=False,
+                font=dict(size=12, family='Proxima Nova', color='black'),
+                xanchor='center'
+            ),
+            
+            # 3. CUSTOM LEGEND - Attack (Red)
+            dict(
+                x=0.5, y=-0.1,
+                xref="paper", yref="paper",
+                text="<span style='color:#d62728;'>●</span> Aanval",
+                showarrow=False,
+                font=dict(size=12, family='Proxima Nova', color='black'),
+                xanchor='center'
+            ),
+            
+            # 4. CUSTOM LEGEND - Defense (Yellow/Orange)
+            dict(
+                x=0.75, y=-0.1,
+                xref="paper", yref="paper",
+                text="<span style='color:#ff7f0e;'>●</span> Defensie",
+                showarrow=False,
+                font=dict(size=12, family='Proxima Nova', color='black'),
+                xanchor='center'
             )
         ],
         showlegend=False,
