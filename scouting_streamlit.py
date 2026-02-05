@@ -1183,38 +1183,18 @@ if 'search_grid_response' in locals() and search_grid_response is not None:
 with radar_plot_container:
     
     # Combine the selections from both tables
-    all_selected_names = selected_from_top_table.copy()
-    all_selected_data = selected_from_top_table_full_data.copy()
+    all_selected_names = selected_from_top_table + selected_from_search_table
+    all_selected_data = selected_from_top_table_full_data + selected_from_search_table_full_data
 
-    # Only add search table selections if any rows are selected
-    if 'search_grid_response' in locals() and search_grid_response is not None:
-        search_rows = search_grid_response.get('selected_rows', [])
-        if len(search_rows) > 0:
-            if isinstance(search_rows, pd.DataFrame):
-                rows = search_rows.to_dict('records')
-            else:
-                rows = search_rows
-
-            for row in rows:
-                name_label = table_columns.get('player_name', 'Speler')
-                p_name = row.get(name_label)
-                
-                idx = row.get('_original_index')
-                if idx is None:
-                    idx = row.get('_search_original_index')
-                
-                if idx is not None and idx in df_player_data.index:
-                    all_selected_names.append(p_name)
-                    all_selected_data.append(df_player_data.loc[idx])
-
-    # Only render radar plots if we have at least one player
+    # 2. Check the length of the FULL list for the warning
     total_selected = len(all_selected_names)
+    
     if total_selected > 0:
-        # Show the warning if more than 2
+        # Show the warning if the total count is 3 or more
         if total_selected > 2:
             st.warning(f"Je hebt {total_selected} spelers geselecteerd, alleen de eerste 2 worden getoond.")
 
-        # Slice to first 2
+        # 3. NOW slice the lists to only get the first 2 for rendering
         players_to_compare = all_selected_names[:2]
         players_data_to_compare = all_selected_data[:2]
 
