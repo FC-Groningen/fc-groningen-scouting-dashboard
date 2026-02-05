@@ -1072,6 +1072,7 @@ df_selected_players = df_player_data[df_player_data['player_name'].isin(search_s
 df_selected_players['original_rank'] = df_selected_players.index + 1
 df_selected_players["player_url"] = df_selected_players.apply(get_player_url, axis=1)
 df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
+df_selected_players["_original_index"] = df_selected_players.index
 
 # Round numeric columns
 numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
