@@ -1223,12 +1223,14 @@ for i, player_name in enumerate(players_to_compare):
             season = player_data.get('season_name')
             team_logo_b64 = get_team_logo_base64(team_name, competition)
 
-            # Build Clean Caption - Split into two parts
+            # Format the numbers with a period as thousands separator
+            total_minutes = f"{int(player_data['total_minutes']):,}".replace(',', '.')
+            position_minutes = f"{int(player_data['position_minutes']):,}".replace(',', '.')
             
             # Line 1: Team and Country
             line1 = f"{team_name} | {competition} | {season}"
             # Line 2: Age, Position, and Minutes
-            line2 = f"{int(player_data['age'])} jaar · Nationaliteit: {player_data['country']} · Totale minuten: {int(player_data['total_minutes'])} · Minuten op positie: {int(player_data['position_minutes'])}"
+            line2 = f"{int(player_data['age'])} jaar · Nationaliteit: {player_data['country']} · Totale minuten: {total_minutes} · Minuten op positie: {position_minutes}"
 
             # Display Logo and Caption using <br> for the enter key effect
             logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
