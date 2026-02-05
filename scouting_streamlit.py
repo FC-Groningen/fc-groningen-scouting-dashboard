@@ -1146,27 +1146,22 @@ name_label = table_columns.get('player_name', 'Speler')
 
 # This part must be OUTSIDE of the 'if not df_selected_players.empty' block 
 # to ensure it captures updates correctly
-if 'search_grid_response' in locals() and search_grid_response and search_grid_response.get('selected_rows') is not None:
-    search_selected_rows = search_grid_response['selected_rows']
-    
-    # Standardize AgGrid output
-    if isinstance(search_selected_rows, pd.DataFrame):
-        # If it's a dataframe, we use it directly
-        for idx_in_grid, row in search_selected_rows.iterrows():
-            p_name = row.get(name_label)
-            # Use the original index to pull from master data
-            master_idx = row.get('_original_index')
-            if master_idx is not None and master_idx in df_player_data.index:
-                selected_from_search_table.append(p_name)
-                selected_from_search_table_full_data.append(df_player_data.loc[master_idx])
-    else:
-        # If it's a list of dicts
-        for row in search_selected_rows:
-            p_name = row.get(name_label)
-            master_idx = row.get('_original_index')
-            if master_idx is not None and master_idx in df_player_data.index:
-                selected_from_search_table.append(p_name)
-                selected_from_search_table_full_data.append(df_player_data.loc[master_idx])
+if search_grid_response and 'selected_rows' in search_grid_response:
+        search_selected_rows = search_grid_response['selected_rows']
+        if search_selected_rows is not None:
+            # Handle DataFrame
+            if isinstance(search_selected_rows, pd.DataFrame):
+                selected_from_bottom_table = search_selected_rows['Player Name'].tolist()
+                for idx in search_selected_rows['_search_original_index'].tolist():
+                    if idx in df_selected_players.index:
+                        selected_from_search_table_full_data.append(df_selected_players.loc[idx])
+            # Handle List
+            elif isinstance(search_selected_rows, list) and len(search_selected_rows) > 0:
+                selected_from_bottom_table = [row['Player Name'] for row in search_selected_rows]
+                for row in search_selected_rows:
+                    idx = row.get('_search_original_index')
+                    if idx is not None and idx in df_selected_players.index:
+                        selected_from_search_table_full_data.append(df_selected_players.loc[idx])
 
 # X. Finalize radar plot area
 with radar_plot_container:
