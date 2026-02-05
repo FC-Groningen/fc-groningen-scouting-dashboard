@@ -1240,11 +1240,7 @@ with radar_plot_container:
                 )
 
                 # Render Chart
-                fig = create_polarized_bar_chart(
-                    player_data,
-                    player_data['competition_name'],
-                    player_data['season_name']
-                )
+                fig = create_polarized_bar_chart(player_data)
                 
                 chart_key = f"comparison_chart_{i}_{player_name.replace(' ', '_')}"
                 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=chart_key)
