@@ -1200,14 +1200,17 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         height=500,
         margin=dict(l=50, r=50, t=100, b=50),
         title=dict(
-            text=(f"<span style='font-size:16px'>Fysiek: {physical_avg:.1f} | Aanvallend: {attack_avg:.1f} | Verdedigend: {defense_avg:.1f}</span>"),
+            text=(
+                f"<b>{player_data.get('player_name', 'Speler')}</b> | {player_data.get('position_profile', '')}<br>"
+                f"<span style='font-size:13px; font-family:Proxima Nova;'>"
+                # We use a larger font-size and vertical-align for the dots
+                f"<span style='color:#2ca02c; font-size:18px; vertical-align: middle;'>●</span> Fysiek: {physical_avg:.1f} | "
+                f"<span style='color:#d62728; font-size:18px; vertical-align: middle;'>●</span> Aanval: {attack_avg:.1f} | "
+                f"<span style='color:#ff7f0e; font-size:18px; vertical-align: middle;'>●</span> Defensie: {defense_avg:.1f}"
+                f"</span>"
+            ),
             x=0.5, y=0.98, xanchor='center',
-            # Add this font dictionary here:
-            font=dict(
-                family='Proxima Nova, sans-serif',
-                size=16,
-                color='black'
-            )
+            font=dict(family='Proxima Nova', size=16, color='black')
         )
     )
 
