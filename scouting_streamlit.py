@@ -1209,8 +1209,11 @@ for i, player_name in enumerate(players_to_compare):
         player_data = players_data_to_compare[i]
 
         with cols[i]:
+            pos_profile = player_data.get('position_profile', '')
+            title_text = f"{player_name} | {pos_profile}"
+
             st.markdown(
-                f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;'>{player_name}</p>",
+                f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;'>{title_text}</p>",
                 unsafe_allow_html=True
             )
 
