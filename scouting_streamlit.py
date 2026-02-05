@@ -1135,19 +1135,19 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 showline=False
             ),
             angularaxis=dict(
-                tickfont=dict(size=10, color='black'), 
+                tickfont=dict(size=10, family='Proxima Nova', color='black'), 
                 rotation=90, 
                 direction='clockwise', 
-                showgrid=False,           # <--- WE HIDE BUILT-IN GRID
-                ticks='', 
-                showline=True,            # <--- THE OUTER BORDER
-                linecolor='rgba(0,0,0,0.2)',
-                ticks='outside',          # Put the ticks back on the outside
-                ticklen=8,                # Length of the little lines
-                tickwidth=1,              # Thickness of the little lines
+                showgrid=False,           
+                showline=True,            
+                linecolor='black',
+                # --- TICK RESTORATION ---
+                ticks='outside',          
+                ticklen=8,                
+                tickwidth=1,              
                 tickcolor='black'
-            )
-        ),
+            ) # This closes angularaxis
+        ), # This closes polar <--- THIS WAS LIKELY MISSING
         annotations=[
             dict(
                 text=f"<b>{overall_avg:.1f}</b>", 
