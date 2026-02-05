@@ -1024,115 +1024,75 @@ top_grid_response = AgGrid(
 selected_from_top_table = []
 selected_from_top_table_full_data = []
 
-# Ensure grid_response isn't empty and has selected rows
 if top_grid_response and top_grid_response.get('selected_rows') is not None:
     selected_rows = top_grid_response['selected_rows']
-    
-    # Standardize AgGrid's output
-    if isinstance(selected_rows, pd.DataFrame):
-        rows = selected_rows.to_dict('records')
-    else:
-        rows = selected_rows
-
-    # Process up to 2 selected players
+    rows = selected_rows.to_dict('records') if isinstance(selected_rows, pd.DataFrame) else selected_rows
     for row in rows[:2]:
-        # Get the human-readable name for display
         name_col = table_columns.get('player_name', 'player_name')
         selected_from_top_table.append(row.get(name_col))
-
         idx = row.get('_original_index')
         if idx is not None and idx in df_top.index:
             selected_from_top_table_full_data.append(df_top.loc[idx])
 
-
-# X. Create  radar plot section (with container)
+# --- 2. Radar Plot Container (Visual Placement) ---
 st.subheader("Radarplots")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 radar_plot_container = st.container()
 
-# X. Create player search
-# Add title
+# --- 3. Player Search Section ---
 st.subheader("Zoekopdracht")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
-# Create list with all available players
 available_players = sorted(df_player_data["player_name"].unique().tolist())
-
-# Create search field
 search_selected_players = st.multiselect(
     "Selecteer speler(s) en zie alle beschikbare data.",
     options=available_players,
     default=[],
-    help="Een speler kan er niet tussen staan als we geen data van die competitie afnemen of als hij onvoldoende minuten op een specifieke positie heeft gemaakt"
+    help="Een speler kan er niet tussen staan als we geen data van die competitie afnemen..."
 )
 
-# Filter and sort data
+# Filter and sort raw data
 df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().sort_values(by='total', ascending=False).reset_index(drop=True)
 
-# Add helper columns
+# Add helper columns to RAW data (for easy iloc retrieval later)
 df_selected_players['original_rank'] = df_selected_players.index + 1
 df_selected_players["player_url"] = df_selected_players.apply(get_player_url, axis=1)
 df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
 
-# Round numeric columns
+# Round raw data (Keeping your rounding logic)
 numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
 for col in numeric_columns:
     if col in df_selected_players.columns:
         decimals = 0 if col in ["total_minutes", "position_minutes"] else 1
         df_selected_players[col] = df_selected_players[col].round(decimals)
 
-# Reorder and rename columns
-all_needed_cols = list(table_columns.keys()) + ["player_url"]
-df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
+# Create the renamed version for the UI
 df_show_search = df_selected_players.rename(columns=table_columns)
 
-# Create third table
+# Build the Grid
 gb = GridOptionsBuilder.from_dataframe(df_show_search)
 
-# Set the width of specific columns
-gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
+# Apply widths and renderers using the Dutch labels
+gb.configure_column(table_columns["original_rank"], width=80, pinned="left")
 gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
 gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
 
-# Automatically configure the rest of the columns from the dictionary
 for key, label in table_columns.items():
     if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
         is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
-        
-        col_config = {
-                "width": 140, 
-                "type": ["numericColumn"] if is_numeric else [],
-                "sortingOrder": ["desc", "asc", None]
-            }
-        
-        # Keep the thousand separator for minutes
-        if key in ["total_minutes", "position_minutes"]:
-            col_config["valueFormatter"] = number_dot_formatter
-            
-        # Apply the dynamic gradient to metrics
-        if key in ["physical", "attacking", "defending"]:
-            col_config["cellStyle"] = gradient_js
-            
+        col_config = {"width": 140, "type": ["numericColumn"] if is_numeric else [], "sortingOrder": ["desc", "asc", None]}
+        if key in ["total_minutes", "position_minutes"]: col_config["valueFormatter"] = number_dot_formatter
+        if key in ["physical", "attacking", "defending"]: col_config["cellStyle"] = gradient_js
         gb.configure_column(label, **col_config)
 
-# Hide the technical helper columns
 gb.configure_column("player_url", hide=True)
-gb.configure_column("_original_index", hide=True)
-gb.configure_column("::auto_unique_id::", hide=True)
-
-# Final settings
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
 gb.configure_selection(selection_mode='multiple', use_checkbox=True)
 
-gridOptions = gb.build()
-
-df_selected_players["_search_original_index"] = df_selected_players.index
-
-if not df_selected_players.empty:
+if not df_show_search.empty:
     search_grid_response = AgGrid(
         df_show_search,
-        gridOptions=gridOptions,
-        enable_enterprise_modules=False,
+        gridOptions=gb.build(),
         allow_unsafe_jscode=True,
         update_mode=GridUpdateMode.SELECTION_CHANGED,
         height= min(615, 34.5 + len(df_selected_players) * 29.1),
@@ -1141,36 +1101,23 @@ if not df_selected_players.empty:
         theme='streamlit'
     )
 
-# Check which boxes are checked
-selected_from_search_table = []
-selected_from_search_table_full_data = []
+    # --- 4. Process Search Selections ---
+    selected_from_search_table = []
+    selected_from_search_table_full_data = []
 
-# Get the human-readable label for "Player Name"
-name_col = table_columns.get('player_name', 'Player Name')
-
-# Process only if rows are selected
-if search_grid_response and search_grid_response.get('selected_rows') is not None:
-    selected_rows = search_grid_response['selected_rows']
-    
-    # If using AgGrid, the index is usually preserved in the selection
-    if isinstance(selected_rows, pd.DataFrame):
-        # This is the easiest way: pull the index from the selected dataframe
-        selected_indices = selected_rows.index
-        for idx in selected_indices:
-            # Pull directly from master data using the index
-            raw_data = df_player_data.loc[idx]
-            selected_from_search_table.append(raw_data['player_name'])
-            selected_from_search_table_full_data.append(raw_data)
-    else:
-        # If it's a list of dicts, AgGrid typically includes the index
-        for row in selected_rows:
-            # Pull by index if available, or by matching player_name in the master DF
-            p_name = row.get(table_columns.get('player_name', 'Speler'))
-            # Safety fallback: find the player in the master data by name/team
-            raw_data = df_player_data[df_player_data['player_name'] == p_name].iloc[0]
-            
-            selected_from_search_table.append(p_name)
-            selected_from_search_table_full_data.append(raw_data)
+    if search_grid_response and search_grid_response.get('selected_rows') is not None:
+        sel_rows = search_grid_response['selected_rows']
+        # Convert to list of dicts to get indices
+        rows_list = sel_rows.to_dict('records') if isinstance(sel_rows, pd.DataFrame) else sel_rows
+        
+        for row in rows_list:
+            # AgGrid provides _row_index for the current dataframe
+            idx = row.get('_row_index')
+            if idx is not None:
+                # Get raw data from the English (un-renamed) dataframe
+                raw_player = df_selected_players.iloc[idx]
+                selected_from_search_table.append(raw_player['player_name'])
+                selected_from_search_table_full_data.append(raw_player)
 
 # X. Finalize radar plot area
 with radar_plot_container:
