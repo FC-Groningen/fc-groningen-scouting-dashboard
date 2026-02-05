@@ -346,6 +346,16 @@ def create_team_html_with_logo(row):
         return f'<img src="{logo_b64}" height="20" style="vertical-align: middle; margin-right: 8px;">{team_name}'
     return team_name
 
+# 1.12 
+def get_gradient_color(score, base_hex):
+    """
+    Returns gradient of the main color based on its value.
+    """
+    
+    norm = max(0, min(1, score / 100))
+    base = [int(base_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)]
+    return f'rgb({int(255-(255-base[0])*norm)}, {int(255-(255-base[1])*norm)}, {int(255-(255-base[2])*norm)})'
+    
 # X. METRICS AND POSITION_PROFILES
 # Enumeration of metric categories
 class MetricCategory(str, Enum):
@@ -394,7 +404,7 @@ metrics = {
 # Assign metrics per position_profile
 position_profiles = {
 
-    "DMCM": [
+    "DM/CM": [
         "total_distance_p90_percentile",
         "running_distance_p90_percentile",
         "hi_distance_p90_percentile",
@@ -1054,13 +1064,15 @@ if search_grid_response and search_grid_response.get('selected_rows') is not Non
             selected_from_search_table_full_data.append(df_selected_players.loc[idx])
 
 
-def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, season_name: str) -> go.Figure:
-    # 1. Determine the profile key (e.g., "DMCM")
-    # We strip extra info to match your position_profiles keys
-    raw_pos = str(player_data.get('position_profile', '')).split(' (')[0]
-    profile_key = raw_pos if raw_pos in position_profiles else "DMCM" # Fallback to DMCM
+def create_polarized_bar_chart(player_data):
+    """
+    Create polarized bar chart.
+    """
+    
+    # Get the selected position
+    profile_key = player_data.get('position')
 
-    # 2. Automatically sort metrics into categories based on your metrics dict
+    # Automatically sort metrics into categories based on the dictionary
     active_metric_keys = position_profiles.get(profile_key, [])
     
     physical_keys = [k for k in active_metric_keys if metrics[k].category == MetricCategory.PHYSICAL]
@@ -1069,53 +1081,28 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     
     all_keys = physical_keys + attack_keys + defense_keys
 
-    # 3. Pull values and labels
+    # Get the information shown per metric
+    hover_descriptions = [metrics[m].tooltip for m in active_metric_keys]
+
+    # Get percentile scores and labels
     percentile_values = [float(player_data.get(k, 0)) for k in all_keys]
-    # Uses the .label property from your Metric dataclass
     metric_labels = [metrics[k].label.replace('\n', '<br>') for k in all_keys]
 
-    # 4. Averages (using original keys for group scores)
+    # Get the category and total scores
     physical_avg = float(player_data.get('physical', 0))
     attack_avg   = float(player_data.get('attacking', 0))
     defense_avg  = float(player_data.get('defending', 0))
     overall_avg  = float(player_data.get('total', np.mean([physical_avg, attack_avg, defense_avg])))
 
-    # 5. Styling
-    green, red, yellow = '#3E8C5E', '#E83F2A', '#F2B533'
-    
-    def get_color(score, base_hex):
-        norm = max(0, min(1, score / 100))
-        base = [int(base_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)]
-        return f'rgb({int(255-(255-base[0])*norm)}, {int(255-(255-base[1])*norm)}, {int(255-(255-base[2])*norm)})'
+    # Set colors
+    colors = ([get_gradient_color(v, '#3E8C5E') for v in percentile_values[:len(physical_keys)]] +
+              [get_gradient_color(v, '#E83F2A') for v in percentile_values[len(physical_keys):len(physical_keys)+len(attack_keys)]] +
+              [get_gradient_color(v, '#F2B533') for v in percentile_values[-len(defense_keys):]])
 
-    colors = ([get_color(v, green) for v in percentile_values[:len(physical_keys)]] +
-              [get_color(v, red) for v in percentile_values[len(physical_keys):len(physical_keys)+len(attack_keys)]] +
-              [get_color(v, yellow) for v in percentile_values[-len(defense_keys):]])
-
-    # 6. Build Figure
+    # Build Figure
     fig = go.Figure()
 
-    # # --- LAYER 1: THE RADIAL SPOKES (Manual Grid) ---
-    # # We build these first so they are naturally behind the bars
-    # r_coords = []
-    # theta_coords = []
-    # for label in metric_labels:
-    #     # This tells Plotly: Start at 0, go to 100, then stop drawing
-    #     r_coords.extend([0, 100, None]) 
-    #     theta_coords.extend([label, label, None])
-
-    # fig.add_trace(go.Scatterpolar(
-    #     r=r_coords,
-    #     theta=theta_coords,
-    #     mode='lines',
-    #     line=dict(color='rgba(0,0,0,0.1)', width=1),
-    #     hoverinfo='skip',
-    #     showlegend=False
-    # ))
-
-    hover_descriptions = [metrics[m].tooltip for m in active_metric_keys]
-
-    # --- LAYER 2: THE BARS ---
+    # Add the bars
     fig.add_trace(go.Barpolar(
         r=percentile_values,
         theta=metric_labels,
@@ -1128,19 +1115,23 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         )
     ))
 
-    # --- THE LAYOUT ---
+    # Customize layout
     fig.update_layout(
+
         polar=dict(
             bgcolor='white',
+
+            # Set layout of the horizontal rings
             radialaxis=dict(
                 range=[-25, 100], 
                 visible=True, 
                 showticklabels=False, 
                 gridcolor='rgba(0,0,0,0.1)', 
-                tickvals=[-0.5, 25, 50, 75, 100], # Circular rings
-                ticks='', 
+                tickvals=[-0.5, 25, 50, 75, 100], 
                 showline=False
             ),
+
+            # Set lay-out of the vertical lines
             angularaxis=dict(
                 tickfont=dict(size=10, family='Proxima Nova', color='black'), 
                 rotation=90, 
@@ -1148,17 +1139,18 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
                 showgrid=False,           
                 showline=True,            
                 linecolor='black',
-                # --- TICK RESTORATION ---
                 ticks='outside',          
                 ticklen=8,                
                 tickwidth=1,              
                 tickcolor='black'
-            ) # This closes angularaxis
-        ), # This closes polar <--- THIS WAS LIKELY MISSING
+            )
+        ),
+
+        # Add total score in the middle
         annotations=[
             dict(
                 text=f"<b>{overall_avg:.1f}</b>", 
-                x=0.5, y=0.5, # Adjusted for visual centering
+                x=0.5, y=0.5,
                 showarrow=False,
                 font=dict(size=28, color='black'), 
                 xref="paper", yref="paper"
@@ -1167,11 +1159,13 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
         showlegend=False,
         height=500,
         margin=dict(l=50, r=50, t=100, b=50),
+
+        # Add category scores
         title=dict(
             text=(
                 f"<span style='color:#3E8C5E; font-size:18px; vertical-align: middle;'>●</span> Fysiek: {physical_avg:.1f} | "
-                f"<span style='color:#E83F2A; font-size:18px; vertical-align: middle;'>●</span> Aanval: {attack_avg:.1f} | "
-                f"<span style='color:#F2B533; font-size:18px; vertical-align: middle;'>●</span> Defensie: {defense_avg:.1f}"
+                f"<span style='color:#E83F2A; font-size:18px; vertical-align: middle;'>●</span> Aanvallend: {attack_avg:.1f} | "
+                f"<span style='color:#F2B533; font-size:18px; vertical-align: middle;'>●</span> Verdedigend: {defense_avg:.1f}"
                 f"</span>"
             ),
             x=0.5, y=0.98, xanchor='center',
