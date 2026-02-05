@@ -925,10 +925,10 @@ if top_grid_response and top_grid_response.get('selected_rows') is not None:
         if idx is not None and idx in df_top.index:
             selected_from_top_table_full_data.append(df_top.loc[idx])
 
-# Create plot section
+# Create plot section (with container)
 st.subheader("Radarplots")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
-
+radar_plot_container = st.container()
 
 
 
@@ -1183,6 +1183,101 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     )
 
     return fig
+
+
+
+# 2. Populate the container at the end of your script
+with radar_plot_container:
+    # Combine the selections from both tables
+    players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
+    players_data_to_compare = (selected_from_top_table_full_data + selected_from_search_table_full_data)[:2]
+
+    if len(players_to_compare) > 0:
+        # Warning if the user gets click-happy
+        total_selected = len(selected_from_top_table) + len(selected_from_search_table)
+        if total_selected > 2:
+            st.warning("Je hebt meer dan 2 spelers geselecteerd, alleen de eerste 2 worden getoond.")
+
+        # Header for the comparison section
+        st.subheader("Speler Vergelijking")
+
+        # --- Animation & Column Layout ---
+        st.markdown("""
+        <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stPlotlyChart { animation: fadeIn 0.5s ease-in-out; }
+        </style>
+        """, unsafe_allow_html=True)
+
+        cols = st.columns(2)
+
+        for i, player_name in enumerate(players_to_compare):
+            player_data = players_data_to_compare[i]
+
+            with cols[i]:
+                pos_profile = player_data.get('position_profile', '')
+                title_text = f"{player_name}  |  {pos_profile}"
+
+                st.markdown(
+                    f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; text-align: center;'>{title_text}</p>",
+                    unsafe_allow_html=True
+                )
+
+                # Metadata Retrieval
+                team_name = player_data['team_name']
+                competition = player_data.get('competition_name')
+                season = player_data.get('season_name')
+                team_logo_b64 = get_team_logo_base64(team_name, competition)
+
+                # Format the numbers with a period as thousands separator
+                total_minutes = f"{int(player_data['total_minutes']):,}".replace(',', '.')
+                position_minutes = f"{int(player_data['position_minutes']):,}".replace(',', '.')
+                
+                # Line 1: Team and Competition
+                line1 = f"{team_name} | {competition} | {season}"
+                # Line 2: Stats
+                line2 = f"{int(player_data['age'])} jaar · Nationaliteit: {player_data['country']} · Totale minuten: {total_minutes} · Minuten op positie: {position_minutes}"
+
+                # Display Logo and Caption
+                logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-bottom: 5px;">' if team_logo_b64 else ""
+                st.markdown(
+                    f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4; text-align: center;">
+                        {logo_html}<br>
+                        <b>{line1}</b><br>
+                        <span style="font-size: 0.95rem; color: #666;">{line2}</span>
+                    </div>""", 
+                    unsafe_allow_html=True
+                )
+
+                # Render Chart
+                fig = create_polarized_bar_chart(
+                    player_data,
+                    player_data['competition_name'],
+                    player_data['season_name']
+                )
+                
+                chart_key = f"comparison_chart_{i}_{player_name.replace(' ', '_')}"
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=chart_key)
+
+                # Centered Multi-line Footer
+                st.markdown(
+                    """<p style='text-align: center; font-family: "Proxima Nova", sans-serif; 
+                    font-size: 0.8rem; color: #888; margin-top: -15px;'>
+                    Een score van 50 is het gemiddelde op die positie binnen die competitie <br>
+                    Data is een combinatie van Impect en SkillCorner
+                    </p>""", 
+                    unsafe_allow_html=True
+                )
+
+
+
+
+
+
+
 
 # 1. Combine the selections from both tables
 players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
