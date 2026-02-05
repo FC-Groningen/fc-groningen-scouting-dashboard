@@ -1163,15 +1163,20 @@ if 'search_grid_response' in locals() and search_grid_response and search_grid_r
 # X. Finalize radar plot area
 with radar_plot_container:
     # Combine the selections from both tables
-    players_to_compare = (selected_from_top_table + selected_from_search_table)[:2]
-    players_data_to_compare = (selected_from_top_table_full_data + selected_from_search_table_full_data)[:2]
+    all_selected_names = selected_from_top_table + selected_from_search_table
+    all_selected_data = selected_from_top_table_full_data + selected_from_search_table_full_data
 
-    if len(players_to_compare) > 0:
-
-        # Warning when more than tweo players are selected
-        total_selected = len(selected_from_top_table) + len(selected_from_search_table)
+    # 2. Check the length of the FULL list for the warning
+    total_selected = len(all_selected_names)
+    
+    if total_selected > 0:
+        # Show the warning if the total count is 3 or more
         if total_selected > 2:
-            st.warning("Je hebt meer dan 2 spelers geselecteerd, alleen de eerste 2 worden getoond.")
+            st.warning(f"Je hebt {total_selected} spelers geselecteerd, alleen de eerste 2 worden getoond.")
+
+        # 3. NOW slice the lists to only get the first 2 for rendering
+        players_to_compare = all_selected_names[:2]
+        players_data_to_compare = all_selected_data[:2]
 
         st.markdown("""
         <style>
