@@ -1145,22 +1145,24 @@ selected_from_search_table_full_data = []
 if search_grid_response and search_grid_response.get('selected_rows') is not None:
     search_selected_rows = search_grid_response['selected_rows']
     
-    # Standardize AgGrid output to a list of dictionaries
+    # Standardize AgGrid output
     rows = (search_selected_rows.to_dict('records') 
             if isinstance(search_selected_rows, pd.DataFrame) 
             else search_selected_rows)
 
     for row in rows:
-        # 1. Get the name using the Dutch label from your table_columns
-        name_col_dutch = table_columns.get('player_name', 'Speler')
-        p_name = row.get(name_col_dutch)
+        # 1. Use the Dutch label to get the name for the list
+        name_label = table_columns.get('player_name', 'Speler')
+        p_name = row.get(name_label)
         
-        if p_name:
+        # 2. IMPORTANT: Use the index to pull from 'df_player_data' 
+        # df_player_data is your MASTER English dataframe that was never renamed.
+        idx = row.get('_original_index') 
+        
+        if idx is not None and idx in df_player_data.index:
             selected_from_search_table.append(p_name)
-            
-            # 2. FIX: Instead of looking up by index, convert the row directly to a Series.
-            # This 'row' already contains all the stats needed for the radar plot!
-            selected_from_search_table_full_data.append(pd.Series(row))
+            # This ensures the data is in English for the Radar Plot!
+            selected_from_search_table_full_data.append(df_player_data.loc[idx])
 
 # X. Finalize radar plot area
 with radar_plot_container:
