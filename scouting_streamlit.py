@@ -1141,27 +1141,28 @@ if not df_selected_players.empty:
 selected_from_search_table = []
 selected_from_search_table_full_data = []
 
-# Ensure we use the correct column name for the lookup
-name_label = table_columns.get('player_name', 'Speler')
+# This block should be at the same indentation level as your search table setup
+if search_grid_response and search_grid_response.get('selected_rows') is not None:
+    search_selected_rows = search_grid_response['selected_rows']
+    
+    # Standardize AgGrid output
+    rows = (search_selected_rows.to_dict('records') 
+            if isinstance(search_selected_rows, pd.DataFrame) 
+            else search_selected_rows)
 
-# This part must be OUTSIDE of the 'if not df_selected_players.empty' block 
-# to ensure it captures updates correctly
-if search_grid_response and 'selected_rows' in search_grid_response:
-        search_selected_rows = search_grid_response['selected_rows']
-        if search_selected_rows is not None:
-            # Handle DataFrame
-            if isinstance(search_selected_rows, pd.DataFrame):
-                selected_from_bottom_table = search_selected_rows['Player Name'].tolist()
-                for idx in search_selected_rows['_search_original_index'].tolist():
-                    if idx in df_selected_players.index:
-                        selected_from_search_table_full_data.append(df_selected_players.loc[idx])
-            # Handle List
-            elif isinstance(search_selected_rows, list) and len(search_selected_rows) > 0:
-                selected_from_bottom_table = [row['Player Name'] for row in search_selected_rows]
-                for row in search_selected_rows:
-                    idx = row.get('_search_original_index')
-                    if idx is not None and idx in df_selected_players.index:
-                        selected_from_search_table_full_data.append(df_selected_players.loc[idx])
+    for row in rows:
+        # 1. Use the Dutch label to get the name for the list
+        name_label = table_columns.get('player_name', 'Speler')
+        p_name = row.get(name_label)
+        
+        # 2. IMPORTANT: Use the index to pull from 'df_player_data' 
+        # df_player_data is your MASTER English dataframe that was never renamed.
+        idx = row.get('_original_index') 
+        
+        if idx is not None and idx in df_player_data.index:
+            selected_from_search_table.append(p_name)
+            # This ensures the data is in English for the Radar Plot!
+            selected_from_search_table_full_data.append(df_player_data.loc[idx])
 
 # X. Finalize radar plot area
 with radar_plot_container:
