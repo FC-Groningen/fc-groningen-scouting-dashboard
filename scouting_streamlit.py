@@ -1084,7 +1084,6 @@ for col in numeric_columns:
 # Reorder and rename columns
 all_needed_cols = list(table_columns.keys()) + ["player_url"]
 df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
-df_selected_players['temp_id'] = range(len(df_selected_players))
 df_show_search = df_selected_players.rename(columns=table_columns)
 
 # Create third table
@@ -1153,20 +1152,25 @@ name_col = table_columns.get('player_name', 'Player Name')
 if search_grid_response and search_grid_response.get('selected_rows') is not None:
     selected_rows = search_grid_response['selected_rows']
     
-    # Standardize to list of dicts
-    rows = (selected_rows.to_dict('records') if isinstance(selected_rows, pd.DataFrame) else selected_rows)
-
-    for row in rows:
-        # 1. Get the player name (using the Dutch key since the table is renamed)
-        dutch_name_key = table_columns.get('player_name', 'Speler')
-        selected_from_search_table.append(row.get(dutch_name_key))
-        
-        # 2. Use the temp_id to find the RAW data in the original dataframe
-        # We find the row in the English DF where temp_id matches
-        t_id = row.get('temp_id') # temp_id wasn't renamed, so it's still 'temp_id'
-        if t_id is not None:
-            raw_player_data = df_selected_players.iloc[t_id]
-            selected_from_search_table_full_data.append(raw_player_data)
+    # If using AgGrid, the index is usually preserved in the selection
+    if isinstance(selected_rows, pd.DataFrame):
+        # This is the easiest way: pull the index from the selected dataframe
+        selected_indices = selected_rows.index
+        for idx in selected_indices:
+            # Pull directly from master data using the index
+            raw_data = df_player_data.loc[idx]
+            selected_from_search_table.append(raw_data['player_name'])
+            selected_from_search_table_full_data.append(raw_data)
+    else:
+        # If it's a list of dicts, AgGrid typically includes the index
+        for row in selected_rows:
+            # Pull by index if available, or by matching player_name in the master DF
+            p_name = row.get(table_columns.get('player_name', 'Speler'))
+            # Safety fallback: find the player in the master data by name/team
+            raw_data = df_player_data[df_player_data['player_name'] == p_name].iloc[0]
+            
+            selected_from_search_table.append(p_name)
+            selected_from_search_table_full_data.append(raw_data)
 
 # X. Finalize radar plot area
 with radar_plot_container:
