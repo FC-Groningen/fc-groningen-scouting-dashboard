@@ -706,6 +706,17 @@ st.markdown(
         [data-testid="stMainViewContainer"] {{
             width: 100% !important;
             }}
+
+    /* Custom info box for radar charts */
+        .custom-info-box {{
+            background-color: #d0f0fd; /* light blue */
+            color: #000000;             /* text color */
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid #a0d4e8;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }}
     
     </style>
     """,
@@ -1256,7 +1267,14 @@ with radar_plot_container:
                     unsafe_allow_html=True
                 )
     else:
-        st.info("Selecteer spelers in de ranglijst en/of zoekopdracht tabellen om hun radarplots te zien.")
+        st.markdown(
+        """
+        <div class="custom-info-box">
+            Select players from the top table or search table below (using checkboxes) to view comparison charts.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 
