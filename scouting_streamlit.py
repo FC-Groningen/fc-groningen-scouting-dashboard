@@ -363,7 +363,7 @@ class Metric:
 metrics = {
 
     # Physical metrics
-    "total_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL,label="Totale\nafstand"),
+    "total_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL,label="Totale\nafstand", tooltip="De totale afgelegde afstand per 90 minuten."),
     "running_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL, label="15–20km/u\nafstand"),
     "hsr_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL,label="20-25km/u\nafstand"),
     "sprint_distance_p90_percentile": Metric(category=MetricCategory.PHYSICAL, label="25+km/u\nafstand"),
@@ -1115,13 +1115,20 @@ def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, se
     #     showlegend=False
     # ))
 
+    hover_descriptions = [metrics[m].tooltip for m in active_metric_keys]
+
     # --- LAYER 2: THE BARS ---
     fig.add_trace(go.Barpolar(
         r=percentile_values,
         theta=metric_labels,
         marker=dict(color=colors, line=dict(color='white', width=1.5)),
-        text=[f'{v:.0f}' for v in percentile_values],
-        hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
+        customdata=hover_descriptions,
+        hovertemplate=(
+            "<b>%{theta}</b><br>" +
+            "Score: %{r:.1f}<br>" +
+            "<i>%{customdata}</i>" +
+            "<extra></extra>"
+        )
     ))
 
     # --- THE LAYOUT ---
