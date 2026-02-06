@@ -1,5 +1,5 @@
 # Scouting app
-# 0. Import packages
+# 0. IMPORT PACKAGES
 import base64
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from supabase import create_client, Client
 
 # 1. HELP FUNCTIONS
-# 1.1 Check whether password is incorrect
+# Check whether password is incorrect
 def check_password():
     """
     Returns `True` if the user has entered the correct password.
@@ -58,7 +58,7 @@ def check_password():
         # Password is correct
         return True
 
-# 1.2 Check whether all metrics used for a position are defined correctly    
+# Check whether all metrics used for a position are defined correctly    
 def validate_profiles(metrics, profiles):
     """
     Returns an error message if a metric is not defined.
@@ -69,7 +69,7 @@ def validate_profiles(metrics, profiles):
             if key not in metrics:
                 raise KeyError(f"'{key}' in position '{pos}' is not defined.")
 
-# 1.3 Function to load data stored in Supabase
+# Function to load data stored in Supabase
 @st.cache_data(ttl=3600)
 def load_data_from_supabase():
     """
@@ -102,7 +102,7 @@ def load_data_from_supabase():
         st.stop()
         return pd.DataFrame()
 
-# 1.4 Function to load stored player Impect urls in Supabase
+# Function to load stored player Impect urls in Supabase
 @st.cache_data(ttl=36000)
 def load_impect_urls_from_supabase():
     """
@@ -133,7 +133,7 @@ def load_impect_urls_from_supabase():
         st.warning(f"Could not load Impect URLs: {str(e)}")
         return pd.DataFrame()
 
-# 1.5 Get the relevant metrics for a selected position
+# Get the relevant metrics for a selected position
 def get_metrics_for_profile(profile_name):
     """"
     Find relevant metrics per category for a selected position.
@@ -154,7 +154,7 @@ def get_metrics_for_profile(profile_name):
             
     return categories
 
-# 1.6 Create player radars
+# Create player radars
 def build_radar_3_shapes(row, profile_name):
     """
     Builds a tri-colored radar chart using structured metric definitions.
@@ -241,7 +241,7 @@ def build_radar_3_shapes(row, profile_name):
 
     return fig
 
-# 1.7 Function to clean teamnames based on how they can be saved
+# Function to clean teamnames based on how they can be saved
 def sanitize_filename(name):
     """"
     Clean team names for how these can be saved.
@@ -260,7 +260,7 @@ def sanitize_filename(name):
         .replace("|", "_")
     )
 
-# 1.8 Encode save team logo's      
+# Encode save team logo's      
 def encode_image_to_base64(logo_path):
     """
     Helper to convert an image file to a base64 string.
@@ -272,7 +272,7 @@ def encode_image_to_base64(logo_path):
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return f"data:image/png;base64,{img_str}"
 
-# 1.9 Get team logo's
+# Get team logo's
 @st.cache_data
 def get_team_logo_base64(team_name, competition_name):
     """"
@@ -318,7 +318,7 @@ def get_team_logo_base64(team_name, competition_name):
         pass
     return None
 
-# 1.10 Get the Impect player url
+# Get the Impect player url
 def get_player_url(row):
     """"
     Finds the related player Impect url.
@@ -330,7 +330,7 @@ def get_player_url(row):
     # If not found, return None (nothing)
     return None
 
-# 1.11 Create team name column with logo
+# Create team name column with logo
 def create_team_html_with_logo(row):
     """"
     Create column that combines team logo with name.
@@ -346,7 +346,7 @@ def create_team_html_with_logo(row):
         return f'<img src="{logo_b64}" height="20" style="vertical-align: middle; margin-right: 8px;">{team_name}'
     return team_name
 
-# 1.12 Get gradient of main color
+# Get gradient of main color
 def get_gradient_color(score, base_hex):
     """
     Returns gradient of the main color based on its value.
@@ -356,7 +356,7 @@ def get_gradient_color(score, base_hex):
     base = [int(base_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)]
     return f'rgb({int(255-(255-base[0])*norm)}, {int(255-(255-base[1])*norm)}, {int(255-(255-base[2])*norm)})'
 
-# 1.13 Function that creates the bar chart
+# Function that creates the bar chart
 def create_polarized_bar_chart(player_data):
     """
     Create polarized bar chart.
@@ -536,10 +536,7 @@ position_profiles = {
 
 }
 
-# Check whether all metrics assigned to position_profiles are defined correctly
-validate_profiles(metrics, position_profiles)
-
-# X. Not sure where to put this yet
+# Choose which columns to show in the tables and with what name
 table_columns = {
     "original_rank": "#",
     "player_name": "Speler",
@@ -557,13 +554,17 @@ table_columns = {
     "total": "Totaal",
 }
 
+# Check whether all metrics assigned to position_profiles are defined correctly
+validate_profiles(metrics, position_profiles)
+
+# X. Not sure where to put this yet
 FC_GRONINGEN_GREEN = "#3E8C5E"
 TEAM_LOGOS_DIR = "team_logos"
 
 TEAM_LOGO_MAPPING = {
 }
 
-# X. SET UP DASHBOARD
+# 3. SET UP DASHBOARD
 # Configure page and set layout
 st.set_page_config(page_title="FC Groningen Scouting Dashboard", layout="wide")
 
@@ -753,8 +754,7 @@ with st.sidebar:
 # Add title
 st.title("Scouting dashboard")
 
-# 3. Create the top table
-# Add title and divider
+# Add title and divider for first table
 st.subheader("Ranglijst")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
@@ -773,7 +773,7 @@ with col3:
 with col4:
     min_defense = st.slider("Defensieve benchmark", min_value=0, max_value=100, value=0, step=1)
 
-# 4. GET DATA
+# 4. GET DATA AND FILL SIDEBAR
 # Get percentile data
 with st.spinner('Ophalen van de data...'):
     df_player_data = load_data_from_supabase()
@@ -980,7 +980,7 @@ function(params) {{
 }}
 """)
 
-# Create first table
+# 5. CREATE TOP TABLE
 gb = GridOptionsBuilder.from_dataframe(df_show)
 
 # Set the width of specific columns
@@ -1054,12 +1054,12 @@ if top_grid_response and top_grid_response.get('selected_rows') is not None:
             selected_from_top_table_full_data.append(df_top.loc[idx])
 
 
-# 5. Create  radar plot section (with container)
+# 6. CREATE CONTAINER FOR RADAR PLOTS
 st.subheader("Radarplots")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 radar_plot_container = st.container()
 
-# 6. Create player search
+# 7. CREATE SEARCH TABLE
 # Add title
 st.subheader("Zoekopdracht")
 st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
@@ -1180,7 +1180,7 @@ if isinstance(selected_rows, list) and len(selected_rows) > 0:
             selected_from_search_table.append(p_name)
             selected_from_search_table_full_data.append(df_player_data.loc[idx])
 
-# 7. Finalize radar plot area
+# 8. FILL RADARPLOT CONTAINER
 with radar_plot_container:
     
     # Combine the selections from both tables
