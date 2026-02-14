@@ -554,7 +554,6 @@ position_profiles = {
         'total_minutes_percentile',
         'bypass_midfield_defense_pass_tip_p30_percentile',
         'bypass_midfield_defense_dribble_tip_p30_percentile',
-        'bypass_opponents_rec_tip_p30_percentile',
         'ball_win_removed_opponents_otip_p30_percentile',
         'ball_win_added_teammates_otip_p30_percentile',
         'ground_duels_won_p90_percentile',
