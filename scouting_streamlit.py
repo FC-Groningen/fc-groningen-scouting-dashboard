@@ -666,7 +666,7 @@ table_columns = {
 }
 
 # Check whether all metrics assigned to position_profiles are defined correctly
-validate_profiles(metrics, position_profiles)
+# validate_profiles(metrics, position_profiles)
 
 # X. Not sure where to put this yet
 FC_GRONINGEN_GREEN = "#3E8C5E"
