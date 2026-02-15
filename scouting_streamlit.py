@@ -499,6 +499,7 @@ metrics = {
     "bypass_midfield_defense_pass_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Uitgespeelde\ntegenstanders\nmet passes", tooltip="Uitgespeelde middenvelders en verdedigers met passes over de grond, geschaald naar balbezit."),
     "bypass_midfield_defense_dribble_tip_p30_percentile": Metric(category=MetricCategory.ATTACK,label="Uitgespeelde\ntegenstanders\nmet dribbels", tooltip="Uitgespeelde middenvelders en verdedigers met dribbels, geschaald naar balbezit."),
     "bypass_opponents_rec_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Uitgespeelde\ntegenstanders\nals ontvanger", tooltip="Uitgespeelde tegenstanders als ontvanger van een pass, geschaald naar balbezit."),
+    "off_ball_runs_total_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Loopacties\nzonder bal", tooltip="Totale hoeveelheid loopacties zonder bal, geschaald naar balbezit."),
     "involvement_chances_tip_p30_percentile": Metric(category=MetricCategory.ATTACK,label="Betrokkenheid\nkansen", tooltip="Betrokkenheid bij kansen via een doelpoging, een assist of een voorassist op de doelpoging, geschaald naar balbezit."),
     "chance_created_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Loopacties\nzonder bal", tooltip="Totale hoeveelheid loopacties zonder bal, geschaald naar balbezit."),
     "pxt_pass_absolute_tip_p30_percentile": Metric(category=MetricCategory.ATTACK, label="Gecreëerd gevaar\nmet passes", tooltip="Gecreëerd gevaar met passes over de grond, geschaald naar balbezit."),
