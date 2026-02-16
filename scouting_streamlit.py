@@ -908,15 +908,21 @@ if not df_impect_urls.empty:
         how='left'
     )
 
+# Set custom position order
+custom_order = ["LB (AANV)", "LB (VERD)", "RB (AANV)", "RB (VERD)", "CB (AANV)", "CB (VERD)", 
+                "DM/CM (DEF)", "DM/CM (BTB)", "DM/CM (CRE)", "CAM (CREA)", "CAM (LOP)", 
+                "LW (BIN)", "LW (BUI)", "RW (BIN)", "RW (BUI)", "ST (DYN)", "ST (TARG)", "ST (DIEP)"]
+
 # Find unique variables to show in the dropdowns
 competitions = sorted(df_player_data["competition_name"].dropna().unique())
 seasons = sorted(df_player_data["season_name"].dropna().unique())
-positions = sorted(df_player_data["position_profile"].dropna().unique())
+raw_positions = df_player_data["position_profile"].dropna().unique()
+positions = sorted(raw_positions, key=lambda x: custom_order.index(x) if x in custom_order else 999)
 
 # Set default in the selection
 default_competitions = ["Eredivisie"] if "Eredivisie" in competitions else competitions
 default_seasons = ["2025/2026"] if "2025/2026" in seasons else seasons
-default_positions = [p for p in ["DM/CM (DEF)", "DM/CM (CRE)", "DM/CM (BTB)"] if p in positions]    
+default_positions = None 
 
 # Create dropdowns
 dropdown_competition = st.sidebar.multiselect("Competitie", competitions, default=default_competitions)
@@ -929,7 +935,7 @@ teams = sorted(df_player_data[
     df_player_data["season_name"].isin(dropdown_season)
 ]["team_name"].dropna().unique())
 
-dropdown_teams = st.sidebar.multiselect("Club", teams, default=[])
+dropdown_teams = st.sidebar.multiselect("Club (optioneel)", teams, default=[])
 
 # Create age range slider
 age_min = int(np.nanmin(df_player_data["age"].values))
