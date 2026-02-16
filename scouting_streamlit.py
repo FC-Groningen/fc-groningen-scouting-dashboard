@@ -910,7 +910,7 @@ if not df_impect_urls.empty:
 
 # Set custom position order
 custom_order = ["LB (AANV)", "LB (VERD)", "RB (AANV)", "RB (VERD)", "CB (AANV)", "CB (VERD)", 
-                "DM/CM (DEF)", "DM/CM (BTB)", "DM/CM (CRE)", "CAM (CREA)", "CAM (LOP)", 
+                "DM/CM (DEF)", "DM/CM (BTB)", "DM/CM (CREA)", "CAM (CREA)", "CAM (LOP)", 
                 "LW (BIN)", "LW (BUI)", "RW (BIN)", "RW (BUI)", "ST (DYN)", "ST (TARG)", "ST (DIEP)"]
 
 # Find unique variables to show in the dropdowns
