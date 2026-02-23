@@ -6,8 +6,6 @@ from PIL import Image
 import base64
 from io import BytesIO
 from pathlib import Path
-from dataclasses import dataclass
-from enum import Enum
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from supabase import create_client, Client
 
@@ -54,330 +52,100 @@ SUPABASE_URL = st.secrets.get("SUPABASE_URL", "")
 SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "")
 TEAM_LOGOS_DIR = "team_logos"
 
-FC_GRONINGEN_GREEN = "#3E8C5E"
-
-
-# =========================
-# METRICS & POSITION PROFILES (matching Bram's scouting_streamlit.py)
-# =========================
-class MetricCategory(str, Enum):
-    PHYSICAL = "physical"
-    ATTACK = "attacking"
-    DEFENSE = "defending"
-
-
-@dataclass(frozen=True)
-class Metric:
-    category: MetricCategory
-    label: str
-    tooltip: str
-
-
-# Full metric definitions
-metrics = {
-    # Physical metrics
-    "total_distance_p90_percentile": Metric(
-        category=MetricCategory.PHYSICAL,
-        label="Totale\nafstand",
-        tooltip="De totale afgelegde afstand per 90 minuten."
-    ),
-    "running_distance_p90_percentile": Metric(
-        category=MetricCategory.PHYSICAL,
-        label="15–20km/u\nafstand",
-        tooltip="De totale afgelegde afstand tussen de 15-20km/u per 90 minuten."
-    ),
-    "hsr_distance_p90_percentile": Metric(
-        category=MetricCategory.PHYSICAL,
-        label="20-25km/u\nafstand",
-        tooltip="De totale afgelegde afstand tussen de 20-25km/u per 90 minuten."
-    ),
-    "sprint_distance_p90_percentile": Metric(
-        category=MetricCategory.PHYSICAL,
-        label="25+km/u\nafstand",
-        tooltip="De totale afgelegde afstand boven de 25km/u per 90 minuten."
-    ),
-    "hi_distance_p90_percentile": Metric(
-        category=MetricCategory.PHYSICAL,
-        label="20+km/u\nafstand",
-        tooltip="De totale afgelegde afstand boven de 20km/u per 90 minuten."
-    ),
-    "total_minutes_percentile": Metric(
-        category=MetricCategory.PHYSICAL,
-        label="Totale\nspeeltijd",
-        tooltip="Het totaal aan gespeelde minuten op alle posities."
-    ),
-
-    # Attacking metrics
-    "bypass_midfield_defense_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Uitgespeelde\ntegenstanders",
-        tooltip="Uitgespeelde middenvelders en verdedigers met alle acties, geschaald naar balbezit."
-    ),
-    "bypass_midfield_defense_pass_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Uitgespeelde\ntegenstanders\nmet passes",
-        tooltip="Uitgespeelde middenvelders en verdedigers met passes over de grond, geschaald naar balbezit."
-    ),
-    "bypass_midfield_defense_dribble_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Uitgespeelde\ntegenstanders\nmet dribbels",
-        tooltip="Uitgespeelde middenvelders en verdedigers met dribbels, geschaald naar balbezit."
-    ),
-    "bypass_opponents_rec_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Uitgespeelde\ntegenstanders\nals ontvanger",
-        tooltip="Uitgespeelde tegenstanders als ontvanger van een pass, geschaald naar balbezit."
-    ),
-    "off_ball_runs_total_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Loopacties\nzonder bal",
-        tooltip="Totale hoeveelheid loopacties zonder bal, geschaald naar balbezit."
-    ),
-    "involvement_chances_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Betrokkenheid\nkansen",
-        tooltip="Betrokkenheid bij kansen via een doelpoging, een assist of een voorassist op de doelpoging, geschaald naar balbezit."
-    ),
-    "chance_created_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Gecreëerde\nkansen",
-        tooltip="Totale hoeveelheid gecreëerde kansen, geschaald naar balbezit."
-    ),
-    "pxt_pass_absolute_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Gecreëerd gevaar\nmet passes",
-        tooltip="Gecreëerd gevaar met passes over de grond, geschaald naar balbezit."
-    ),
-    "pxt_dribble_absolute_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Gecreëerd gevaar\nmet dribbels",
-        tooltip="Gecreëerd gevaar met dribbels, geschaald naar balbezit."
-    ),
-    "pxt_rec_absolute_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Gecreëerd gevaar\nals ontvanger",
-        tooltip="Gecreëerd gevaar als pass ontvanger, geschaald naar balbezit."
-    ),
-    "goals_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Doelpunten",
-        tooltip="Doelpunten (zonder penalties), geschaald naar balbezit"
-    ),
-    "shot_xg_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Verwachte\ndoelpunten",
-        tooltip="Verwachte doelpunten (zonder penalties), geschaald naar balbezit"
-    ),
-    "postshot_xg_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Verwachte\ndoelpunten\nna schot",
-        tooltip="Verwachte doelpunten na schot (zonder penalties), geschaald naar balbezit"
-    ),
-    "ball_loss_removed_teammates_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Balverlies\nverwijderde\nteamgenoten",
-        tooltip="Balverlies verwijderde teamgenoten, geschaald naar balbezit."
-    ),
-    "ball_loss_added_opponents_tip_p30_percentile": Metric(
-        category=MetricCategory.ATTACK,
-        label="Balverlies\ntoegevoegde\ntegenstanders",
-        tooltip="Balverlies toegevoegde tegenstanders, geschaald naar balbezit."
-    ),
-
-    # Defending metrics
-    "ball_win_removed_opponents_otip_p30_percentile": Metric(
-        category=MetricCategory.DEFENSE,
-        label="Aanvallende\nveroveringen",
-        tooltip="Het totaal aantal verwijderde tegenstanders, die niet meer in staat zijn om te verdedigen, door balveroveringen hoog op het veld."
-    ),
-    "ball_win_added_teammates_otip_p30_percentile": Metric(
-        category=MetricCategory.DEFENSE,
-        label="Verdedigende\nveroveringen",
-        tooltip="Het totaal aantal toevoegde teamgenoten, die weer in staat zijn deel te nemen aan het spel, door balveroveringen laag op het veld."
-    ),
-    "ground_duels_won_p90_percentile": Metric(
-        category=MetricCategory.DEFENSE,
-        label="Gewonnen\ngrondduels",
-        tooltip="Het totaal aantal gewonnen grondduels per 90 minuten."
-    ),
-    "ground_duels_won_percentage_percentile": Metric(
-        category=MetricCategory.DEFENSE,
-        label="Winstpercentage\ngrondduels",
-        tooltip="Het winstpercentage van grondduels."
-    ),
-    "aerial_duels_won_p90_percentile": Metric(
-        category=MetricCategory.DEFENSE,
-        label="Gewonnen\nluchtduels",
-        tooltip="Het totaal aantal gewonnen luchtduels per 90 minuten."
-    ),
-    "aerial_duels_won_percentage_percentile": Metric(
-        category=MetricCategory.DEFENSE,
-        label="Winstpercentage\nluchtduels",
-        tooltip="Het winstpercentage van luchtduels."
-    ),
-    "press_total_count_otip_p30_percentile": Metric(
-        category=MetricCategory.DEFENSE,
-        label="Druk\nzetten",
-        tooltip="Het totaal aantal momenten van drukzetten, geschaald naar balbezit."
-    ),
-    "press_total_stop_danger_otip_p30_percentile": Metric(
-        category=MetricCategory.DEFENSE,
-        label="Gestopt gevaar\nmet verdedigende acties",
-        tooltip="Het totaal aantal momenten van drukzetten waarbij het gevaar is gestopt, geschaald naar balbezit."
-    ),
-}
-
-# Position profiles: which metrics to show per position (matches scouting_streamlit.py)
-position_profiles = {
-    'LB': [
-        'total_distance_p90_percentile',
-        'running_distance_p90_percentile',
-        'hi_distance_p90_percentile',
-        'total_minutes_percentile',
-        'bypass_midfield_defense_pass_tip_p30_percentile',
-        'bypass_midfield_defense_dribble_tip_p30_percentile',
-        'bypass_opponents_rec_tip_p30_percentile',
-        'off_ball_runs_total_tip_p30_percentile',
-        'involvement_chances_tip_p30_percentile',
-        'ball_win_removed_opponents_otip_p30_percentile',
-        'ball_win_added_teammates_otip_p30_percentile',
-        'ground_duels_won_p90_percentile',
-        'aerial_duels_won_p90_percentile',
-    ],
-    'RB': [
-        'total_distance_p90_percentile',
-        'running_distance_p90_percentile',
-        'hi_distance_p90_percentile',
-        'total_minutes_percentile',
-        'bypass_midfield_defense_pass_tip_p30_percentile',
-        'bypass_midfield_defense_dribble_tip_p30_percentile',
-        'bypass_opponents_rec_tip_p30_percentile',
-        'off_ball_runs_total_tip_p30_percentile',
-        'involvement_chances_tip_p30_percentile',
-        'ball_win_removed_opponents_otip_p30_percentile',
-        'ball_win_added_teammates_otip_p30_percentile',
-        'ground_duels_won_p90_percentile',
-        'aerial_duels_won_p90_percentile',
-    ],
-    'CB': [
-        'total_distance_p90_percentile',
-        'running_distance_p90_percentile',
-        'hi_distance_p90_percentile',
-        'total_minutes_percentile',
-        'bypass_midfield_defense_pass_tip_p30_percentile',
-        'bypass_midfield_defense_dribble_tip_p30_percentile',
-        'ball_win_removed_opponents_otip_p30_percentile',
-        'ball_win_added_teammates_otip_p30_percentile',
-        'ground_duels_won_p90_percentile',
-        'aerial_duels_won_p90_percentile',
-    ],
-    'DM/CM': [
-        'total_distance_p90_percentile',
-        'running_distance_p90_percentile',
-        'hi_distance_p90_percentile',
-        'total_minutes_percentile',
-        'bypass_midfield_defense_pass_tip_p30_percentile',
-        'bypass_midfield_defense_dribble_tip_p30_percentile',
-        'bypass_opponents_rec_tip_p30_percentile',
-        'off_ball_runs_total_tip_p30_percentile',
-        'involvement_chances_tip_p30_percentile',
-        'ball_win_removed_opponents_otip_p30_percentile',
-        'ball_win_added_teammates_otip_p30_percentile',
-        'ground_duels_won_p90_percentile',
-        'aerial_duels_won_p90_percentile',
-    ],
-    'CAM': [
-        'total_distance_p90_percentile',
-        'running_distance_p90_percentile',
-        'hi_distance_p90_percentile',
-        'total_minutes_percentile',
-        'pxt_pass_absolute_tip_p30_percentile',
-        'pxt_dribble_absolute_tip_p30_percentile',
-        'pxt_rec_absolute_tip_p30_percentile',
-        'off_ball_runs_total_tip_p30_percentile',
-        'shot_xg_tip_p30_percentile',
-        'chance_created_tip_p30_percentile',
-        'ball_win_removed_opponents_otip_p30_percentile',
-        'ball_win_added_teammates_otip_p30_percentile',
-        'ground_duels_won_p90_percentile',
-        'aerial_duels_won_p90_percentile',
-    ],
-    'LW': [
-        'total_distance_p90_percentile',
-        'running_distance_p90_percentile',
-        'hi_distance_p90_percentile',
-        'total_minutes_percentile',
-        'pxt_pass_absolute_tip_p30_percentile',
-        'pxt_dribble_absolute_tip_p30_percentile',
-        'pxt_rec_absolute_tip_p30_percentile',
-        'off_ball_runs_total_tip_p30_percentile',
-        'shot_xg_tip_p30_percentile',
-        'chance_created_tip_p30_percentile',
-        'ball_win_removed_opponents_otip_p30_percentile',
-        'ball_win_added_teammates_otip_p30_percentile',
-        'ground_duels_won_p90_percentile',
-        'aerial_duels_won_p90_percentile',
-    ],
-    'RW': [
-        'total_distance_p90_percentile',
-        'running_distance_p90_percentile',
-        'hi_distance_p90_percentile',
-        'total_minutes_percentile',
-        'pxt_pass_absolute_tip_p30_percentile',
-        'pxt_dribble_absolute_tip_p30_percentile',
-        'pxt_rec_absolute_tip_p30_percentile',
-        'off_ball_runs_total_tip_p30_percentile',
-        'shot_xg_tip_p30_percentile',
-        'chance_created_tip_p30_percentile',
-        'ball_win_removed_opponents_otip_p30_percentile',
-        'ball_win_added_teammates_otip_p30_percentile',
-        'ground_duels_won_p90_percentile',
-        'aerial_duels_won_p90_percentile',
-    ],
-    'ST': [
-        'total_distance_p90_percentile',
-        'running_distance_p90_percentile',
-        'hi_distance_p90_percentile',
-        'total_minutes_percentile',
-        'pxt_pass_absolute_tip_p30_percentile',
-        'pxt_dribble_absolute_tip_p30_percentile',
-        'pxt_rec_absolute_tip_p30_percentile',
-        'off_ball_runs_total_tip_p30_percentile',
-        'goals_tip_p30_percentile',
-        'shot_xg_tip_p30_percentile',
-        'postshot_xg_tip_p30_percentile',
-        'ball_win_removed_opponents_otip_p30_percentile',
-        'ball_win_added_teammates_otip_p30_percentile',
-        'ground_duels_won_p90_percentile',
-        'aerial_duels_won_p90_percentile',
-    ]
-}
-
-
-# Table columns (matching Bram's layout)
-table_columns = {
-    "original_rank": "#",
-    "player_name": "Speler",
-    "team_with_logo_html": "Club",
-    "country": "Nationaliteit",
-    "age": "Leeftijd",
-    "position_profile": "Positie",
-    "total_minutes": "Alle minuten",
-    "position_minutes": "Minuten",
-    "competition_name": "Competitie",
-    "season_name": "Seizoen",
-    "physical": "Fysiek",
-    "attacking": "Aanvallend",
-    "defending": "Verdedigend",
-    "total": "Totaal",
-}
-
-# Custom position ordering
-CUSTOM_POSITION_ORDER = [
-    "LB (AANV)", "LB (VERD)", "RB (AANV)", "RB (VERD)", "CB (AANV)", "CB (VERD)",
-    "DM/CM (DEF)", "DM/CM (BTB)", "DM/CM (CREA)", "CAM (CREA)", "CAM (LOP)",
-    "LW (BIN)", "LW (BUI)", "RW (BIN)", "RW (BUI)", "ST (DYN)", "ST (TARG)", "ST (DIEP)"
+PHYSICAL_METRICS = [
+    "total_distance_p90_percentile",
+    "running_distance_p90_percentile",
+    "hsr_distance_p90_percentile",
+    "sprint_distance_p90_percentile"
 ]
+
+ATTACK_METRICS = [
+    "bypass_midfield_defense_tip_p30_percentile",
+    "bypass_opponents_rec_tip_p30_percentile",
+    "off_ball_runs_total_tip_p30_percentile",
+    "involvement_chances_tip_p30_percentile",
+    "ball_loss_removed_teammates_tip_p30_percentile",
+    "ball_loss_added_opponents_tip_p30_percentile"
+]
+
+DEFENSE_METRICS = [
+    "ball_win_removed_opponents_otip_p30_percentile",
+    "ball_win_added_teammates_otip_p30_percentile",
+    "ground_duels_won_percentage_percentile",
+    "aerial_duels_won_percentage_percentile",
+    "press_total_stop_danger_otip_p30_percentile"
+]
+
+
+
+# =============================================================================
+# DM/CM POSITION PROFILE RADAR METRICS (match scouting_model_* profile weights)
+# These are ONLY used for the radar chart variable set (Top-20 ranking stays the same).
+# =============================================================================
+DMCM_PROFILE_PHYSICAL_METRICS = [
+    "total_distance_p90_percentile",
+    "running_distance_p90_percentile",
+    "hi_distance_p90_percentile",
+    "total_minutes_percentile"
+]
+
+DMCM_PROFILE_ATTACK_METRICS = [
+    "bypass_midfield_defense_pass_tip_p30_percentile",
+    "bypass_midfield_defense_dribble_tip_p30_percentile",
+    "bypass_opponents_rec_tip_p30_percentile",
+    "off_ball_runs_total_tip_p30_percentile",
+    "involvement_chances_tip_p30_percentile"
+]
+
+DMCM_PROFILE_DEFENSE_METRICS = [
+    "ball_win_removed_opponents_otip_p30_percentile",
+    "ball_win_added_teammates_otip_p30_percentile",
+    "ground_duels_won_p90_percentile",
+    "aerial_duels_won_p90_percentile",
+    "press_total_count_otip_p30_percentile"
+]
+LABELS = {
+    "total_distance_p90_percentile": "Totale\nafstand",
+    "running_distance_p90_percentile": "15-20km/u\nafstand",
+    "hsr_distance_p90_percentile": "20-25km/u\nafstand",
+    "sprint_distance_p90_percentile": "25+km/u\nafstand",
+    "bypass_midfield_defense_tip_p30_percentile": "Uitgespeelde\ntegenstanders",
+    "bypass_opponents_rec_tip_p30_percentile": "Uitgespeelde\ntegenstanders\nals ontvanger",
+    "off_ball_runs_total_tip_p30_percentile": "Loopacties\nzonder bal",
+    "involvement_chances_tip_p30_percentile": "Betrokkenheid\nkansen",
+    "ball_loss_removed_teammates_tip_p30_percentile": "Balverlies\nverwijderde\nteamgenoten",
+    "ball_loss_added_opponents_tip_p30_percentile": "Balverlies\ntoegevoegde\ntegenstanders",
+    "ball_win_removed_opponents_otip_p30_percentile": "Aanvallende\nveroveringen",
+    "ball_win_added_teammates_otip_p30_percentile": "Verdedigende\nveroveringen",
+    "ground_duels_won_percentage_percentile": "Winstpercentage\ngrondduels",
+    "aerial_duels_won_percentage_percentile": "Winstpercentage\nluchtduels",
+    "press_total_stop_danger_otip_p30_percentile": "Gestopt gevaar\nmet verdedigende actie",
+
+    "hi_distance_p90_percentile": "20+km/u\nafstand",
+    "total_minutes_percentile": "Totale\nspeeltijd",
+    "bypass_midfield_defense_pass_tip_p30_percentile": "Uitgespeelde\ntegenstanders\n(pass)",
+    "bypass_midfield_defense_dribble_tip_p30_percentile": "Uitgespeelde\ntegenstanders\n(dribbel)",
+    "ground_duels_won_p90_percentile": "Gewonnen\ngrondduels",
+    "aerial_duels_won_p90_percentile": "Gewonnen\nluchtduels",
+    "press_total_count_otip_p30_percentile": "Druk\nzetten",
+}
+
+DISPLAY_COLS = {
+    "player_name": "Player Name",
+    "team_name": "Team",
+    "country": "Nationality",
+    "age": "Age",
+    "display_position": "Position",
+    "total_minutes": "Minutes",
+    "competition_name": "Competition",
+    "season_name": "Season",
+    "physical": "Physical",
+    "attack": "Attack",
+    "defense": "Defense",
+    "total": "Total",
+}
+
+FC_GRONINGEN_GREEN = "#3E8C5E"
 
 # ✅ Paste your existing huge TEAM_LOGO_MAPPING here unchanged
 TEAM_LOGO_MAPPING = {
@@ -397,7 +165,7 @@ st.markdown(
       }}
 
       section[data-testid="stSidebar"] {{
-        background-color: #E9F4ED;
+        background-color: #F4F6F8;
         overflow-y: auto !important;
       }}
 
@@ -407,10 +175,6 @@ st.markdown(
 
       section[data-testid="stSidebar"] > div:first-child {{
         padding-top: 0 !important;
-      }}
-
-      section[data-testid="stSidebar"] div[style*="text-align: center"] {{
-        margin-bottom: 50px !important;
       }}
 
       section[data-testid="stSidebar"] .block-container {{
@@ -430,9 +194,9 @@ st.markdown(
         padding-bottom: 0.05rem;
       }}
 
-      section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{
-        font-size: 16px !important;
-        color: #000000 !important;
+      section[data-testid="stSidebar"] label {{
+        margin-bottom: 0.2rem !important;
+        font-size: 14px !important;
       }}
 
       section[data-testid="stSidebar"] div[data-baseweb="select"] {{
@@ -461,48 +225,9 @@ st.markdown(
         margin: 0 0 8px 0;
       }}
 
-      section[data-testid="stSidebar"] div[data-testid="stSlider"] label {{
-        color: #000000 !important;
-      }}
-
-      section[data-testid="stSidebar"] .stSlider > label {{
-        padding-bottom: 10px !important;
-      }}
-
-      [data-testid="stAppViewBlockContainer"] {{
-        padding-top: 1rem !important;
-        margin-top: 0px !important;
-      }}
-
-      h1 {{
-        margin-top: -30px !important;
-        padding-top: 0px !important;
-      }}
-
-      .stSubheader {{
-        margin-top: -10px !important;
-      }}
-
-      [data-testid="stSidebar"] {{
-        width: 250px !important;
-      }}
-
-      [data-testid="stAppViewMain"] {{
-        margin-left: 0px !important;
-      }}
-
-      [data-testid="stMainViewContainer"] {{
-        width: 100% !important;
-      }}
-
-      .custom-info-box {{
-        background-color: #E9F4ED;
-        color: #000000;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-size: 1rem;
-        margin-bottom: 10px;
-      }}
+      div[data-testid="stSlider"] * {{ color: #111111 !important; }}
+      section[data-testid="stSidebar"] div[data-testid="stSlider"] * {{ color: #111111 !important; }}
+      div[data-baseweb="slider"] * {{ color: #111111 !important; }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -510,205 +235,149 @@ st.markdown(
 
 
 # =========================
-# HELPER FUNCTIONS
-# =========================
-def get_metrics_for_profile(profile_name):
-    """Find relevant metrics per category for a selected position."""
-    metric_keys = position_profiles.get(profile_name, [])
-
-    categories = {cat.name.lower(): [] for cat in MetricCategory}
-
-    for key in metric_keys:
-        if key in metrics:
-            metric_obj = metrics[key]
-            cat_name = metric_obj.category.name.lower()
-            if cat_name in categories:
-                categories[cat_name].append(key)
-
-    return categories
-
-
-def get_gradient_color(score, base_hex):
-    """Returns gradient of the main color based on its value."""
-    norm = max(0, min(1, score / 100))
-    base = [int(base_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)]
-    return f'rgb({int(255-(255-base[0])*norm)}, {int(255-(255-base[1])*norm)}, {int(255-(255-base[2])*norm)})'
-
-
-# =========================
 # CHARTS
 # =========================
-def create_polarized_bar_chart(player_data):
+def create_polarized_bar_chart(player_data: pd.Series, competition_name: str, season_name: str) -> go.Figure:
     """
     Create a polarized bar chart (circular bar chart) for a player.
-    Uses position_profiles to determine which metrics to show for each position.
+    Shows 15 metrics in 3 categories: Physical (4), Attack (6), Defense (5).
+
+    ✅ FIX: Overall score is taken from player_data['total'] (same as the table Total column) when available;
+           fallback is the mean of physical/attack/defense if 'total' is missing.
     """
-    # Get the base position from the player data
-    profile_key = player_data.get('position')
+    # -----------------------------------------------------------------
+    # Select metric set for the radar chart.
+    # DM/CM profiles use the updated profile metrics (pass/dribble split, press count, etc.)
+    # All other positions keep the original metric set.
+    # -----------------------------------------------------------------
+    display_pos = None
+    if isinstance(player_data, pd.Series):
+        # Prefer display_position if it exists; otherwise use position_profile/position
+        if 'display_position' in player_data.index and pd.notna(player_data.get('display_position')):
+            display_pos = str(player_data.get('display_position'))
+        elif 'position_profile' in player_data.index and pd.notna(player_data.get('position_profile')):
+            display_pos = str(player_data.get('position_profile'))
+        elif 'position' in player_data.index and pd.notna(player_data.get('position')):
+            display_pos = str(player_data.get('position'))
 
-    # Get the metrics for this position from position_profiles
-    active_metric_keys = position_profiles.get(profile_key, [])
+    is_dmcm_profile = bool(display_pos) and display_pos.startswith("DM/CM (") and display_pos.endswith(")")
 
-    # Sort into categories
-    physical_keys = [k for k in active_metric_keys if metrics[k].category == MetricCategory.PHYSICAL]
-    attack_keys = [k for k in active_metric_keys if metrics[k].category == MetricCategory.ATTACK]
-    defense_keys = [k for k in active_metric_keys if metrics[k].category == MetricCategory.DEFENSE]
+    # Use profile label in the chart caption when available
+    position_caption = display_pos if display_pos else (str(player_data.get('position')) if 'position' in player_data.index else "")
 
-    all_keys = physical_keys + attack_keys + defense_keys
+    physical_metrics = DMCM_PROFILE_PHYSICAL_METRICS if is_dmcm_profile else PHYSICAL_METRICS
+    attack_metrics   = DMCM_PROFILE_ATTACK_METRICS   if is_dmcm_profile else ATTACK_METRICS
+    defense_metrics  = DMCM_PROFILE_DEFENSE_METRICS  if is_dmcm_profile else DEFENSE_METRICS
 
-    # Get hover descriptions
-    hover_descriptions = [metrics[m].tooltip for m in all_keys]
+    green = '#3E8C5E'
+    red = '#E83F2A'
+    yellow = '#F2B533'
 
-    # Get percentile scores and labels
-    percentile_values = [float(player_data.get(k, 0) if pd.notna(player_data.get(k, 0)) else 0) for k in all_keys]
-    metric_labels = [metrics[k].label.replace('\n', '<br>') for k in all_keys]
+    def lighten_color(hex_color, amount=0.6):
+        hex_color = hex_color.lstrip('#')
+        r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+        r = int(r + (255 - r) * amount)
+        g = int(g + (255 - g) * amount)
+        b = int(b + (255 - b) * amount)
+        return f'#{r:02x}{g:02x}{b:02x}'
 
-    # Get the category and total scores
-    physical_avg = float(player_data.get('physical', 0) if pd.notna(player_data.get('physical', 0)) else 0)
-    attack_avg = float(player_data.get('attacking', 0) if pd.notna(player_data.get('attacking', 0)) else 0)
-    defense_avg = float(player_data.get('defending', 0) if pd.notna(player_data.get('defending', 0)) else 0)
-    overall_avg = float(player_data.get('total', np.mean([physical_avg, attack_avg, defense_avg])))
+    def get_gradient_color(base_color, score, min_score=0, max_score=100):
+        normalized = (score - min_score) / (max_score - min_score) if max_score > min_score else 0
+        normalized = max(0, min(1, normalized))
+        light_color = lighten_color(base_color, amount=0.6)
+        light_rgb = tuple(int(light_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+        dark_rgb = tuple(int(base_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+        r = int(light_rgb[0] + (dark_rgb[0] - light_rgb[0]) * normalized)
+        g = int(light_rgb[1] + (dark_rgb[1] - light_rgb[1]) * normalized)
+        b = int(light_rgb[2] + (dark_rgb[2] - light_rgb[2]) * normalized)
+        return f'rgb({r},{g},{b})'
 
-    # Set colors
-    colors = (
-        [get_gradient_color(v, '#3E8C5E') for v in percentile_values[:len(physical_keys)]] +
-        [get_gradient_color(v, '#E83F2A') for v in percentile_values[len(physical_keys):len(physical_keys)+len(attack_keys)]] +
-        [get_gradient_color(v, '#F2B533') for v in percentile_values[-len(defense_keys):]]
+    plot_columns = physical_metrics + attack_metrics + defense_metrics
+    percentile_values = [player_data[col] if col in player_data.index else 0 for col in plot_columns]
+
+    category_mapping = (
+        [1] * len(physical_metrics) +
+        [2] * len(attack_metrics) +
+        [3] * len(defense_metrics)
     )
 
-    # Build Figure
-    fig = go.Figure()
+    category_colors = {1: green, 2: red, 3: yellow}
 
+    colors = []
+    for score, category_id in zip(percentile_values, category_mapping):
+        base_color = category_colors[category_id]
+        colors.append(get_gradient_color(base_color, score))
+
+    # ✅ Category averages
+    if all(k in player_data.index for k in ['physical', 'attack', 'defense']):
+        physical_avg = float(player_data['physical'])
+        attack_avg   = float(player_data['attack'])
+        defense_avg  = float(player_data['defense'])
+    else:
+        physical_avg = float(np.mean(percentile_values[0:len(physical_metrics)]))
+        attack_avg   = float(np.mean(percentile_values[len(physical_metrics):len(physical_metrics)+len(attack_metrics)]))
+        defense_avg  = float(np.mean(percentile_values[len(physical_metrics)+len(attack_metrics):]))
+
+    # ✅ FIX: Overall score should match the table's Total column.
+    # Prefer the stored 'total' value (already weighted/defined by the model); fallback to mean of category scores.
+    if 'total' in player_data.index and pd.notna(player_data.get('total')):
+        overall_avg = float(player_data['total'])
+    else:
+        overall_avg = float(np.mean([physical_avg, attack_avg, defense_avg]))
+
+    metric_labels = [LABELS.get(col, col).replace('\n', '<br>') for col in plot_columns]
+
+    fig = go.Figure()
     fig.add_trace(go.Barpolar(
         r=percentile_values,
         theta=metric_labels,
-        marker=dict(color=colors, line=dict(color='white', width=1.5)),
-        customdata=hover_descriptions,
-        hovertemplate=(
-            "<span style='color:black;'><b>Score: %{r:.1f}</b></span><br>"
-            "%{customdata}"
-            "<extra></extra>"
-        )
+        marker=dict(color=colors, line=dict(color='white', width=2)),
+        opacity=1.0,
+        name='',
+        text=[f'{v:.0f}' for v in percentile_values],
+        hovertemplate='%{theta}<br>Percentile: %{r:.1f}<extra></extra>'
     ))
 
     fig.update_layout(
         polar=dict(
-            bgcolor='white',
+            domain=dict(x=[0.02, 0.98], y=[0.0, 0.88]),
             radialaxis=dict(
-                range=[-25, 100],
                 visible=True,
+                range=[-20, 100],
                 showticklabels=False,
-                gridcolor='rgba(0,0,0,0.1)',
-                tickvals=[-0.35, 25, 50, 75, 100],
+                ticks='',
                 showline=False,
-                ticks=''
+                showgrid=True,
+                gridcolor='rgba(0, 0, 0, 0.2)',
+                gridwidth=1,
+                tickvals=[25, 50, 75, 100],
+                layer='above traces'
             ),
             angularaxis=dict(
-                tickfont=dict(size=10, family='Proxima Nova', color='black'),
+                tickfont=dict(size=10, family='Proxima Nova', color='#000000'),
                 rotation=90,
                 direction='clockwise',
                 showgrid=False,
-                showline=True,
-                linecolor='black',
-                ticks='outside',
-                ticklen=8,
-                tickwidth=1,
-                tickcolor='black'
-            )
+                gridcolor='rgba(0, 0, 0, 0.2)',
+                gridwidth=1,
+                layer='above traces'
+            ),
+            bgcolor='rgba(255, 255, 255, 1)'
         ),
-        annotations=[
-            dict(
-                text=f"<b>{overall_avg:.1f}</b>",
-                x=0.5, y=0.5,
-                showarrow=False,
-                font=dict(size=28, color='black', family="ProximaNova-Bold, sans-serif"),
-                xref="paper", yref="paper"
-            )
-        ],
         showlegend=False,
         height=500,
-        margin=dict(l=50, r=50, t=100, b=50),
+        margin=dict(l=80, r=80, t=120, b=80),
         title=dict(
             text=(
-                f"<span style='color:#3E8C5E; font-size:18px; vertical-align: middle;'>●</span> Fysiek: {physical_avg:.1f} | "
-                f"<span style='color:#E83F2A; font-size:18px; vertical-align: middle;'>●</span> Aanvallend: {attack_avg:.1f} | "
-                f"<span style='color:#F2B533; font-size:18px; vertical-align: middle;'>●</span> Verdedigend: {defense_avg:.1f}"
+                f"<b>Overall: {overall_avg:.1f}</b><br>"
+                f"<span style='font-size:14px'>🟢 Fysiek: {physical_avg:.1f} | 🔴 Aanvallen: {attack_avg:.1f} | 🟡 Verdedigen: {defense_avg:.1f}</span><br>"
+                f"<span style='font-size:11px; color:#666'>{competition_name} | {season_name}</span>"
             ),
-            x=0.5, y=0.98, xanchor='center',
-            font=dict(family='Proxima Nova', size=16, color='black')
-        )
-    )
-
-    return fig
-
-
-def build_radar_3_shapes(row, profile_name):
-    """Builds a tri-colored radar chart using structured metric definitions."""
-    fig = go.Figure()
-
-    categorized_metrics = get_metrics_for_profile(profile_name)
-
-    def add_group(metric_keys, name, line_color, fill_rgba):
-        if not metric_keys:
-            return
-
-        r_vals = []
-        theta = []
-
-        for m in metric_keys:
-            val = row.get(m, 0)
-            r_vals.append(float(val) if pd.notna(val) else 0)
-
-            if m in metrics:
-                display_label = metrics[m].label.replace('\n', ' ')
-            else:
-                display_label = m.replace('_', ' ').title()
-
-            theta.append(display_label)
-
-        r_vals.append(r_vals[0])
-        theta.append(theta[0])
-
-        fig.add_trace(go.Scatterpolar(
-            r=r_vals,
-            theta=theta,
-            fill='toself',
-            fillcolor=fill_rgba,
-            line=dict(color=line_color, width=2),
-            name=name,
-            hovertemplate="<b>%{theta}</b><br>Percentile: %{r:.1f}<extra></extra>"
-        ))
-
-    layers = [
-        ('physical', "Fysiek", "#3E8C5E", "rgba(62, 140, 94, 0.25)"),
-        ('attacking', "Aanval", "#E83F2A", "rgba(232, 63, 42, 0.25)"),
-        ('defending', "Verdediging", "#F2B533", "rgba(242, 181, 51, 0.25)")
-    ]
-
-    for key, label, line_col, fill_col in layers:
-        add_group(categorized_metrics.get(key, []), label, line_col, fill_col)
-
-    fig.update_layout(
-        polar=dict(
-            bgcolor="rgba(0,0,0,0)",
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                tickfont=dict(size=10, color="gray"),
-                gridcolor="rgba(200, 200, 200, 0.2)"
-            ),
-            angularaxis=dict(
-                tickfont=dict(size=10, fontfamily="Arial Black"),
-                rotation=90,
-                direction="clockwise"
-            )
+            x=0.5, y=0.95, xanchor='center', yanchor='top',
+            font=dict(size=16, family='Proxima Nova', color='black')
         ),
-        showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
-        height=500,
-        margin=dict(l=80, r=80, t=40, b=40),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor='rgba(255, 255, 255, 1)',
+        plot_bgcolor='rgba(255, 255, 255, 1)'
     )
 
     return fig
@@ -723,7 +392,7 @@ def load_data_from_supabase() -> pd.DataFrame:
     try:
         supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-        count_response = supabase.table('player_percentiles').select("id", count='exact').limit(1).execute()
+        count_response = supabase.table('player_percentiles').select("*", count='exact').limit(1).execute()
         total_count = count_response.count
 
         all_data = []
@@ -735,6 +404,47 @@ def load_data_from_supabase() -> pd.DataFrame:
 
         df = pd.DataFrame(all_data)
 
+        # ✅ FIX 3: Include category columns in numeric conversion
+        numeric_cols = (
+            ["age", "total_minutes", "physical", "attacking", "defending", "total"] +
+            PHYSICAL_METRICS + ATTACK_METRICS + DEFENSE_METRICS
+        )
+        for c in numeric_cols:
+            if c in df.columns:
+                df[c] = pd.to_numeric(df[c], errors="coerce")
+
+        # ✅ FIX 2: Rename database columns to match app expectations
+        if 'attacking' in df.columns:
+            df['attack'] = df['attacking']
+        if 'defending' in df.columns:
+            df['defense'] = df['defending']
+
+        # ✅ FIX 1: Use database scores (correctly weighted for position profiles)
+        # Only calculate if database values are missing
+        if 'physical' not in df.columns or df['physical'].isna().all():
+            df['physical'] = df[PHYSICAL_METRICS].mean(axis=1)
+        if 'attack' not in df.columns or df['attack'].isna().all():
+            df['attack'] = df[ATTACK_METRICS].mean(axis=1)
+        if 'defense' not in df.columns or df['defense'].isna().all():
+            df['defense'] = df[DEFENSE_METRICS].mean(axis=1)
+        if 'total' not in df.columns or df['total'].isna().all():
+            df['total'] = df[['physical', 'attack', 'defense']].mean(axis=1)
+
+        # ✅ FIX 4: Calculate category scores for rows missing them (non-DM/CM players)
+        # The scouting model only calculates scores for DM/CM, so other positions have NaN
+        mask_missing_scores = (
+            df['physical'].isna() | 
+            df['attack'].isna() | 
+            df['defense'].isna()
+        )
+        
+        if mask_missing_scores.any():
+            # Calculate simple averages (equal weights) for missing scores
+            df.loc[mask_missing_scores, 'physical'] = df.loc[mask_missing_scores, PHYSICAL_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'attack'] = df.loc[mask_missing_scores, ATTACK_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'defense'] = df.loc[mask_missing_scores, DEFENSE_METRICS].mean(axis=1)
+            df.loc[mask_missing_scores, 'total'] = df.loc[mask_missing_scores, ['physical', 'attack', 'defense']].mean(axis=1)
+
         return df
 
     except Exception as e:
@@ -744,23 +454,30 @@ def load_data_from_supabase() -> pd.DataFrame:
         return pd.DataFrame()
 
 
-@st.cache_data(ttl=36000)
+@st.cache_data(ttl=3600)
 def load_impect_urls_from_supabase() -> pd.DataFrame:
     """Load Impect URLs from player_impect_urls table"""
     try:
         supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-        count_response = supabase.table('player_impect_urls').select("id", count='exact').limit(1).execute()
-        total_count = count_response.count
-
         all_urls = []
         page_size = 1000
+        offset = 0
 
-        for offset in range(0, total_count, page_size):
+        while True:
             response = supabase.table('player_impect_urls').select(
                 "player_id, player_name, iterationid, position, impect_url"
             ).range(offset, offset + page_size - 1).execute()
+
+            if not response.data:
+                break
+
             all_urls.extend(response.data)
+
+            if len(response.data) < page_size:
+                break
+
+            offset += page_size
 
         df_urls = pd.DataFrame(all_urls)
         return df_urls
@@ -770,28 +487,73 @@ def load_impect_urls_from_supabase() -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def sanitize_filename(name):
-    return (
-        name.replace(" ", "_")
-        .replace("/", "_")
-        .replace("\\", "_")
-        .replace(":", "_")
-        .replace("*", "_")
-        .replace("?", "_")
-        .replace('"', "_")
-        .replace("<", "_")
-        .replace(">", "_")
-        .replace("|", "_")
+def percentile_0_100(series: pd.Series) -> pd.Series:
+    s = series.copy()
+    if s.notna().sum() == 0:
+        return pd.Series([np.nan] * len(s), index=s.index)
+    if s.nunique(dropna=True) <= 1:
+        return pd.Series([50.0] * len(s), index=s.index)
+    return s.rank(pct=True) * 100.0
+
+
+def get_relevant_metrics_for_position(row: pd.Series, cohort: pd.DataFrame) -> dict:
+    # Default metric sets (legacy radar)
+    physical = PHYSICAL_METRICS
+    attack   = ATTACK_METRICS
+    defense  = DEFENSE_METRICS
+
+    # If this row is a DM/CM position profile, use the profile-specific metric set
+    # to match how the model defines DM/CM (DEF/CRE/BTB).
+    pos_label = str(row.get("display_position", row.get("position_profile", row.get("position", ""))))
+    if pos_label.startswith("DM/CM ("):
+        physical = DMCM_PROFILE_PHYSICAL_METRICS
+        attack   = DMCM_PROFILE_ATTACK_METRICS
+        defense  = DMCM_PROFILE_DEFENSE_METRICS
+
+    return {'physical': physical, 'attack': attack, 'defense': defense}
+
+
+def build_radar_3_shapes(row: pd.Series, cohort: pd.DataFrame) -> go.Figure:
+    fig = go.Figure()
+    relevant_metrics = get_relevant_metrics_for_position(row, cohort)
+
+    def add_group(metrics, name, line_color, fill_rgba):
+        if not metrics:
+            return
+
+        r_vals, theta = [], []
+        for m in metrics:
+            r_vals.append(float(row[m]) if m in row.index and pd.notna(row[m]) else 0)
+            theta.append(LABELS.get(m, m).replace('\n', ' '))
+
+        r_vals = r_vals + [r_vals[0]]
+        theta  = theta + [theta[0]]
+
+        fig.add_trace(go.Scatterpolar(
+            r=r_vals,
+            theta=theta,
+            fill='toself',
+            fillcolor=fill_rgba,
+            line=dict(color=line_color, width=2),
+            name=name,
+            hovertemplate="%{theta}<br>Percentile: %{r:.1f}<extra></extra>"
+        ))
+
+    add_group(relevant_metrics['physical'], "Physical", "#3E8C5E", "rgba(62, 140, 94, 0.25)")
+    add_group(relevant_metrics['attack'], "Attack", "#E83F2A", "rgba(232, 63, 42, 0.25)")
+    add_group(relevant_metrics['defense'], "Defense", "#F2B533", "rgba(242, 181, 51, 0.25)")
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 100], tickfont=dict(size=10)),
+            angularaxis=dict(tickfont=dict(size=9))
+        ),
+        showlegend=True,
+        height=400,
+        margin=dict(l=60, r=60, t=60, b=60),
     )
 
-
-def encode_image_to_base64(logo_path):
-    """Helper to convert an image file to a base64 string."""
-    img = Image.open(logo_path)
-    buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    return f"data:image/png;base64,{img_str}"
+    return fig
 
 
 @st.cache_data
@@ -801,28 +563,56 @@ def get_team_logo_base64(team_name: str, competition_name: str = None) -> str:
 
     try:
         logo_filename = TEAM_LOGO_MAPPING.get(team_name, team_name)
+
+        def sanitize_filename(name):
+            return (
+                name.replace(" ", "_")
+                .replace("/", "_")
+                .replace("\\", "_")
+                .replace(":", "_")
+                .replace("*", "_")
+                .replace("?", "_")
+                .replace('"', "_")
+                .replace("<", "_")
+                .replace(">", "_")
+                .replace("|", "_")
+            )
+
+        def sanitize_competition_folder(name):
+            return name.replace("/", "_").replace("\\", "_")
+
         safe_filename = sanitize_filename(logo_filename)
+
         paths_to_try = []
 
         if competition_name:
-            safe_comp = competition_name.replace("/", "_").replace("\\", "_")
+            safe_comp = sanitize_competition_folder(competition_name)
             comp_folder = Path(TEAM_LOGOS_DIR) / safe_comp
+            paths_to_try.append(comp_folder / f"{safe_filename}.png")
 
-            if comp_folder.exists():
-                paths_to_try.append(comp_folder / f"{safe_filename}.png")
-
-                for file in comp_folder.glob("*.png"):
-                    if safe_filename.lower() in file.stem.lower():
-                        paths_to_try.append(file)
+            if logo_filename != team_name:
+                paths_to_try.append(comp_folder / f"{sanitize_filename(team_name)}.png")
 
         paths_to_try.append(Path(TEAM_LOGOS_DIR) / f"{safe_filename}.png")
 
         if logo_filename != team_name:
             paths_to_try.append(Path(TEAM_LOGOS_DIR) / f"{sanitize_filename(team_name)}.png")
 
+        if competition_name:
+            safe_comp = sanitize_competition_folder(competition_name)
+            comp_folder = Path(TEAM_LOGOS_DIR) / safe_comp
+            if comp_folder.exists():
+                for file in comp_folder.glob("*.png"):
+                    if safe_filename.lower() in file.stem.lower():
+                        paths_to_try.insert(0, file)
+
         for logo_path in paths_to_try:
             if logo_path.exists():
-                return encode_image_to_base64(logo_path)
+                img = Image.open(logo_path)
+                buffered = BytesIO()
+                img.save(buffered, format="PNG")
+                img_str = base64.b64encode(buffered.getvalue()).decode()
+                return f"data:image/png;base64,{img_str}"
 
     except Exception:
         pass
@@ -830,43 +620,32 @@ def get_team_logo_base64(team_name: str, competition_name: str = None) -> str:
     return None
 
 
-def get_player_url(row):
-    """Finds the related player Impect url."""
-    if pd.notna(row.get('impect_url')) and row.get('impect_url'):
-        return row['impect_url']
-    return None
-
-
-def create_team_html_with_logo(row):
-    """Create column that combines team logo with name."""
-    team_name = row['team_name']
-    competition = row.get('competition_name')
-    logo_b64 = get_team_logo_base64(team_name, competition)
-    if logo_b64:
-        return f'<img src="{logo_b64}" height="20" style="vertical-align: middle; margin-right: 8px;">{team_name}'
-    return team_name
+def get_team_fbref_google_search(team_name: str) -> str:
+    query = f"{team_name} site:fbref.com"
+    return f"https://www.google.com/search?q={query.replace(' ', '+')}"
 
 
 # =========================
 # LOAD DATA
 # =========================
-with st.spinner('Ophalen van de data...'):
-    df_player_data = load_data_from_supabase()
+with st.spinner('Loading player data...'):
+    df = load_data_from_supabase()
 
-with st.spinner('Creëeren van Impect connectie...'):
+with st.spinner('Loading player profiles...'):
     df_impect_urls = load_impect_urls_from_supabase()
 
-# Merge Impect URLs
 if not df_impect_urls.empty:
-    url_lookup = df_impect_urls[['player_id', 'position', 'impect_url']].drop_duplicates(
-        subset=['player_id', 'position']
+    # Deduplicate: keep one URL per player/iteration/position to avoid row multiplication on merge
+    df_impect_urls_deduped = (
+        df_impect_urls[['player_id', 'iterationid', 'position', 'impect_url']]
+        .dropna(subset=['impect_url'])
+        .drop_duplicates(subset=['player_id', 'iterationid', 'position'], keep='first')
     )
-    df_player_data = df_player_data.merge(
-        url_lookup,
-        on=['player_id', 'position'],
+    df = df.merge(
+        df_impect_urls_deduped,
+        on=['player_id', 'iterationid', 'position'],
         how='left'
     )
-
 
 # =========================
 # SIDEBAR & FILTERS
@@ -894,120 +673,187 @@ with st.sidebar:
     st.markdown('<div class="sb-title">Filters</div>', unsafe_allow_html=True)
     st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
 
-st.title("Scouting dashboard")
+st.title("FC Groningen Scouting Dashboard")
 
-# Add title and divider for first table
-st.subheader("Ranglijst")
-st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
+competitions = sorted(df["competition_name"].dropna().unique())
+seasons = sorted(df["season_name"].dropna().unique())
 
-# Create selection options for first table
-col1, col2, col3, col4 = st.columns(4, gap="large")
-
-with col1:
-    top_n = st.number_input("Aantal spelers", min_value=1, max_value=500, value=20, step=1)
-
-with col2:
-    min_physical = st.slider("Fysieke benchmark", min_value=0, max_value=100, value=0, step=1)
-
-with col3:
-    min_attack = st.slider("Aanvallende benchmark", min_value=0, max_value=100, value=0, step=1)
-
-with col4:
-    min_defense = st.slider("Defensieve benchmark", min_value=0, max_value=100, value=0, step=1)
-
-
-# Build position and filter options
-competitions = sorted(df_player_data["competition_name"].dropna().unique())
-seasons = sorted(df_player_data["season_name"].dropna().unique())
-raw_positions = df_player_data["position_profile"].dropna().unique()
-positions = sorted(raw_positions, key=lambda x: CUSTOM_POSITION_ORDER.index(x) if x in CUSTOM_POSITION_ORDER else 999)
+# Build position list that includes position profiles for DM/CM
+positions = []
+for pos in sorted(df["position"].dropna().unique()):
+    if pos == "DM/CM":
+        # For DM/CM, add the specific profiles instead of generic position
+        if 'position_profile' in df.columns:
+            profiles = df[df["position"] == "DM/CM"]["position_profile"].dropna().unique()
+            dm_cm_profiles = sorted([p for p in profiles if p and p.startswith("DM/CM")])
+            if len(dm_cm_profiles) > 0:
+                # Add the specific profiles
+                positions.extend(dm_cm_profiles)
+            else:
+                # Fallback: no profiles exist yet, add generic DM/CM
+                positions.append(pos)
+        else:
+            positions.append(pos)
+    else:
+        positions.append(pos)
 
 default_competitions = ["Eredivisie"] if "Eredivisie" in competitions else competitions
 default_seasons = ["2025/2026"] if "2025/2026" in seasons else seasons
 
-dropdown_competition = st.sidebar.multiselect("Competitie", competitions, default=default_competitions)
-dropdown_season = st.sidebar.multiselect("Seizoen", seasons, default=default_seasons)
-dropdown_positions = st.sidebar.multiselect("Positie (profiel)", positions, default=positions)
+selected_comp = st.sidebar.multiselect("Competition", competitions, default=default_competitions)
+selected_season = st.sidebar.multiselect("Season", seasons, default=default_seasons)
 
-# Dynamic teams dropdown
-teams = sorted(df_player_data[
-    df_player_data["competition_name"].isin(dropdown_competition) &
-    df_player_data["season_name"].isin(dropdown_season)
-]["team_name"].dropna().unique())
-
-dropdown_teams = st.sidebar.multiselect("Club (optioneel)", teams, default=[])
-
-age_min = int(np.nanmin(df_player_data["age"].values))
-age_max = int(np.nanmax(df_player_data["age"].values))
+age_min = int(np.nanmin(df["age"].values))
+age_max = int(np.nanmax(df["age"].values))
 age_range = st.sidebar.slider(
-    "Leeftijd range",
+    "Age range",
     min_value=age_min,
     max_value=age_max,
     value=(age_min, age_max),
     step=1,
 )
 
-show_eu_only = st.sidebar.checkbox(
-    "Alleen EU spelers",
+show_european_only = st.sidebar.checkbox(
+    "European players only",
     value=False,
-    help="Selecteer alleen spelers die een EU paspoort hebben"
+    help="Filter to show only players from European countries"
+)
+
+# Default selection: show DM/CM profiles first (Bram request)
+dmcm_default_positions = [p for p in ["DM/CM (DEF)", "DM/CM (CRE)", "DM/CM (BTB)"] if p in positions]
+default_positions = dmcm_default_positions if dmcm_default_positions else positions
+
+selected_pos = st.sidebar.multiselect("Position (optional)", positions, default=default_positions)
+
+# Workaround: enforce minimum minutes played IN the selected position for DM/CM profile rows
+# (prevents players with low DM/CM minutes from ranking as DM/CM profiles when they mostly played elsewhere)
+DMCM_PROFILE_MIN_POSITION_MINUTES = st.sidebar.number_input(
+    "DM/CM profile min position minutes",
+    min_value=0,
+    max_value=5000,
+    value=400,
+    step=25,
+    help="Applies only to DM/CM (DEF/CRE/BTB). Set to 0 to disable."
 )
 
 
-# Apply filters
+st.subheader("Ranking & Filtering")
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    top_n = st.number_input("Top N Players", min_value=1, max_value=500, value=20, step=1)
+
+with col2:
+    min_physical = st.slider("Physical minimum", min_value=0, max_value=100, value=0, step=1)
+
+with col3:
+    min_attack = st.slider("Attack minimum", min_value=0, max_value=100, value=0, step=1)
+
+with col4:
+    min_defense = st.slider("Defense minimum", min_value=0, max_value=100, value=0, step=1)
+
+# Build position filter that handles both regular positions and profiles
+position_mask = pd.Series([False] * len(df), index=df.index)
+
+for selected in selected_pos:
+    if selected.startswith("DM/CM ("):
+        # This is a position profile - filter by position_profile column
+        if "position_profile" in df.columns:
+            dmcm_mask = (df["position_profile"] == selected)
+            # Workaround: require sufficient minutes played in DM/CM (position_minutes) for profile rows
+            if DMCM_PROFILE_MIN_POSITION_MINUTES and ("position_minutes" in df.columns):
+                dmcm_mask &= (df["position_minutes"].fillna(0) >= float(DMCM_PROFILE_MIN_POSITION_MINUTES))
+            position_mask |= dmcm_mask
+
+    else:
+        # Regular position - filter by position column
+        position_mask |= (df["position"] == selected)
+
 mask = (
-    df_player_data["competition_name"].isin(dropdown_competition)
-    & df_player_data["season_name"].isin(dropdown_season)
-    & df_player_data["age"].between(age_range[0], age_range[1])
-    & df_player_data["position_profile"].isin(dropdown_positions)
+    df["competition_name"].isin(selected_comp)
+    & df["season_name"].isin(selected_season)
+    & df["age"].between(age_range[0], age_range[1])
+    & position_mask
 )
 
-if dropdown_teams:
-    mask &= df_player_data["team_name"].isin(dropdown_teams)
+if show_european_only and 'european' in df.columns:
+    mask = mask & (df["european"] == True)
 
-if show_eu_only and 'european' in df_player_data.columns:
-    mask &= (df_player_data["european"] == True)
-
-df_filtered = df_player_data.loc[mask].copy()
-
-df_filtered.sort_values("total", ascending=False, inplace=True, na_position="last")
-df_filtered["original_rank"] = range(1, len(df_filtered) + 1)
-
-df_top = df_filtered.head(int(top_n)).copy()
+df_f = df.loc[mask].copy()
+df_f.sort_values("total", ascending=False, inplace=True, na_position="last")
+df_f["original_rank"] = range(1, len(df_f) + 1)
+df_top = df_f.head(int(top_n)).copy()
 
 df_top = df_top[
     (df_top["physical"] >= min_physical) &
-    (df_top["attacking"] >= min_attack) &
-    (df_top["defending"] >= min_defense)
+    (df_top["attack"] >= min_attack) &
+    (df_top["defense"] >= min_defense)
+]
+
+df_f = df_f[
+    (df_f["physical"] >= min_physical) &
+    (df_f["attack"] >= min_attack) &
+    (df_f["defense"] >= min_defense)
 ]
 
 if len(df_top) == 0:
     st.info("No players match the current filters.")
     st.stop()
 
+# Add display_position column that shows position_profile when available
+if 'position_profile' in df_top.columns:
+    df_top['display_position'] = df_top.apply(
+        lambda row: row['position_profile'] if pd.notna(row.get('position_profile')) and row.get('position_profile') else row['position'],
+        axis=1
+    )
+else:
+    df_top['display_position'] = df_top['position']
 
-# =========================
-# TOP TABLE
-# =========================
-df_show = df_top.copy()
+st.subheader("Top Players Table")
 
-# Round numeric columns
-numeric_columns = ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
-for col in numeric_columns:
+table_cols = list(DISPLAY_COLS.keys())
+cols_to_copy = table_cols + ["original_rank"]
+if 'impect_url' in df_top.columns:
+    cols_to_copy.append('impect_url')
+df_show = df_top[cols_to_copy].copy()
+
+df_show['_original_index'] = df_top.index
+
+numeric_display_cols = ["age", "total_minutes", "physical", "attack", "defense", "total"]
+for col in numeric_display_cols:
     if col in df_show.columns:
-        decimals = 0 if col in ["total_minutes", "position_minutes"] else 1
-        df_show[col] = df_show[col].round(decimals)
+        if col == "total_minutes":
+            df_show[col] = df_show[col].round(0)
+        else:
+            df_show[col] = df_show[col].round(1)
 
-# Create dynamic columns
+def get_player_url(row):
+    if pd.notna(row.get('impect_url')) and row.get('impect_url'):
+        return row['impect_url']
+    else:
+        return get_team_fbref_google_search(row['team_name'])
+
 df_show["player_url"] = df_show.apply(get_player_url, axis=1)
+
+def create_team_html_with_logo(row):
+    team_name = row['team_name']
+    competition = row.get('competition_name')
+    logo_b64 = get_team_logo_base64(team_name, competition)
+    if logo_b64:
+        return f'<img src="{logo_b64}" height="20" style="vertical-align: middle; margin-right: 8px;">{team_name}'
+    return team_name
+
 df_show["team_with_logo_html"] = df_show.apply(create_team_html_with_logo, axis=1)
-df_show["_original_index"] = df_top.index
 
-# Reorder and rename columns
-df_show = df_show[list(table_columns.keys()) + ["player_url", "_original_index"]]
-df_show = df_show.rename(columns=table_columns)
+cols_order = ["original_rank", "player_name", "team_with_logo_html"] + [c for c in table_cols if c not in ["player_name", "team_name"]]
+df_show = df_show[cols_order + ["player_url", "_original_index"]]
 
-# JS Renderers
+rename_dict = {k: v for k, v in DISPLAY_COLS.items() if k != "team_name"}
+rename_dict["original_rank"] = "#"
+rename_dict["team_with_logo_html"] = "Team"
+df_show = df_show.rename(columns=rename_dict)
+
 player_link_renderer = JsCode("""
 class PlayerLinkRenderer {
     init(params) {
@@ -1036,256 +882,290 @@ class TeamLogoRenderer {
 }
 """)
 
-number_dot_formatter = JsCode("""
-function(params) {
-    if (params.value == null) return '';
-    return params.value.toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, ".");
-}
-""")
-
-# Conditional formatting (gradient green for high scores)
-COLOR_THRESHOLD = 30
-gradient_js = JsCode(f"""
-function(params) {{
-    if (params.value == null || isNaN(params.value)) return {{}};
-    
-    let val = params.value;
-    let threshold = {COLOR_THRESHOLD};
-    
-    if (val < threshold) {{
-        return {{
-            'backgroundColor': '#FFFFFF',
-            'color': 'black',
-            'display': 'flex',
-            'alignItems': 'center',
-            'justifyContent': 'center',
-            'textAlign': 'center'
-        }};
-    }}
-    
-    let factor = (val - threshold) / (100 - threshold); 
-    factor = Math.min(1, Math.max(0, factor)); 
-    
-    let r = Math.round(255 - (factor * (255 - 62)));
-    let g = Math.round(255 - (factor * (255 - 140)));
-    let b = Math.round(255 - (factor * (255 - 94)));
-    
-    let backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')';
-    let textColor = factor > 0.6 ? 'white' : 'black';
-    
-    return {{
-        'backgroundColor': backgroundColor,
-        'color': textColor,
-        'fontWeight': 'normal',
-        'border': '3px solid #FFFFFF',
-        'borderRadius': '8px',
-        'display': 'flex',
-        'alignItems': 'center',
-        'justifyContent': 'center',
-        'textAlign': 'center'
-    }};
-}}
-""")
-
-
-# Build AgGrid for top table
 gb = GridOptionsBuilder.from_dataframe(df_show)
-
-gb.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
-gb.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
-gb.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
-
-for key, label in table_columns.items():
-    if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
-        is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
-
-        col_config = {
-            "width": 140,
-            "type": ["numericColumn"] if is_numeric else [],
-            "sortingOrder": ["desc", "asc", None]
-        }
-
-        if key in ["total_minutes", "position_minutes"]:
-            col_config["valueFormatter"] = number_dot_formatter
-
-        if key in ["physical", "attacking", "defending"]:
-            col_config["cellStyle"] = gradient_js
-
-        gb.configure_column(label, **col_config)
+gb.configure_column("#", width=70, pinned="left", sortable=True, type=["numericColumn"])
+gb.configure_column("Player Name", width=180, pinned="left", cellRenderer=player_link_renderer)
+gb.configure_column("Team", width=200, cellRenderer=team_logo_renderer)
+gb.configure_column("Nationality", width=110)
+gb.configure_column("Age", width=80, type=["numericColumn"], sortable=True)
+gb.configure_column("Position", width=130)  # Increased width for position profiles
+gb.configure_column("Minutes", width=100, type=["numericColumn"], sortable=True)
+gb.configure_column("Competition", width=110)
+gb.configure_column("Season", width=110)
+gb.configure_column("Physical", width=100, type=["numericColumn"], sortable=True)
+gb.configure_column("Attack", width=100, type=["numericColumn"], sortable=True)
+gb.configure_column("Defense", width=100, type=["numericColumn"], sortable=True)
+gb.configure_column("Total", width=100, type=["numericColumn"], sortable=True)
 
 gb.configure_column("player_url", hide=True)
 gb.configure_column("_original_index", hide=True)
 gb.configure_default_column(sortable=True, filterable=False, resizable=True)
-gb.configure_selection(selection_mode='multiple', use_checkbox=True)
+gb.configure_selection(selection_mode='multiple', use_checkbox=True, pre_selected_rows=[])
 
 gridOptions = gb.build()
 
-top_grid_response = AgGrid(
+grid_response = AgGrid(
     df_show,
     gridOptions=gridOptions,
     enable_enterprise_modules=False,
     allow_unsafe_jscode=True,
     update_mode=GridUpdateMode.SELECTION_CHANGED,
-    height=615,
+    height=450,
     fit_columns_on_grid_load=False,
     theme='streamlit'
 )
 
-# Check which players are selected from top table
-selected_from_top_table = []
-selected_from_top_table_full_data = []
+selected_from_grid = []
+selected_from_grid_full_data = []
+if grid_response and 'selected_rows' in grid_response:
+    selected_rows = grid_response['selected_rows']
+    if selected_rows is not None and len(selected_rows) > 0:
+        if isinstance(selected_rows, pd.DataFrame):
+            selected_from_grid = selected_rows['Player Name'].tolist()[:2]
+            for _, row_dict in selected_rows.iterrows():
+                if len(selected_from_grid_full_data) >= 2:
+                    break
+                if '_original_index' in row_dict.index:
+                    orig_idx = row_dict['_original_index']
+                    if orig_idx in df_top.index:
+                        selected_from_grid_full_data.append(df_top.loc[orig_idx])
+                        continue
+                import re
+                player_name = row_dict['Player Name']
+                team_name = row_dict['Team']
+                if isinstance(team_name, str) and '<img' in team_name:
+                    match = re.search(r'margin-right: 8px;">(.+?)(?:<|$)', team_name)
+                    if match:
+                        team_name = match.group(1).strip()
+                position = row_dict['Position']
+                competition = row_dict['Competition']
+                season = row_dict['Season']
+                matched_row = df_top[
+                    (df_top['player_name'] == player_name) &
+                    (df_top['team_name'] == team_name) &
+                    (df_top['display_position'] == position) &  # Use display_position for matching
+                    (df_top['competition_name'] == competition) &
+                    (df_top['season_name'] == season)
+                ]
+                if not matched_row.empty:
+                    selected_from_grid_full_data.append(matched_row.iloc[0])
+        elif isinstance(selected_rows, list) and len(selected_rows) > 0:
+            if isinstance(selected_rows[0], dict):
+                selected_from_grid = [row['Player Name'] for row in selected_rows[:2]]
+                for row_dict in selected_rows[:2]:
+                    if '_original_index' in row_dict:
+                        orig_idx = row_dict['_original_index']
+                        if orig_idx in df_top.index:
+                            selected_from_grid_full_data.append(df_top.loc[orig_idx])
+                            continue
+                    import re
+                    player_name = row_dict.get('Player Name')
+                    team_name = row_dict.get('Team', '')
+                    if isinstance(team_name, str) and '<img' in team_name:
+                        match = re.search(r'margin-right: 8px;">(.+?)(?:<|$)', team_name)
+                        if match:
+                            team_name = match.group(1).strip()
+                    position = row_dict.get('Position')
+                    competition = row_dict.get('Competition')
+                    season = row_dict.get('Season')
+                    matched_row = df_top[
+                        (df_top['player_name'] == player_name) &
+                        (df_top['team_name'] == team_name.strip()) &
+                        (df_top['display_position'] == position) &  # Use display_position for matching
+                        (df_top['competition_name'] == competition) &
+                        (df_top['season_name'] == season)
+                    ]
+                    if not matched_row.empty:
+                        selected_from_grid_full_data.append(matched_row.iloc[0])
+            else:
+                selected_from_grid = selected_rows[:2]
 
-if top_grid_response and top_grid_response.get('selected_rows') is not None:
-    selected_rows = top_grid_response['selected_rows']
+# ========================================
+# DEFINE SEARCH POOL
+# ========================================
+mask_search = (
+    df["competition_name"].isin(selected_comp)
+    & df["season_name"].isin(selected_season)
+    & df["age"].between(age_range[0], age_range[1])
+)
+df_search_pool = df.loc[mask_search].copy()
 
-    if isinstance(selected_rows, pd.DataFrame):
-        rows = selected_rows.to_dict('records')
-    else:
-        rows = selected_rows
+st.markdown("---")
+comparison_placeholder = st.empty()
 
-    for row in rows:
-        name_col = table_columns.get('player_name', 'player_name')
-        selected_from_top_table.append(row.get(name_col))
-
-        idx = row.get('_original_index')
-        if idx is not None and idx in df_top.index:
-            selected_from_top_table_full_data.append(df_top.loc[idx])
-
-
-# =========================
-# RADAR PLOT CONTAINER
-# =========================
-st.subheader("Radarplots")
-st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
-radar_plot_container = st.container()
-
-
-# =========================
+# ========================================
 # PLAYER SEARCH (Bottom Table)
-# =========================
-st.subheader("Zoekopdracht")
-st.markdown('<div class="sb-rule"></div>', unsafe_allow_html=True)
+# ========================================
+st.markdown("---")
+st.subheader("Player Search")
+st.markdown("Search for specific players to compare their performance across different positions and seasons.")
 
-available_players = sorted(df_player_data["player_name"].unique().tolist())
+available_players = sorted(df_search_pool["player_name"].unique().tolist())
 
 search_selected_players = st.multiselect(
-    "Selecteer speler(s) en zie alle beschikbare data.",
+    "Search and select players",
     options=available_players,
     default=[],
-    help="Een speler kan er niet tussen staan als we geen data van die competitie afnemen of als hij onvoldoende minuten op een specifieke positie heeft gemaakt"
+    help="Type to search and select multiple players. Search is independent of position and minimum score filters."
 )
 
-# Filter and sort data
-df_selected_players = df_player_data[df_player_data['player_name'].isin(search_selected_players)].copy().sort_values(by='total', ascending=False)
+selected_from_bottom_table = []
+selected_from_bottom_table_full_data = []
 
-# Create master index
-df_selected_players["_original_index"] = df_selected_players.index
+if search_selected_players:
+    search_df = df_search_pool[df_search_pool["player_name"].isin(search_selected_players)].copy()
+    
+    # Add display_position for search results
+    if 'position_profile' in search_df.columns:
+        search_df['display_position'] = search_df.apply(
+            lambda row: row['position_profile'] if pd.notna(row.get('position_profile')) and row.get('position_profile') else row['position'],
+            axis=1
+        )
+    else:
+        search_df['display_position'] = search_df['position']
 
-# Reset the index
-df_selected_players.reset_index(drop=True, inplace=True)
+    search_cols = ["player_name", "team_name", "display_position", "competition_name", "season_name", "total_minutes",
+                   "physical", "attack", "defense", "total"]
+    if 'impect_url' in search_df.columns:
+        search_cols.append('impect_url')
 
-# Add helper columns
-df_selected_players['original_rank'] = df_selected_players.index + 1
-df_selected_players["player_url"] = df_selected_players.apply(get_player_url, axis=1)
-df_selected_players["team_with_logo_html"] = df_selected_players.apply(create_team_html_with_logo, axis=1)
+    search_display = search_df[search_cols].copy()
+    
+    # Store original index to match back to full data later
+    search_display['_search_original_index'] = search_df.index
 
-# Round numeric columns
-for col in numeric_columns:
-    if col in df_selected_players.columns:
-        decimals = 0 if col in ["total_minutes", "position_minutes"] else 1
-        df_selected_players[col] = df_selected_players[col].round(decimals)
+    for col in ["total_minutes", "physical", "attack", "defense", "total"]:
+        if col in search_display.columns:
+            if col == "total_minutes":
+                search_display[col] = search_display[col].round(0)
+            else:
+                search_display[col] = search_display[col].round(1)
 
-# Reorder and rename columns
-all_needed_cols = list(table_columns.keys()) + ["player_url", "_original_index"]
-df_selected_players = df_selected_players[[c for c in all_needed_cols if c in df_selected_players.columns]]
-df_selected_players = df_selected_players.rename(columns=table_columns)
+    search_display = search_display.sort_values(["player_name", "total"], ascending=[True, False])
 
-# Create search table grid
-gb_search = GridOptionsBuilder.from_dataframe(df_selected_players)
+    def create_search_team_html(row):
+        team_name = row['team_name']
+        competition = row.get('competition_name')
+        logo_b64 = get_team_logo_base64(team_name, competition)
+        if logo_b64:
+            return f'<img src="{logo_b64}" height="20" style="vertical-align: middle; margin-right: 8px;">{team_name}'
+        return team_name
 
-gb_search.configure_column(table_columns["original_rank"], width=80, pinned="left", sortable=True, type=["numericColumn"])
-gb_search.configure_column(table_columns["player_name"], width=180, pinned="left", cellRenderer=player_link_renderer)
-gb_search.configure_column(table_columns["team_with_logo_html"], width=200, cellRenderer=team_logo_renderer)
+    search_display["team_with_logo_html"] = search_display.apply(create_search_team_html, axis=1)
 
-for key, label in table_columns.items():
-    if key not in ["original_rank", "player_name", "team_with_logo_html", "position_profile"]:
-        is_numeric = key in ["age", "total_minutes", "position_minutes", "physical", "attacking", "defending", "total"]
+    def get_search_player_url(row):
+        if 'impect_url' in row.index and pd.notna(row.get('impect_url')) and row.get('impect_url'):
+            return row['impect_url']
+        else:
+            return get_team_fbref_google_search(row['team_name'])
 
-        col_config = {
-            "width": 140,
-            "type": ["numericColumn"] if is_numeric else [],
-            "sortingOrder": ["desc", "asc", None]
-        }
+    search_display["player_url"] = search_display.apply(get_search_player_url, axis=1)
 
-        if key in ["total_minutes", "position_minutes"]:
-            col_config["valueFormatter"] = number_dot_formatter
+    display_cols = ["player_name", "team_with_logo_html", "display_position", "competition_name", "season_name",
+                    "total_minutes", "physical", "attack", "defense", "total"]
+    search_display = search_display[display_cols + ["player_url", "_search_original_index"]]
 
-        if key in ["physical", "attacking", "defending"]:
-            col_config["cellStyle"] = gradient_js
+    search_display = search_display.rename(columns={
+        "player_name": "Player Name",
+        "team_with_logo_html": "Team",
+        "display_position": "Position",
+        "competition_name": "Competition",
+        "season_name": "Season",
+        "total_minutes": "Minutes",
+        "physical": "Physical",
+        "attack": "Attack",
+        "defense": "Defense",
+        "total": "Total"
+    })
 
-        gb_search.configure_column(label, **col_config)
+    gb_search = GridOptionsBuilder.from_dataframe(search_display)
+    gb_search.configure_column("Player Name", width=180, pinned="left", cellRenderer=player_link_renderer)
+    gb_search.configure_column("Team", width=200, cellRenderer=team_logo_renderer)
+    gb_search.configure_column("Position", width=130)  # Increased width for position profiles
+    gb_search.configure_column("Competition", width=110)
+    gb_search.configure_column("Season", width=110)
+    gb_search.configure_column("Minutes", width=100, type=["numericColumn"], sortable=True)
+    gb_search.configure_column("Physical", width=100, type=["numericColumn"], sortable=True)
+    gb_search.configure_column("Attack", width=100, type=["numericColumn"], sortable=True)
+    gb_search.configure_column("Defense", width=100, type=["numericColumn"], sortable=True)
+    gb_search.configure_column("Total", width=100, type=["numericColumn"], sortable=True)
+    gb_search.configure_column("player_url", hide=True)
+    gb_search.configure_column("_search_original_index", hide=True)
+    gb_search.configure_default_column(sortable=True, filterable=False, resizable=True)
+    gb_search.configure_selection(selection_mode='multiple', use_checkbox=True, pre_selected_rows=[])
 
-gb_search.configure_column("player_url", hide=True)
-gb_search.configure_column("_original_index", hide=True)
-gb_search.configure_column("::auto_unique_id::", hide=True)
-gb_search.configure_default_column(sortable=True, filterable=False, resizable=True)
-gb_search.configure_selection(selection_mode='multiple', use_checkbox=True)
+    gridOptions_search = gb_search.build()
 
-gridOptions_search = gb_search.build()
+    st.markdown(f"**Found {len(search_display)} record(s) for {len(search_selected_players)} player(s)**")
+    st.info("💡 **Tip:** Select up to 2 players using the checkboxes to view their comparison charts above.")
 
-search_grid_response = None
-
-if not df_selected_players.empty:
     search_grid_response = AgGrid(
-        df_selected_players,
+        search_display,
         gridOptions=gridOptions_search,
         enable_enterprise_modules=False,
         allow_unsafe_jscode=True,
         update_mode=GridUpdateMode.SELECTION_CHANGED,
-        height=min(615, 34.5 + len(df_selected_players) * 29.1),
+        height=min(400, 50 + len(search_display) * 35),
         fit_columns_on_grid_load=False,
         theme='streamlit'
     )
 
-# Check which boxes are checked in search table
-selected_from_search_table = []
-selected_from_search_table_full_data = []
-
-selected_rows = []
-if 'search_grid_response' in locals() and search_grid_response is not None:
-    selected_rows = search_grid_response.get('selected_rows', [])
-
-if isinstance(selected_rows, pd.DataFrame):
-    selected_rows = selected_rows.to_dict('records')
-
-if isinstance(selected_rows, list) and len(selected_rows) > 0:
-    for row in selected_rows:
-        name_label = table_columns.get('player_name', 'Speler')
-        p_name = row.get(name_label)
-        idx = row.get('_original_index') or row.get('_search_original_index')
-
-        if idx is not None and idx in df_player_data.index:
-            selected_from_search_table.append(p_name)
-            selected_from_search_table_full_data.append(df_player_data.loc[idx])
-
+    selected_from_bottom_table = []
+    selected_from_bottom_table_full_data = []
+    if search_grid_response and 'selected_rows' in search_grid_response:
+        search_selected_rows = search_grid_response['selected_rows']
+        if search_selected_rows is not None and len(search_selected_rows) > 0:
+            if isinstance(search_selected_rows, pd.DataFrame):
+                selected_from_bottom_table = search_selected_rows['Player Name'].tolist()[:2]
+                # Get full data using the original index
+                for idx in search_selected_rows['_search_original_index'].tolist()[:2]:
+                    if idx in search_df.index:
+                        selected_from_bottom_table_full_data.append(search_df.loc[idx])
+            elif isinstance(search_selected_rows, list) and len(search_selected_rows) > 0:
+                if isinstance(search_selected_rows[0], dict):
+                    selected_from_bottom_table = [row['Player Name'] for row in search_selected_rows[:2]]
+                    # Get full data using the original index
+                    for row in search_selected_rows[:2]:
+                        if '_search_original_index' in row:
+                            idx = row['_search_original_index']
+                            if idx in search_df.index:
+                                selected_from_bottom_table_full_data.append(search_df.loc[idx])
+                else:
+                    selected_from_bottom_table = search_selected_rows[:2]
+else:
+    st.info("Type player names above to search across all positions and seasons.")
+    selected_from_bottom_table = []
+    selected_from_bottom_table_full_data = []
 
 # ========================================
-# FILL RADAR PLOT CONTAINER
+# COMPARISON CHARTS
 # ========================================
-with radar_plot_container:
+with comparison_placeholder.container():
+    st.subheader("Player Comparison Charts")
 
-    # Combine the selections from both tables
-    all_selected_names = selected_from_top_table + selected_from_search_table
-    all_selected_data = selected_from_top_table_full_data + selected_from_search_table_full_data
+    if selected_from_bottom_table:
+        players_to_compare = selected_from_bottom_table
+        players_data_to_compare = selected_from_bottom_table_full_data
+        source_message = "from search table below"
+        use_exact_data = len(selected_from_bottom_table_full_data) > 0
+    elif selected_from_grid and selected_from_grid_full_data:
+        players_to_compare = selected_from_grid
+        players_data_to_compare = selected_from_grid_full_data
+        source_message = "from top table"
+        use_exact_data = True
+    else:
+        players_to_compare = []
+        players_data_to_compare = []
+        source_message = ""
+        use_exact_data = False
 
-    total_selected = len(all_selected_names)
+    if len(players_to_compare) > 0:
+        if len(players_to_compare) > 2:
+            st.warning("Please select at most 2 players for comparison.")
+            players_to_compare = players_to_compare[:2]
+            players_data_to_compare = players_data_to_compare[:2] if use_exact_data else []
 
-    if total_selected > 0:
-        if total_selected > 2:
-            st.warning(f"Je hebt {total_selected} spelers geselecteerd, alleen de eerste 2 worden getoond.")
-
-        players_to_compare = all_selected_names[:2]
-        players_data_to_compare = all_selected_data[:2]
+        st.info(f"Comparing {len(players_to_compare)} player(s) selected {source_message}")
 
         st.markdown("""
         <style>
@@ -1293,70 +1173,65 @@ with radar_plot_container:
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .stPlotlyChart { animation: fadeIn 0.5s ease-in-out; }
+        .stPlotlyChart {
+            animation: fadeIn 0.5s ease-in-out;
+        }
         </style>
         """, unsafe_allow_html=True)
 
         cols = st.columns(2)
 
         for i, player_name in enumerate(players_to_compare):
-            player_data = players_data_to_compare[i]
+            if use_exact_data and i < len(players_data_to_compare):
+                player_data = players_data_to_compare[i]
+            else:
+                player_rows = df_search_pool[df_search_pool["player_name"] == player_name]
+                if player_rows.empty:
+                    player_rows = df[df["player_name"] == player_name]
+                if player_rows.empty:
+                    st.warning(f"No data found for {player_name}")
+                    continue
+                player_data = player_rows.iloc[0]
 
             with cols[i]:
-
-                # Create title with position profile
-                pos_profile = player_data.get('position_profile', '')
-                title_text = f"{player_name}  |  {pos_profile}"
-
                 st.markdown(
-                    f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; text-align: center;'>{title_text}</p>",
+                    f"<p style='font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;'>{player_name}</p>",
                     unsafe_allow_html=True
                 )
 
-                # Get information for subtitles
                 team_name = player_data['team_name']
                 competition = player_data.get('competition_name')
-                season = player_data.get('season_name')
                 team_logo_b64 = get_team_logo_base64(team_name, competition)
 
-                # Format the numbers with a thousand separator
-                total_minutes = f"{int(player_data['total_minutes']):,}".replace(',', '.')
-                position_minutes_val = player_data.get('position_minutes', 0)
-                position_minutes = f"{int(position_minutes_val):,}".replace(',', '.') if pd.notna(position_minutes_val) else "0"
+                caption_parts = [
+                    f"{team_name}",
+                    f"{player_data['country']}",
+                    f"Age {int(player_data['age'])}",
+                    f"{str(player_data.get('display_position') if 'display_position' in player_data.index and pd.notna(player_data.get('display_position')) else (player_data.get('position_profile') if 'position_profile' in player_data.index and pd.notna(player_data.get('position_profile')) else player_data.get('position', '')))}",
+                    f"{int(player_data['total_minutes'])} mins"
+                ]
 
-                line1 = f"{team_name} | {competition} | {season}"
-                line2 = f"{int(player_data['age'])} jaar · Nationaliteit: {player_data['country']} · Totale minuten: {total_minutes} · Minuten op positie: {position_minutes}"
+                if team_logo_b64:
+                    caption_html = f"""
+                    <div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.6;">
+                        <img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">
+                        {' · '.join(caption_parts)}
+                    </div>
+                    """
+                    st.markdown(caption_html, unsafe_allow_html=True)
+                else:
+                    st.markdown(
+                        f"<div style='font-size: 1.1rem; margin-bottom: 1rem;'>{' · '.join(caption_parts)}</div>",
+                        unsafe_allow_html=True
+                    )
 
-                logo_html = f'<img src="{team_logo_b64}" height="30" style="vertical-align: middle; margin-right: 8px;">' if team_logo_b64 else ""
-                st.markdown(
-                    f"""<div style="font-size: 1.1rem; margin-bottom: 1rem; line-height: 1.4; text-align: center;">
-                        {logo_html} <b>{line1}</b><br>
-                        <span style="font-size: 0.95rem; color: #666;">{line2}</span>
-                    </div>""",
-                    unsafe_allow_html=True
+                fig = create_polarized_bar_chart(
+                    player_data,
+                    player_data['competition_name'],
+                    player_data['season_name']
                 )
-
-                # Create the chart
-                fig = create_polarized_bar_chart(player_data)
-
+                # Add unique key to prevent duplicate element ID error
                 chart_key = f"comparison_chart_{i}_{player_name.replace(' ', '_')}"
                 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=chart_key)
-
-                # Add information at the bottom
-                st.markdown(
-                    """<p style='text-align: center; font-family: "Proxima Nova", sans-serif; 
-                    font-size: 0.8rem; color: #888; margin-top: -15px;'>
-                    Een score van 50 is het gemiddelde op die positie binnen die competitie <br>
-                    Data is een combinatie van Impect en SkillCorner
-                    </p>""",
-                    unsafe_allow_html=True
-                )
     else:
-        st.markdown(
-            """
-            <div class="custom-info-box">
-                Selecteer spelers in de ranglijst en/of zoekopdracht tabellen om hun radarplots te zien.
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.info("Select players from the top table or search table below (using checkboxes) to view comparison charts.")
