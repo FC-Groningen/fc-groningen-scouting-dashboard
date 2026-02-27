@@ -1455,6 +1455,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+open_click = st.button(" ", key="feedback_clicker")
+if open_click:
+    st.session_state.show_feedback = not st.session_state.show_feedback
+
 st.markdown("""
 <script>
 window.addEventListener('message', (event) => {
@@ -1466,52 +1470,18 @@ window.addEventListener('message', (event) => {
 """, unsafe_allow_html=True)
 
 if st.session_state.show_feedback:
-    with st.container():
-        st.markdown('<div class="feedback-panel">', unsafe_allow_html=True)
+    st.markdown('<div class="feedback-panel">', unsafe_allow_html=True)
 
-        st.subheader("Feedback")
+    st.subheader("Feedback")
 
-        mode = st.radio("Type", ["Player Rating", "General Feedback"])
+    feedback_text = st.text_area("Your comment")
 
-        if mode == "Player Rating":
-            player_name = st.text_input("Player Name")
-            position = st.text_input("Position")
-            comment = st.text_area("Comment")
+    if st.button("Submit feedback"):
+        st.session_state.show_feedback = False
+        st.success("Thank you for your feedback!")
+        # Write to Supabase here
 
-            if st.button("Submit Rating"):
-                if not player_name or not position or not comment:
-                    st.warning("Please complete all fields.")
-                else:
-                    success, error = insert_feedback(
-                        note_type="player_rating",
-                        player_name=player_name,
-                        position=position,
-                        comment=comment
-                    )
-                    if success:
-                        st.success("Rating submitted!")
-                        st.session_state.show_feedback = False
-                    else:
-                        st.error(error)
+    if st.button("Close panel"):
+        st.session_state.show_feedback = False
 
-        else:
-            comment = st.text_area("Your feedback")
-            
-            if st.button("Submit Feedback"):
-                if not comment:
-                    st.warning("Please enter a comment.")
-                else:
-                    success, error = insert_feedback(
-                        note_type="general_feedback",
-                        comment=comment
-                    )
-                    if success:
-                        st.success("Thanks for the feedback!")
-                        st.session_state.show_feedback = False
-                    else:
-                        st.error(error)
-
-        if st.button("Close"):
-            st.session_state.show_feedback = False
-
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
