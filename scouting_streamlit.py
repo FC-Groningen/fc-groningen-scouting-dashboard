@@ -1448,40 +1448,62 @@ with radar_plot_container:
     )
 
 # 9. Add feedback button
-st.markdown(
-    '<div id="feedback-button" onclick="document.querySelector(\'iframe\').contentWindow.postMessage({type: \'toggle_feedback\'}, \'*\')">'
-    '💬 Feedback'
-    '</div>',
-    unsafe_allow_html=True
-)
+# Floating feedback button
+st.markdown("""
+<style>
+#feedback-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+</style>
 
-open_click = st.button(" ", key="feedback_clicker")
+<div id="feedback-button" onclick="document.getElementById('hidden-feedback-btn').click()">
+    💬 Feedback
+</div>
+""", unsafe_allow_html=True)
+
+# Hidden Streamlit button
+open_click = st.button("", key="hidden-feedback-btn")
 if open_click:
     st.session_state.show_feedback = not st.session_state.show_feedback
 
-st.markdown("""
-<script>
-window.addEventListener('message', (event) => {
-    if (event.data.type === 'toggle_feedback') {
-        window.parent.postMessage({type: 'streamlit:setSessionState', key: 'show_feedback', value: true}, '*')
-    }
-})
-</script>
-""", unsafe_allow_html=True)
-
 if st.session_state.show_feedback:
+    st.markdown("""
+    <style>
+    .feedback-panel {
+        position: fixed;
+        bottom: 80px;
+        right: 30px;
+        width: 350px;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        z-index: 10000;   /* ABOVE floating button */
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.markdown('<div class="feedback-panel">', unsafe_allow_html=True)
 
     st.subheader("Feedback")
-
     feedback_text = st.text_area("Your comment")
 
     if st.button("Submit feedback"):
         st.session_state.show_feedback = False
         st.success("Thank you for your feedback!")
-        # Write to Supabase here
+        # TODO: write to Supabase
 
-    if st.button("Close panel"):
+    if st.button("Close"):
         st.session_state.show_feedback = False
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
