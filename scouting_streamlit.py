@@ -686,6 +686,13 @@ table_columns = {
 # Check whether all metrics assigned to position_profiles are defined correctly
 # validate_profiles(metrics, position_profiles)
 
+# Add feedback option
+if "show_feedback" not in st.session_state:
+    st.session_state.show_feedback = False
+
+def toggle_feedback():
+    st.session_state.show_feedback = not st.session_state.show_feedback
+
 # X. Not sure where to put this yet
 FC_GRONINGEN_GREEN = "#3E8C5E"
 TEAM_LOGOS_DIR = "team_logos"
