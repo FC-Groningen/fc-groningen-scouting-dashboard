@@ -260,6 +260,23 @@ def sanitize_filename(name):
         .replace("|", "_")
     )
 
+# Write feedback to Supabase
+def insert_feedback(note_type, comment, player_name=None, position=None):
+    payload = {
+        "note_type": note_type,
+        "comment": comment,
+        "player_name": player_name,
+        "position": position
+    }
+
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+    try:
+        response = supabase.table("feedback_notes").insert(payload).execute()
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
 # Encode save team logo's      
 def encode_image_to_base64(logo_path):
     """
@@ -829,6 +846,36 @@ st.markdown(
             font-size: 1rem;
             margin-bottom: 10px;
         }}
+
+    /* Floating Button */
+        #feedback-button {{
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: #3BA171;
+            color: white;
+            padding: 14px 22px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }}
+
+    /* Floating Panel (modal-like) */
+        .feedback-panel {{
+            position: fixed;
+            bottom: 80px;
+            right: 25px;
+            width: 340px;
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            z-index: 9999;
+            animation: fadeIn 0.25s ease-in-out;
+        }}
     
     </style>
     """,
@@ -1392,3 +1439,72 @@ with radar_plot_container:
         """,
         unsafe_allow_html=True
     )
+
+# 9. Add feedback button
+st.markdown(
+    '<div id="feedback-button" onclick="document.querySelector(\'iframe\').contentWindow.postMessage({type: \'toggle_feedback\'}, \'*\')">'
+    '💬 Feedback'
+    '</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown("""
+<script>
+window.addEventListener('message', (event) => {
+    if (event.data.type === 'toggle_feedback') {
+        window.parent.postMessage({type: 'streamlit:setSessionState', key: 'show_feedback', value: true}, '*')
+    }
+})
+</script>
+""", unsafe_allow_html=True)
+
+if st.session_state.show_feedback:
+    with st.container():
+        st.markdown('<div class="feedback-panel">', unsafe_allow_html=True)
+
+        st.subheader("Feedback")
+
+        mode = st.radio("Type", ["Player Rating", "General Feedback"])
+
+        if mode == "Player Rating":
+            player_name = st.text_input("Player Name")
+            position = st.text_input("Position")
+            comment = st.text_area("Comment")
+
+            if st.button("Submit Rating"):
+                if not player_name or not position or not comment:
+                    st.warning("Please complete all fields.")
+                else:
+                    success, error = insert_feedback(
+                        note_type="player_rating",
+                        player_name=player_name,
+                        position=position,
+                        comment=comment
+                    )
+                    if success:
+                        st.success("Rating submitted!")
+                        st.session_state.show_feedback = False
+                    else:
+                        st.error(error)
+
+        else:
+            comment = st.text_area("Your feedback")
+            
+            if st.button("Submit Feedback"):
+                if not comment:
+                    st.warning("Please enter a comment.")
+                else:
+                    success, error = insert_feedback(
+                        note_type="general_feedback",
+                        comment=comment
+                    )
+                    if success:
+                        st.success("Thanks for the feedback!")
+                        st.session_state.show_feedback = False
+                    else:
+                        st.error(error)
+
+        if st.button("Close"):
+            st.session_state.show_feedback = False
+
+        st.markdown("</div>", unsafe_allow_html=True)
